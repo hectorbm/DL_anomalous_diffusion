@@ -116,3 +116,52 @@ def Brownian(N=1000,T=50,delta=1):
     out2 = x[1]
     
     return out1,out2
+
+def two_state_switching_diffusion(n, k_state0, k_state1, D_state0, D_state1):
+    x = np.random.normal(loc=0, scale=1, size=n)
+    y = np.random.normal(loc=0, scale=1, size=n)
+    
+    #Residence time
+    res_time0 = 1 / k_state0
+    res_time1 = 1 / k_state1
+
+    #Compute each t_state acording to exponential laws 
+    t_state0 = np.random.exponential(scale=res_time0, size=n)
+    t_state1 = np.random.exponential(scale=res_time1, size=n)
+
+    #Set initial t_state for each state
+    t_state0_next = 0
+    t_state1_next = 0
+
+    #Pick an initial state from a random choice
+    current_state = np.random.choice([0, 1])
+    
+    #Fill state array 
+    state = np.zeros(shape=n)
+    i = 0
+    while i < n:
+        if current_state == 1:
+            current_state_length = int(np.floor(t_state1[t_state1_next]))
+            
+            if (current_state_length + i) < n:
+                state[i:(i + current_state_length)] = np.ones(shape=current_state_length)
+            else:
+                state[i:n] = np.ones(shape=(n-i))
+            
+            current_state = 0 #Set state from 1->0
+        else:
+            current_state_length = int(np.floor(t_state0[t_state0_next]))
+            current_state = 1 #Set state from 0->1
+
+        i += current_state_length
+
+    for i in range(len(state)):
+        if state[i] == 0:
+            x[i] = x[i] * np.sqrt(2 * D_state0)
+            y[i] = y[i] * np.sqrt(2 * D_state0)
+        else:
+            x[i] = x[i] * np.sqrt(2 * D_state1)
+            y[i] = y[i] * np.sqrt(2 * D_state1)
+    x = np.cumsum(x)
+    y = np.cumsum(y)
+    return x,y,state
