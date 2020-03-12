@@ -24,7 +24,7 @@ def fbm_diffusion(n=1000,H=1,T=15):
     y = n**(-H)*np.cumsum(np.real(y[:n])) # rescale
     y = ((T**H)*y) # resulting traj. in y
 
-    t = np.arange(0,n+1,1)/n
+    t = np.arange(0,n,1)/n
     t = t*T # scale for final time T
     
 
@@ -117,7 +117,7 @@ def Brownian(N=1000,T=50,delta=1):
     
     return out1,out2
 
-def two_state_switching_diffusion(n, k_state0, k_state1, D_state0, D_state1):
+def two_state_switching_diffusion(n, k_state0, k_state1, D_state0, D_state1, T):
     x = np.random.normal(loc=0, scale=1, size=n)
     y = np.random.normal(loc=0, scale=1, size=n)
     
@@ -162,6 +162,9 @@ def two_state_switching_diffusion(n, k_state0, k_state1, D_state0, D_state1):
         else:
             x[i] = x[i] * np.sqrt(2 * D_state1)
             y[i] = y[i] * np.sqrt(2 * D_state1)
+            
     x = np.cumsum(x)
     y = np.cumsum(y)
-    return x,y,state
+    t = np.arange(0,n,1)/n
+    t = t*T 
+    return x,y,t,state
