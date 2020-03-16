@@ -91,32 +91,6 @@ def CTRW(n=1000,alpha=1,gamma=1,T=40):
     
     return xOut,yOut,tOut
 
-def Sub_brownian(x0, n, dt, delta, out=None):
-    x0 = np.asarray(x0)
-    # generate a sample of n numbers from a normal distribution.
-    r = stats.norm.rvs(size=x0.shape + (n,), scale=delta*np.sqrt(dt))
-
-    # If `out` was not given, create an output array.
-    if out is None:
-        out = np.empty(r.shape)
-    # Compute Brownian motion by forming the cumulative sum of random samples. 
-    np.cumsum(r, axis=-1, out=out)
-    # Add the initial condition.
-    out += np.expand_dims(x0, axis=-1)
-
-    return out
-
-def Brownian(N=1000,T=50,delta=1):
-    x = np.empty((2,N+1))
-    x[:, 0] = 0.0
-    
-    Sub_brownian(x[:,0], N, T/N, delta, out=x[:,1:])
-    
-    out1 = x[0]
-    out2 = x[1]
-    
-    return out1,out2
-
 def two_state_switching_diffusion(n, k_state0, k_state1, D_state0, D_state1, T):
     x = np.random.normal(loc=0, scale=1, size=n)
     y = np.random.normal(loc=0, scale=1, size=n)
@@ -141,7 +115,7 @@ def two_state_switching_diffusion(n, k_state0, k_state1, D_state0, D_state1, T):
     i = 0
     while i < n:
         if current_state == 1:
-            current_state_length = int(np.floor(t_state1[t_state1_next]))
+            current_state_length = int(np.ceil(t_state1[t_state1_next]))
             
             if (current_state_length + i) < n:
                 state[i:(i + current_state_length)] = np.ones(shape=current_state_length)
@@ -150,7 +124,7 @@ def two_state_switching_diffusion(n, k_state0, k_state1, D_state0, D_state1, T):
             
             current_state = 0 #Set state from 1->0
         else:
-            current_state_length = int(np.floor(t_state0[t_state0_next]))
+            current_state_length = int(np.ceil(t_state0[t_state0_next]))
             current_state = 1 #Set state from 0->1
 
         i += current_state_length
