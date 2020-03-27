@@ -13,12 +13,12 @@ class TwoStateDiffusion:
         self.D_state1 = D_state1
 
     @classmethod
-    def random_initialization(cls):
+    def create_random(cls):
         D_state0 = np.random.uniform(low=0.05 ,high=2) 
         D_state1 = np.random.uniform(low=0.001 , high=0.05)
         k_state0 = np.random.uniform(low=0.01 ,high=0.08) 
         k_state1 = np.random.uniform(low=0.007 ,high=0.2)
-        model = TwoStateDiffusion(k_state0, k_state1, D_state0, D_state1)
+        model = cls(k_state0, k_state1, D_state0, D_state1)
         return model
 
     def simulate_track(self, track_length, T):
@@ -74,5 +74,5 @@ class TwoStateDiffusion:
         y = np.cumsum(y)
         t = np.arange(0,track_length,1)/track_length
         t = t*T
-        
+
         return x,y,t,state,switching

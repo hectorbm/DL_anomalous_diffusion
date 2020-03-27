@@ -7,9 +7,9 @@ class CTRW:
         self.gamma = gamma
 
     @classmethod
-    def random_initialization(cls):
+    def create_random(cls):
         random_alpha = np.random.uniform(low=0.1, high=0.9)
-        model = CTRW(alpha=random_alpha, beta=0.5, gamma=1)
+        model = cls(alpha=random_alpha, beta=0.5, gamma=1)
         return model
 
     def mittag_leffler_rand(self, n = 1000):
