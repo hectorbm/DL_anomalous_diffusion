@@ -1,6 +1,10 @@
 import numpy as np
 
 class TwoStateDiffusion:
+    """
+    State-0: Free Diffusion
+    State-1: Confined Diffusion
+    """
 
     def __init__(self, k_state0, k_state1, D_state0, D_state1):
         assert(D_state0 >= 0.05 and D_state0 <= 2), "Invalid Diffusion coeficient state-0"
@@ -11,9 +15,13 @@ class TwoStateDiffusion:
         self.k_state1 = k_state1
         self.D_state0 = D_state0
         self.D_state1 = D_state1
+        self.beta0 = 1
+        self.beta1 = 0.5
 
     @classmethod
     def create_random(cls):
+        # k_state(i) dimensions = 1 / frame
+        # D_state(i) dimensions = um^2 * s^(-beta) 
         D_state0 = np.random.uniform(low=0.05 ,high=2) 
         D_state1 = np.random.uniform(low=0.001 , high=0.05)
         k_state0 = np.random.uniform(low=0.01 ,high=0.08) 
@@ -30,8 +38,8 @@ class TwoStateDiffusion:
         res_time1 = 1 / self.k_state1
 
         #Compute each t_state acording to exponential laws
-        t_state0 = np.random.exponential(scale=res_time0, size=track_length)
-        t_state1 = np.random.exponential(scale=res_time1, size=track_length)
+        t_state0 =  np.random.exponential(scale=res_time0, size=track_length) 
+        t_state1 =  np.random.exponential(scale=res_time1, size=track_length)
 
         #Set initial t_state for each state
         t_state0_next = 0
@@ -65,13 +73,29 @@ class TwoStateDiffusion:
 
         for i in range(len(state)):
             if state[i] == 0:
-                x[i] = x[i] * np.sqrt(2 * self.D_state0)
-                y[i] = y[i] * np.sqrt(2 * self.D_state0)
+                x[i] = x[i] * np.sqrt(2 * self.D_state0 * (T ** self.beta0))
+                y[i] = y[i] * np.sqrt(2 * self.D_state0 * (T ** self.beta0))
             else:
-                x[i] = x[i] * np.sqrt(2 * self.D_state1)
-                y[i] = y[i] * np.sqrt(2 * self.D_state1)
+                x[i] = x[i] * np.sqrt(2 * self.D_state1 * (T ** self.beta1))
+                y[i] = y[i] * np.sqrt(2 * self.D_state1 * (T ** self.beta1))
         x = np.cumsum(x)
         y = np.cumsum(y)
+        
+        #Scale to 10.000 nm * 10.000 nm
+        if np.min(x) < 0:
+            x =  x + np.absolute(np.min(x)) # Add offset to x
+        if np.min(y) < 0:
+            y = y + np.absolute(np.min(y)) #Add offset to y 
+        #Scale to nm and add a random offset
+        x = x * (1/np.max(x)) * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
+        y = y * (1/np.max(y)) * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
+
+        offset_x = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(x)))
+        offset_y = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(y)))
+
+        x = x + offset_x 
+        y = y + offset_y
+        
         t = np.arange(0,track_length,1)/track_length
         t = t*T
 

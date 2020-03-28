@@ -15,8 +15,8 @@ class SimulatedTrack:
         #Compute noise and data separately to allow noise analysis! 
     def plot_xy(self):
         assert (self.n_axes == 2), "Track n_axes ~= 2!"
-        plt.xlabel("Position X")
-        plt.ylabel("Position Y")
+        plt.xlabel("Position X [nm]")
+        plt.ylabel("Position Y [nm]")
         plt.plot(self.axes_data[0], self.axes_data[1])
         plt.show()
         

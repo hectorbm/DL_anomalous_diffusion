@@ -1,32 +1,33 @@
 import numpy as np
 
 class CTRW:
-    def __init__(self, alpha, beta, gamma):
+    def __init__(self, alpha):
+        assert (alpha >= 0.1 and alpha <= 0.9), "Invalid alpha parameter"
         self.alpha = alpha
-        self.beta = beta
-        self.gamma = gamma
+        self.beta = 0.5
+        self.gamma = 1
 
     @classmethod
     def create_random(cls):
         random_alpha = np.random.uniform(low=0.1, high=0.9)
-        model = cls(alpha=random_alpha, beta=0.5, gamma=1)
+        model = cls(alpha=random_alpha)
         return model
 
-    def mittag_leffler_rand(self, n = 1000):
+    def mittag_leffler_rand(self, track_length):
         # Generate mittag-leffler random numbers
-        t = -np.log(np.random.uniform(size=[n,1]))
-        u = np.random.uniform(size=[n,1])
+        t = -np.log(np.random.uniform(size=[track_length,1]))
+        u = np.random.uniform(size=[track_length,1])
         w = np.sin(self.beta*np.pi)/np.tan(self.beta*np.pi*u)-np.cos(self.beta*np.pi)
         t = t*((w**1/(self.beta)))
         t = self.gamma*t
         return t
 
-    def symmetric_alpha_levy(self, n=1000):
+    def symmetric_alpha_levy(self, track_length):
         alpha_levy_dist = 2
         gamma_levy_dist = self.gamma **(self.alpha/2)
         # Generate symmetric alpha-levi random numbers
-        u = np.random.uniform(size=[n,1])
-        v = np.random.uniform(size=[n,1])
+        u = np.random.uniform(size=[track_length,1])
+        v = np.random.uniform(size=[track_length,1])
 
         phi = np.pi*(v-0.5)
         w = np.sin(alpha_levy_dist*phi)/np.cos(phi)
@@ -53,11 +54,11 @@ class CTRW:
         tY = rawTimeY*(T)/np.max(rawTimeY)
         tY = np.reshape(tY,[len(tY),1])
 
-        x = self.symmetric_alpha_levy(n=track_length)
+        x = self.symmetric_alpha_levy(track_length)
         x = np.cumsum(x)
         x = np.reshape(x,[len(x),1])
 
-        y = self.symmetric_alpha_levy(n=track_length)
+        y = self.symmetric_alpha_levy(track_length)
         y = np.cumsum(y)
         y = np.reshape(y,[len(y),1])
 
@@ -67,5 +68,24 @@ class CTRW:
         for i in range(track_length):
             xOut[i,0] = x[self.find_nearest(tX,tOut[i]),0]
             yOut[i,0] = y[self.find_nearest(tY,tOut[i]),0]
+        
+        x = xOut[:,0]
+        y = yOut[:,0]
+        t = tOut
 
-        return xOut,yOut,tOut
+        #Scale to 10.000 nm * 10.000 nm
+        if np.min(x) < 0:
+            x =  x + np.absolute(np.min(x)) # Add offset to x
+        if np.min(y) < 0:
+            y = y + np.absolute(np.min(y)) #Add offset to y 
+        #Scale to nm and add a random offset
+        x = x * (1/np.max(x)) * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
+        y = y * (1/np.max(y)) * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
+
+        offset_x = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(x)))
+        offset_y = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(y)))
+
+        x = x + offset_x 
+        y = y + offset_y
+
+        return x,y,t

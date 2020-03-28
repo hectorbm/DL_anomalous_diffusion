@@ -67,8 +67,32 @@ class FBM:
         y = track_length**(-self.hurst_exp)*np.cumsum(np.real(y[:track_length])) # rescale
         y = ((T**self.hurst_exp)*y) # resulting traj. in y
 
-        t = np.arange(0,track_length+1,1)/track_length
+        #Scale to 10.000 nm * 10.000 nm
+        if np.min(x) < 0:
+            x =  x + np.absolute(np.min(x)) # Add offset to x
+        if np.min(y) < 0:
+            y = y + np.absolute(np.min(y)) #Add offset to y 
+        #Scale to nm and add a random offset
+        x = x * (1/np.max(x)) * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
+        y = y * (1/np.max(y)) * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
+
+        offset_x = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(x)))
+        offset_y = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(y)))
+
+        x = x + offset_x 
+        y = y + offset_y
+
+        
+        t = np.arange(0,track_length,1)/track_length
         t = t*T # scale for final time T
 
 
         return x,y,t
+
+    def get_diffusion_type(self):
+        if self.hurst_exp >= 0.1 and self.hurst_exp <=0.42:
+            return "superdiffusive"
+        elif self.hurst_exp > 0.42 and self.hurst_exp < 0.58:
+            return "brownian"
+        else:
+            return "subdiffusive"
