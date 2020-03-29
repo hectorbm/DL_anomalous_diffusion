@@ -1,12 +1,17 @@
 import numpy as np
-class ExperimentalTracks:
+from tracks import Tracks
+class ExperimentalTracks(Tracks):
 
-    def __init__(self, track_length, time_length, n_axes, noise_level):
-        self.track_length = track_length
-        self.track_time = time_length
-        self.n_axes = n_axes
-        self.predicted_model = None
-        self.axes_data = np.zeros(shape=[self.n_axes,self.track_length])
-        self.time_axis = np.zeros(shape=self.track_length)
-        self.noise_level = noise_level
+    def __init__(self, track_length, time_length, n_axes, noise_level,label):
+        assert (label == 'btx' or label == 'mAb')
+        super().__init__(track_length, time_length, n_axes)
+        self.label = label
+    
+    def set_predicted_model_type(self, model_type_prediction, network_id):
+        #Network id: unique id assigned to each network trained 
+        self.predicted_model_type = {
+            'model_type_prediction': model_type_prediction,
+            'network_id': network_id}
+        
+
 

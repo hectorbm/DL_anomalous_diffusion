@@ -1,6 +1,7 @@
 import numpy as np
+from models import Models
 
-class TwoStateDiffusion:
+class TwoStateDiffusion(Models):
     """
     State-0: Free Diffusion
     State-1: Confined Diffusion

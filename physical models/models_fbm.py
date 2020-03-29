@@ -1,7 +1,8 @@
 import numpy as np
 from scipy import fftpack
+from models import Models
 
-class FBM:
+class FBM(Models):
 
     sub_diff_min_max = [0.1,0.42]
     super_diff_min_max = [0.58,0.9]
@@ -50,7 +51,7 @@ class FBM:
             model = cls(hurst_exp=random_brownian_hurst_exp)
         return model
 
-    def simulate_track(self, track_length=1000,T=15):
+    def simulate_track(self, track_length,T):
 
         r = np.zeros(track_length+1) # first row of circulant matrix
         r[0] = 1
