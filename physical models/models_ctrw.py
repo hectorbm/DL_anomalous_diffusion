@@ -1,15 +1,19 @@
 import numpy as np
 
 class CTRW:
+
+    min_alpha = 0.1
+    max_alpha = 0.9
+
     def __init__(self, alpha):
-        assert (alpha >= 0.1 and alpha <= 0.9), "Invalid alpha parameter"
+        assert (alpha >= self.min_alpha and alpha <= self.max_alpha), "Invalid alpha parameter"
         self.alpha = alpha
         self.beta = 0.5
         self.gamma = 1
 
     @classmethod
     def create_random(cls):
-        random_alpha = np.random.uniform(low=0.1, high=0.9)
+        random_alpha = np.random.uniform(low=cls.min_alpha, high=cls.max_alpha)
         model = cls(alpha=random_alpha)
         return model
 

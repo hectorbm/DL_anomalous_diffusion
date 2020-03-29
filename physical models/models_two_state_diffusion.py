@@ -5,12 +5,16 @@ class TwoStateDiffusion:
     State-0: Free Diffusion
     State-1: Confined Diffusion
     """
+    state0_diff_min_max = [0.05,2]
+    state1_diff_min_max = [0.001,0.05]
+    state0_k_min_max = [0.01,0.08]
+    state1_k_min_max = [0.007,0.2]
 
     def __init__(self, k_state0, k_state1, D_state0, D_state1):
-        assert(D_state0 >= 0.05 and D_state0 <= 2), "Invalid Diffusion coeficient state-0"
-        assert(D_state1 >= 0.001 and D_state1 <= 0.05), "Invalid Diffusion coeficient state-1"
-        assert(k_state0 >= 0.01 and k_state0 <= 0.08), "Invalid switching rate state-0"
-        assert(k_state0 >= 0.007 and k_state0 <= 0.2), "Invalid switching rate state-1"
+        assert(D_state0 >= self.state0_diff_min_max[0] and D_state0 <= self.state0_diff_min_max[1]), "Invalid Diffusion coeficient state-0"
+        assert(D_state1 >= self.state1_diff_min_max[0] and D_state1 <= self.state1_diff_min_max[1]), "Invalid Diffusion coeficient state-1"
+        assert(k_state0 >= self.state0_k_min_max[0] and k_state0 <= self.state0_k_min_max[1]), "Invalid switching rate state-0"
+        assert(k_state0 >= self.state1_k_min_max[0] and k_state0 <= self.state1_k_min_max[1]), "Invalid switching rate state-1"
         self.k_state0 = k_state0
         self.k_state1 = k_state1
         self.D_state0 = D_state0
@@ -22,10 +26,10 @@ class TwoStateDiffusion:
     def create_random(cls):
         # k_state(i) dimensions = 1 / frame
         # D_state(i) dimensions = um^2 * s^(-beta) 
-        D_state0 = np.random.uniform(low=0.05 ,high=2) 
-        D_state1 = np.random.uniform(low=0.001 , high=0.05)
-        k_state0 = np.random.uniform(low=0.01 ,high=0.08) 
-        k_state1 = np.random.uniform(low=0.007 ,high=0.2)
+        D_state0 = np.random.uniform(low=cls.state0_diff_min_max[0], high=cls.state0_diff_min_max[1]) 
+        D_state1 = np.random.uniform(low=cls.state1_diff_min_max[0] , high=cls.state1_diff_min_max[1])
+        k_state0 = np.random.uniform(low=cls.state0_k_min_max[0] ,high=cls.state0_k_min_max[1]) 
+        k_state1 = np.random.uniform(low=cls.state1_k_min_max[0] ,high=cls.state1_k_min_max[1])
         model = cls(k_state0, k_state1, D_state0, D_state1)
         return model
 

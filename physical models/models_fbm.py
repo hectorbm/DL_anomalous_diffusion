@@ -3,6 +3,9 @@ from scipy import fftpack
 
 class FBM:
 
+    sub_diff_min_max = [0.1,0.42]
+    super_diff_min_max = [0.58,0.9]
+
     def __init__(self, hurst_exp):
         self.hurst_exp = hurst_exp
     
@@ -18,23 +21,23 @@ class FBM:
         return model
 
     @classmethod
-    def create_random_subdiffusive(cls, hurst_exp=None):
+    def create_random_superdiffusive(cls, hurst_exp=None):
         if hurst_exp is not None:
-            assert (hurst_exp >= 0.58 and hurst_exp<=0.9), "Invalid Hurst Exponent"
+            assert (hurst_exp >= cls.super_diff_min_max[0] and hurst_exp<=cls.super_diff_min_max[1]), "Invalid Hurst Exponent"
             model = cls(hurst_exp=hurst_exp)
             
         else: 
-            random_hurst_exp = np.random.uniform(low=0.58, high=0.9)
+            random_hurst_exp = np.random.uniform(low=cls.super_diff_min_max[0], high=cls.super_diff_min_max[1])
             model = cls(hurst_exp=random_hurst_exp)
         return model
 
     @classmethod
-    def create_random_superdiffusive(cls, hurst_exp=None):
+    def create_random_subdiffusive(cls, hurst_exp=None):
         if hurst_exp is not None:
-            assert (hurst_exp >= 0.1 and hurst_exp<=0.42), "Invalid Hurst Exponent"
+            assert (hurst_exp >= cls.sub_diff_min_max[0] and hurst_exp<=cls.sub_diff_min_max[1]), "Invalid Hurst Exponent"
             model = cls(hurst_exp=hurst_exp)
         else: 
-            random_hurst_exp = np.random.uniform(low=0.1, high=0.42)
+            random_hurst_exp = np.random.uniform(low=cls.sub_diff_min_max[0], high=cls.sub_diff_min_max[1])
             model = cls(hurst_exp=random_hurst_exp)
         return model
 
@@ -43,7 +46,7 @@ class FBM:
         if use_exact_exp:
             model = cls(hurst_exp=0.5)
         else:
-            random_brownian_hurst_exp = np.random.uniform(low=0.42, high=0.58)
+            random_brownian_hurst_exp = np.random.uniform(low=cls.sub_diff_min_max[1], high=cls.super_diff_min_max[0])
             model = cls(hurst_exp=random_brownian_hurst_exp)
         return model
 
@@ -90,9 +93,9 @@ class FBM:
         return x,y,t
 
     def get_diffusion_type(self):
-        if self.hurst_exp >= 0.1 and self.hurst_exp <=0.42:
-            return "superdiffusive"
-        elif self.hurst_exp > 0.42 and self.hurst_exp < 0.58:
+        if self.hurst_exp >= self.sub_diff_min_max[0] and self.hurst_exp <=self.sub_diff_min_max[1]:
+            return "subdiffusive"
+        elif self.hurst_exp > self.sub_diff_min_max[1] and self.hurst_exp < self.super_diff_min_max[0]:
             return "brownian"
         else:
-            return "subdiffusive"
+            return "superdiffusive"

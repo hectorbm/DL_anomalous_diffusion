@@ -27,6 +27,15 @@ class SimulatedTrack:
         plt.plot(self.time_axis, self.axes_data[n_axis-1])
         plt.show()
 
+    def plot_axis_velocity(self, n_axis):
+        assert (n_axis <= self.n_axes and n_axis > 0), "Invalid axis"
+        plt.xlabel("Time")
+        plt.ylabel(f"Velocity Axis {n_axis-1}")
+        dt = self.time_axis[1] - self.time_axis[0]
+        velocity_axis = np.diff(self.axes_data[n_axis-1]) * (1/dt)
+        plt.plot(self.time_axis[:len(self.time_axis)-1], velocity_axis)
+        plt.show()
+        
     def set_axes_data(self, axes_data):
         assert (axes_data.shape == self.axes_data.shape)
         self.axes_data = axes_data
