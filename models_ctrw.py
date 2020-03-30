@@ -1,5 +1,6 @@
 import numpy as np
 from models import Models
+
 class CTRW(Models):
 
     min_alpha = 0.1
