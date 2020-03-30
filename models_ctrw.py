@@ -87,10 +87,11 @@ class CTRW(Models):
         x = x * (1/np.max(x)) * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
         y = y * (1/np.max(y)) * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
 
-        offset_x = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(x)))
-        offset_y = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(y)))
-
-        x = x + offset_x 
-        y = y + offset_y
+        if np.max(x) < 10000:
+            offset_x = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(x)))
+            x = x + offset_x 
+        if np.max(y) < 10000:
+            offset_y = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(y)))
+            y = y + offset_y
 
         return x,y,t
