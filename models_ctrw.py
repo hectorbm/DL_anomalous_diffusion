@@ -84,8 +84,14 @@ class CTRW(Models):
         if np.min(y) < 0:
             y = y + np.absolute(np.min(y)) #Add offset to y 
         #Scale to nm and add a random offset
-        x = x * (1/np.max(x)) * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
-        y = y * (1/np.max(y)) * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
+        if np.max(x) != 0:
+            x = x * (1/np.max(x)) * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
+        else:
+            x = x * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
+        if np.max(y) != 0:
+            y = y * (1/np.max(y)) * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
+        else:
+            y = y * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
 
         if np.max(x) < 10000:
             offset_x = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(x)))
