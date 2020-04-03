@@ -1,8 +1,8 @@
 import numpy as np
 from keras.utils import to_categorical
-from models_ctrw import CTRW
-from models_fbm import FBM
-from models_two_state_diffusion import TwoStateDiffusion
+from physical_models.models_ctrw import CTRW
+from physical_models.models_fbm import FBM
+from physical_models.models_two_state_diffusion import TwoStateDiffusion
 
 def axis_adaptation_to_net(axis_data,track_length):
     axis_reshaped = np.reshape(axis_data,[1,len(axis_data)])

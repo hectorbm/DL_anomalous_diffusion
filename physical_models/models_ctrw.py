@@ -1,7 +1,7 @@
 import numpy as np
-from models import Models
+from . import models
 
-class CTRW(Models):
+class CTRW(models.Models):
 
     min_alpha = 0.1
     max_alpha = 0.9

@@ -1,3 +1,12 @@
+"""
+    Currently all the N.N were developed using Keras, in the future a migration to Pytorch should be 
+    a better option.
+    Currently a 2 step classifier outperforms a single neural network because of the similarities between 
+    a 2-state diffusion model and a fbm/brownian model, in particular when D1 and D2(diff coef) are really 
+    similar or a very intense switching behavior, which leads to a mean diffusivity D* 
+    Two state model was added using Monte Carlo simulations introduced in:
+    'Time-averaged mean square displacement for switching diffusion' by Denis Grebenkov 
+"""
 from keras.models import Model, load_model
 from keras.layers import Dense,BatchNormalization,Conv1D
 from keras.layers import Input,GlobalMaxPooling1D
@@ -5,7 +14,7 @@ from keras.layers import Dropout, concatenate
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping,ModelCheckpoint
 from keras.optimizers import Adam
 from generator import generator_first_layer,axis_adaptation_to_net,generate_batch_of_samples
-from analysis_tools import plot_confusion_matrix_for_layer
+from tools.analysis_tools import plot_confusion_matrix_for_layer
 import datetime
 import numpy as np
 
@@ -99,12 +108,12 @@ def load_model_from_file(filename):
     return model
 
 def evaluate_model_multi_axis(model,axis_data_diff,n_axes,track_length,time_length):
-    model_predictions = np.zeros(shape=n_axes)
+    model_predictions = np.zeros(shape=3)
     for axis in range(n_axes):
         input_net = np.zeros([1,track_length-1,1])
         input_net[0,:,0] = axis_data_diff[:,axis]
-        model_predictions = np.reshape(model.predict(input_net),(3))
-    mean_prediction = np.argmax(np.mean(model_predictions))
+        model_predictions = (model.predict(input_net)[0,:]) + model_predictions
+    mean_prediction = np.argmax(model_predictions / n_axes)
     return mean_prediction
 
 def validate_test_data_over_model(model,n_axes,track_length,time_length,sigma):
@@ -115,12 +124,12 @@ def validate_test_data_over_model(model,n_axes,track_length,time_length,sigma):
     print("Please wait, evaluating test data ...")
     for sample in range(test_batchsize):
         predictions[sample] = evaluate_model_multi_axis(model,axis_data_diff[sample],n_axes,track_length,time_length)
-    plot_confusion_matrix_for_layer(model,1,ground_truth,predictions,["fBm","CTRW","Two-State"])
+    plot_confusion_matrix_for_layer(model,1,ground_truth,predictions,["fBm","CTRW","Two-State"],True)
     
 
 
 if __name__ == "__main__":
     #For testing
-    train_l1_net(batchsize=64,steps=100,T=1.2,sigma=0,model_id='first_layer_1')    
-    model = load_model_from_file("first_layer_1.h5")
+    #train_l1_net(batchsize=64,steps=100,T=1.2,sigma=0,model_id='first_layer_1')    
+    model = load_model_from_file("models/first_layer_1.h5")
     validate_test_data_over_model(model,2,100,1.2,0)

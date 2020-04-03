@@ -1,8 +1,8 @@
 import numpy as np
 from scipy import fftpack
-from models import Models
+from . import models
 
-class FBM(Models):
+class FBM(models.Models):
 
     sub_diff_min_max = [0.1,0.42]
     super_diff_min_max = [0.58,0.9]
