@@ -68,11 +68,11 @@ def train_l1_net(batchsize, steps, T, sigma, model_id):
     con = concatenate([x1,x2,x3,x4,x5])
     dense = Dense(512,activation='relu')(con)
     dense = Dense(128,activation='relu')(dense)
-    dense2 = Dense(3,activation='sigmoid')(dense)
+    dense2 = Dense(3,activation='softmax')(dense)
     model = Model(inputs=inputs, outputs=dense2)
 
     optimizer = Adam(lr=1e-5)
-    model.compile(optimizer=optimizer,loss='binary_crossentropy',metrics=['categorical_accuracy'])
+    model.compile(optimizer=optimizer,loss='categorical_crossentropy',metrics=['categorical_accuracy'])
     model.summary()
 
    
@@ -130,6 +130,6 @@ def validate_test_data_over_model(model,n_axes,track_length,time_length,sigma):
 
 if __name__ == "__main__":
     #For testing
-    #train_l1_net(batchsize=64,steps=100,T=1.2,sigma=0,model_id='first_layer_1')    
+    train_l1_net(batchsize=64,steps=100,T=1.2,sigma=0,model_id='first_layer_1')    
     model = load_model_from_file("models/first_layer_1.h5")
     validate_test_data_over_model(model,2,100,1.2,0)
