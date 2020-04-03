@@ -42,5 +42,8 @@ def generator_first_layer(batchsize,track_length,track_time,sigma):
     while True:
         out, label = generate_batch_of_samples(batchsize,track_length,track_time,sigma)
         label = to_categorical(label,num_classes=3)
-        yield out[:,:,0], label
+        input_net = np.zeros([batchsize,track_length-1,1])
+        for i in range(batchsize):
+            input_net[i,:,0] = out[i,:,0]
+        yield input_net, label
 
