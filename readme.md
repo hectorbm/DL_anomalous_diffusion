@@ -14,5 +14,5 @@ The development of a state-detection network is under consideration to analyze t
 
 Current accuracy for the first network is:
 
-![Image](https://github.com/hectorbm/tracking/blob/master/models/model_1_confusionmatrix.png)
+![Image](models/Figure_1.png)
 
