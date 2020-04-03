@@ -1,12 +1,15 @@
-from keras.models import Model
+from keras.models import Model, load_model
 from keras.layers import Dense,BatchNormalization,Conv1D
 from keras.layers import Input,GlobalMaxPooling1D
 from keras.layers import Dropout, concatenate
-from keras.callbacks import ReduceLROnPlateau, EarlyStopping
+from keras.callbacks import ReduceLROnPlateau, EarlyStopping,ModelCheckpoint
 from keras.optimizers import Adam
-from generator import generator_first_layer
+from generator import generator_first_layer,axis_adaptation_to_net,generate_batch_of_samples
+from analysis_tools import plot_confusion_matrix_for_layer
+import datetime
+import numpy as np
 
-def train(batchsize, steps,T,sigma):
+def train_l1_net(batchsize, steps, T, sigma, model_id):
     initializer = 'he_normal'
     f = 32
 
@@ -60,8 +63,10 @@ def train(batchsize, steps,T,sigma):
     model = Model(inputs=inputs, outputs=dense2)
 
     optimizer = Adam(lr=1e-5)
-    model.compile(optimizer=optimizer,loss='binary_crossentropy',metrics=['acc','mse'])
+    model.compile(optimizer=optimizer,loss='binary_crossentropy',metrics=['categorical_accuracy'])
     model.summary()
+
+   
 
     callbacks = [EarlyStopping(monitor='val_loss',
                         patience=20,
@@ -71,10 +76,14 @@ def train(batchsize, steps,T,sigma):
                             factor=0.1,
                             patience=4,
                             verbose=0,
-                            min_lr=1e-9)]
+                            min_lr=1e-9),
+            ModelCheckpoint("models/{}.h5".format(model_id),
+                        monitor='val_loss',
+                        verbose=1,
+                        save_best_only=True)]
 
-    model.fit_generator(
-            generator=generator_first_layer(batchsize=batchsize,track_length=steps,track_time=T,sigma=sigma),
+    model.fit(
+            x=generator_first_layer(batchsize=batchsize,track_length=steps,track_time=T,sigma=sigma),
             steps_per_epoch=4000,
             epochs=50,
             callbacks=callbacks,
@@ -82,7 +91,36 @@ def train(batchsize, steps,T,sigma):
             validation_steps=10)
     return model
 
+def load_model_from_file(filename):
+    try:
+        model = load_model(filename,compile=True)
+    except ValueError:
+        print("File doesn`t exist!")
+    return model
+
+def evaluate_model_multi_axis(model,axis_data_diff,n_axes,track_length,time_length):
+    model_predictions = np.zeros(shape=n_axes)
+    for axis in range(n_axes):
+        input_net = np.zeros([1,track_length-1,1])
+        input_net[0,:,0] = axis_data_diff[:,axis]
+        model_predictions = np.reshape(model.predict(input_net),(3))
+    mean_prediction = np.argmax(np.mean(model_predictions))
+    return mean_prediction
+
+def validate_test_data_over_model(model,n_axes,track_length,time_length,sigma):
+    test_batchsize = 1000
+    axis_data_diff, ground_truth = generate_batch_of_samples(test_batchsize,track_length,time_length,sigma)
+    ground_truth = np.reshape(ground_truth,test_batchsize)
+    predictions = np.zeros(shape=test_batchsize)
+    print("Please wait, evaluating test data ...")
+    for sample in range(test_batchsize):
+        predictions[sample] = evaluate_model_multi_axis(model,axis_data_diff[sample],n_axes,track_length,time_length)
+    plot_confusion_matrix_for_layer(model,1,ground_truth,predictions,["fBm","CTRW","Two-State"])
+    
 
 
 if __name__ == "__main__":
-    train(batchsize=64,steps=100,T=1.2,sigma=0)    
+    #For testing
+    train_l1_net(batchsize=64,steps=100,T=1.2,sigma=0,model_id='first_layer_1')    
+    model = load_model_from_file("first_layer_1.h5")
+    validate_test_data_over_model(model,2,100,1.2,0)
