@@ -114,11 +114,10 @@ def evaluate_model_multi_axis(model,axis_data,n_axes,track_length,time_length):
     return mean_prediction
 
 def validate_test_data_over_model(model,n_axes,track_length,time_length,sigma):
-    test_batchsize = 1
+    test_batchsize = 10
     axis_data, ground_truth = generate_batch_of_samples_state_net(test_batchsize,track_length,time_length,sigma)
     ground_truth = np.reshape(ground_truth,(test_batchsize,track_length))
     predictions = np.zeros(shape=(test_batchsize,track_length))
-    print("Please wait, evaluating test data ...")
     for sample in range(test_batchsize):
         predictions[sample,:] = evaluate_model_multi_axis(model,axis_data[sample],n_axes,track_length,time_length)
     

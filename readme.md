@@ -20,3 +20,7 @@ And the second network accuracy:
 
 ![Image](models/conf_matlayer2.png)
 
+
+State-Detection: 
+
+![Image](models/State-Detection_net.png)
