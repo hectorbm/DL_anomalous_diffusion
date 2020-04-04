@@ -82,3 +82,37 @@ def generator_second_layer(batchsize,track_length,track_time,sigma):
         for i in range(batchsize):
             input_net[i,:,0] = out[i,:,0]
         yield input_net, label
+
+
+
+def generate_batch_of_samples_state_net(batchsize,track_length,track_time,sigma):
+    out = np.zeros([batchsize,track_length,2])
+    label = np.zeros([batchsize,track_length])
+    T_sample = np.random.choice(np.arange(track_time,track_time+1,0.5))
+    steps_sample = int(np.random.choice(np.arange(track_length, np.ceil(track_length*1.05),1)))
+
+    for i in range(batchsize):
+        model = TwoStateDiffusion.create_random()
+        switching = False
+        while not switching:
+            x,y,t,state,switching = model.simulate_track(steps_sample,T_sample)
+
+        axis_reshaped = np.reshape(x,[1,len(x)])[:,:track_length]
+        out[i,:,0] = axis_reshaped - np.mean(axis_reshaped)
+
+        axis_reshaped = np.reshape(y,[1,len(y)])[:,:track_length]
+        out[i,:,1] = axis_reshaped - np.mean(axis_reshaped)
+
+        label[i,:] = state[:track_length]
+
+    return out, label
+
+
+def generator_state_net(batchsize,track_length,track_time,sigma):
+    while True:
+        out, label = generate_batch_of_samples_state_net(batchsize,track_length,track_time,sigma)
+        input_net = np.zeros([batchsize,track_length,1])
+        for i in range(batchsize):
+            input_net[i,:,0] = out[i,:,0]
+        yield input_net, label
+
