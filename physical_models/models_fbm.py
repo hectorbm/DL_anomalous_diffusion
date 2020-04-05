@@ -94,6 +94,9 @@ class FBM(models.Models):
             offset_y = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(y)))
             y = y + offset_y
         
+        x = np.random.uniform(low=np.maximum(0,(x-20)),high=np.minimum(10000,x+20))
+        y = np.random.uniform(low=np.maximum(0,(y-20)),high=np.minimum(10000,y+20))
+        
         t = np.arange(0,track_length,1)/track_length
         t = t*T # scale for final time T
 

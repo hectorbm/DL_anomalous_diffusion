@@ -99,5 +99,7 @@ class CTRW(models.Models):
         if np.max(y) < 10000:
             offset_y = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(y)))
             y = y + offset_y
+        x = np.random.uniform(low=np.maximum(0,(x-20)),high=np.minimum(10000,x+20))
+        y = np.random.uniform(low=np.maximum(0,(y-20)),high=np.minimum(10000,y+20))
 
         return x,y,t
