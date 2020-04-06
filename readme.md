@@ -7,6 +7,10 @@ Second Network: Sub-diffusive, Brownian and Super-diffusive
 * Brownian: Hurst exponent = 0.5
 * Super-diffusive: Hurst exponent > 0.5
 ---
+
+##### Current architecture:
+![Image](models/networks_diagram.png)
+
 Simulations and models adapted to STORM(Stochastic Optical Reconstruction Microscopy) data.
 Raw data is extracted from experimental observations, a pre-processing with ThunderSTORM and Jaqaman allows to obtain data localization and tracks reconstruction. 
 Mongo DB is used to store experimental data, trained models and simulated data.
