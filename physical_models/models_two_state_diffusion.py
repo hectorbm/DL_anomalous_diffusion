@@ -1,40 +1,44 @@
 import numpy as np
 from . import models
+from tools.noise import add_noise
 
-class TwoStateDiffusion(models.Models):
+class TwoStateDiffusion:
     """
     State-0: Free Diffusion
     State-1: Confined Diffusion
     """
-    state0_diff_min_max = [0.05,2]
-    state1_diff_min_max = [0.001,0.05]
-    state0_k_min_max = [0.01,0.08]
-    state1_k_min_max = [0.007,0.2]
-
+    # De aca se puede sacar algunas conclusiones 
+    #http://www.columbia.edu/~ks20/4404-Sigman/4404-Notes-sim-BM.pdf
+    # Saque el 2 del scaling de grebenkov, cual es la explicacion de 
+    # utilizar esta constante que sale de la nada? shetchman en su 
+    #simulacion de brownian no lo utiliza tampoco.
     def __init__(self, k_state0, k_state1, D_state0, D_state1):
-        assert(D_state0 >= self.state0_diff_min_max[0] and D_state0 <= self.state0_diff_min_max[1]), "Invalid Diffusion coeficient state-0"
-        assert(D_state1 >= self.state1_diff_min_max[0] and D_state1 <= self.state1_diff_min_max[1]), "Invalid Diffusion coeficient state-1"
-        assert(k_state0 >= self.state0_k_min_max[0] and k_state0 <= self.state0_k_min_max[1]), "Invalid switching rate state-0"
-        assert(k_state0 >= self.state1_k_min_max[0] and k_state0 <= self.state1_k_min_max[1]), "Invalid switching rate state-1"
         self.k_state0 = k_state0
         self.k_state1 = k_state1
-        self.D_state0 = D_state0
-        self.D_state1 = D_state1
+        self.D_state0 = D_state0 * 1000000 # Convert from um^2 -> nm^2
+        self.D_state1 = D_state1 * 1000000
         self.beta0 = 1
-        self.beta1 = 0.5
+        self.beta1 = 2
 
     @classmethod
     def create_random(cls):
         # k_state(i) dimensions = 1 / frame
-        # D_state(i) dimensions = um^2 * s^(-beta) 
-        D_state0 = np.random.uniform(low=cls.state0_diff_min_max[0], high=cls.state0_diff_min_max[1]) 
-        D_state1 = np.random.uniform(low=cls.state1_diff_min_max[0] , high=cls.state1_diff_min_max[1])
-        k_state0 = np.random.uniform(low=cls.state0_k_min_max[0] ,high=cls.state0_k_min_max[1]) 
-        k_state1 = np.random.uniform(low=cls.state1_k_min_max[0] ,high=cls.state1_k_min_max[1])
+        # D_state(i) dimensions = um^2 * s^(-beta)
+        D_state0 = np.random.uniform(low=0.05 ,high=0.1) 
+        D_state1 = np.random.uniform(low=0.001 , high=0.05)
+        k_state0 = np.random.uniform(low=0.01 ,high=0.08) 
+        k_state1 = np.random.uniform(low=0.007 ,high=0.2)
         model = cls(k_state0, k_state1, D_state0, D_state1)
         return model
+    @classmethod
+    def create_with_coefficients(k_state0, k_state1, D_state0, D_state1):
+        assert(D_state0 >= 0.05 and D_state0 <= 0.3), "Invalid Diffusion coeficient state-0"
+        assert(D_state1 >= 0.001 and D_state1 <= 0.05), "Invalid Diffusion coeficient state-1"
+        assert(k_state0 >= 0.01 and k_state0 <= 0.08), "Invalid switching rate state-0"
+        assert(k_state0 >= 0.007 and k_state0 <= 0.2), "Invalid switching rate state-1"
+        return cls(k_state0, k_state1, D_state0, D_state1)
 
-    def simulate_track(self, track_length, T):
+    def simulate_track(self, track_length, T,noise):
         x = np.random.normal(loc=0, scale=1, size=track_length)
         y = np.random.normal(loc=0, scale=1, size=track_length)
 
@@ -78,40 +82,31 @@ class TwoStateDiffusion(models.Models):
 
         for i in range(len(state)):
             if state[i] == 0:
-                x[i] = x[i] * np.sqrt(2 * self.D_state0 * (T ** self.beta0))
-                y[i] = y[i] * np.sqrt(2 * self.D_state0 * (T ** self.beta0))
+                x[i] = x[i] * np.sqrt(self.D_state0 * ((T/track_length) ** self.beta0))
+                y[i] = y[i] * np.sqrt(self.D_state0 * ((T/track_length) ** self.beta0))
             else:
-                x[i] = x[i] * np.sqrt(2 * self.D_state1 * (T ** self.beta1))
-                y[i] = y[i] * np.sqrt(2 * self.D_state1 * (T ** self.beta1))
+                x[i] = x[i] * np.sqrt(self.D_state1 * ((T/track_length) ** self.beta1))
+                y[i] = y[i] * np.sqrt(self.D_state1 * ((T/track_length) ** self.beta1))
         x = np.cumsum(x)
         y = np.cumsum(y)
-        
-        #Scale to 10.000 nm * 10.000 nm
+
+        # Add noise
+        if noise:
+            x,y = add_noise(x,y,track_length)
+
         if np.min(x) < 0:
             x =  x + np.absolute(np.min(x)) # Add offset to x
         if np.min(y) < 0:
-            y = y + np.absolute(np.min(y)) #Add offset to y 
-        #Scale to nm and add a random offset
-        if np.max(x) != 0:
-            x = x * (1/np.max(x)) * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
-        else:
-            x = x * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
-        if np.max(y) != 0:
-            y = y * (1/np.max(y)) * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
-        else:
-            y = y * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
+            y = y + np.absolute(np.min(y)) #Add offset to y
 
-        if np.max(x) < 10000:
-            offset_x = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(x)))
-            x = x + offset_x 
-        if np.max(y) < 10000:
-            offset_y = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(y)))
-            y = y + offset_y
+        offset_x = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(x)))
+        offset_y = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(y)))
 
-        x = np.random.uniform(low=np.maximum(0,(x-20)),high=np.minimum(10000,x+20))
-        y = np.random.uniform(low=np.maximum(0,(y-20)),high=np.minimum(10000,y+20))
-        
+        x = x + offset_x 
+        y = y + offset_y
+
         t = np.arange(0,track_length,1)/track_length
         t = t*T
 
         return x,y,t,state,switching
+

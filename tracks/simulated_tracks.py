@@ -12,3 +12,5 @@ class SimulatedTrack(Tracks):
 
     def get_model_type(self):
         return self.model_type
+
+    

@@ -116,3 +116,8 @@ def generator_state_net(batchsize,track_length,track_time,sigma):
             input_net[i,:,0] = out[i,:,0]
         yield input_net, label
 
+def generator_coeff_network(batchsize,track_length,track_time,sigma):
+    while True:
+        
+        yield 
+

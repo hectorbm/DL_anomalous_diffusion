@@ -1,4 +1,4 @@
-from keras.models import Model, load_model
+from keras.models import Model
 from keras.layers import Dense,BatchNormalization,Conv1D
 from keras.layers import Input,GlobalMaxPooling1D
 from keras.layers import Dropout, concatenate
@@ -6,7 +6,7 @@ from keras.callbacks import ReduceLROnPlateau, EarlyStopping,ModelCheckpoint
 from keras.optimizers import Adam
 from generators import generator_second_layer,axis_adaptation_to_net,generate_batch_of_samples_l2
 from tools.analysis_tools import plot_confusion_matrix_for_layer
-import datetime
+from tools.load_model import load_model_from_file
 import numpy as np
 
 def train_l2_net(batchsize, steps, T, sigma, model_id):
@@ -96,14 +96,7 @@ def train_l2_net(batchsize, steps, T, sigma, model_id):
             epochs=50,
             callbacks=callbacks,
             validation_data=generator_second_layer(batchsize=batchsize,track_length=steps,track_time=T,sigma=sigma),
-            validation_steps=10)
-    return model
-
-def load_model_from_file(filename):
-    try:
-        model = load_model(filename,compile=True)
-    except ValueError:
-        print("File doesn`t exist!")
+            validation_steps=100)
     return model
 
 def evaluate_model_multi_axis(model,axis_data_diff,n_axes,track_length,time_length):
@@ -129,6 +122,6 @@ def validate_test_data_over_model(model,n_axes,track_length,time_length,sigma):
 
 if __name__ == "__main__":
     #For testing
-    train_l2_net(batchsize=64,steps=100,T=1.2,sigma=0,model_id='second_layer_1')    
+    #train_l2_net(batchsize=64,steps=100,T=1.2,sigma=0,model_id='second_layer_1')    
     model = load_model_from_file("models/second_layer_1.h5")
     validate_test_data_over_model(model,2,100,1.2,0)

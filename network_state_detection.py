@@ -6,7 +6,7 @@ from keras.callbacks import ReduceLROnPlateau, EarlyStopping,ModelCheckpoint
 from keras.optimizers import Adam
 from generators import generator_state_net,axis_adaptation_to_net,generate_batch_of_samples_state_net
 from tools.analysis_tools import plot_confusion_matrix_for_layer
-import datetime
+from tools.load_model import load_model_from_file
 import numpy as np
 
 def train_states_net(batchsize, steps, T, sigma, model_id):
@@ -87,16 +87,7 @@ def train_states_net(batchsize, steps, T, sigma, model_id):
             epochs=50,
             callbacks=callbacks,
             validation_data=generator_state_net(batchsize=batchsize,track_length=steps,track_time=T,sigma=sigma),
-            validation_steps=10)
-    return model
-
-
-
-def load_model_from_file(filename):
-    try:
-        model = load_model(filename,compile=True)
-    except ValueError:
-        print("File doesn`t exist!")
+            validation_steps=200)
     return model
 
 def evaluate_model_multi_axis(model,axis_data,n_axes,track_length,time_length):
