@@ -116,8 +116,29 @@ def generator_state_net(batchsize,track_length,track_time,sigma):
             input_net[i,:,0] = out[i,:,0]
         yield input_net, label
 
-def generator_coeff_network(batchsize,track_length,track_time,sigma):
+def generator_coeff_network(batchsize,track_length,track_time,sigma,state):
+    assert (state == 0 or state == 1), "State must be 0 or 1"
+
     while True:
+        T_sample = np.random.choice(np.arange(track_time,track_time+1,0.5))
+        out = np.zeros([batchsize,2,1])        
+        label = np.zeros([batchsize,1])
         
-        yield 
+        for i in range(batchsize):
+            
+            two_state_model = TwoStateDiffusion.create_random()
+            if state == 0:
+                x,y,t = two_state_model.simulate_track_only_state0(track_length,T_sample,noise=True)
+                label[i,0] = two_state_model.get_D_state0()
+            else: 
+                x,y,t = two_state_model.simulate_track_only_state1(track_length,T_sample,noise=True)
+                label[i,0] = two_state_model.get_D_state1()
+            
+            dx = np.diff(x,axis=0)
+            m = np.mean(np.abs(dx),axis=0)
+            s = np.std(dx,axis=0)
+            
+            out[i,:,0] = [m,s]
+
+        yield out,label
 

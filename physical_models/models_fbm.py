@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import fftpack
 from . import models
-from tools.noise import add_noise
+from . import models_noise
 
 class FBM(models.Models):
 
@@ -88,6 +88,13 @@ class FBM(models.Models):
         else:
             y = y * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
 
+        x,y = models_noise.add_noise(x,y,track_length)
+        
+        if np.min(x) < 0:
+            x =  x + np.absolute(np.min(x)) # Add offset to x
+        if np.min(y) < 0:
+            y = y + np.absolute(np.min(y)) #Add offset to y 
+        
         if np.max(x) < 10000:
             offset_x = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(x)))
             x = x + offset_x 
@@ -95,8 +102,7 @@ class FBM(models.Models):
             offset_y = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(y)))
             y = y + offset_y
         
-        x,y = add_noise(x,y,track_length)
-        
+    
         t = np.arange(0,track_length,1)/track_length
         t = t*T # scale for final time T
 

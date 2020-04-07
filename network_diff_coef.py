@@ -5,7 +5,7 @@ from keras.optimizers import Adam
 from keras.callbacks import EarlyStopping,ReduceLROnPlateau,ModelCheckpoint
 from generators import generator_coeff_network
 
-def train_diff_network(batchsize, track_length, track_time, sigma, model_id):
+def train_diff_network(batchsize, track_length, track_time, sigma, model_id,state):
 
     initializer = 'he_normal'
     f = 32
@@ -41,14 +41,14 @@ def train_diff_network(batchsize, track_length, track_time, sigma, model_id):
                             save_weights_only=False)]
 
 
-    model.fit_generator(generator=generator_coeff_network(batchsize,track_length,track_time,sigma),
-            steps_per_epoch=50,
+    model.fit_generator(generator=generator_coeff_network(batchsize,track_length,track_time,sigma,state),
+            steps_per_epoch=500,
             epochs=100,
             callbacks=callbacks,
-            validation_data=generator_coeff_network(batchsize,track_length,track_time,sigma),
-            validation_steps=10)
+            validation_data=generator_coeff_network(batchsize,track_length,track_time,sigma,state),
+            validation_steps=50)
 
     return model
 
 if __name__ == "__main__":
-    model = train_diff_network(batchsize=64,track_length=120,track_time=2,sigma=0,model_id="net_diff_coeff_1")
+    model = train_diff_network(batchsize=64,track_length=120,track_time=2,sigma=0,model_id="net_diff_coeff_1",state=0)

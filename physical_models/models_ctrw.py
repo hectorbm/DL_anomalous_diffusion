@@ -1,6 +1,6 @@
 import numpy as np
 from . import models
-
+from . import models_noise
 class CTRW(models.Models):
 
     min_alpha = 0.1
@@ -47,7 +47,7 @@ class CTRW(models.Models):
         idx = (np.abs(array - value)).argmin()
         return idx
 
-    def simulate_track(self,track_length,T):
+    def simulate_track(self,track_length,T,noise=True):
 
         jumpsX = self.mittag_leffler_rand(track_length)
         rawTimeX = np.cumsum(jumpsX)
@@ -93,13 +93,20 @@ class CTRW(models.Models):
         else:
             y = y * np.min([10000,((track_length**1.1)*np.random.uniform(low=3, high=4))])
 
+        x,y = models_noise.add_noise(x,y,track_length)
+        
+        if np.min(x) < 0:
+            x =  x + np.absolute(np.min(x)) # Add offset to x
+        if np.min(y) < 0:
+            y = y + np.absolute(np.min(y)) #Add offset to y 
+
         if np.max(x) < 10000:
             offset_x = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(x)))
             x = x + offset_x 
         if np.max(y) < 10000:
             offset_y = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(y)))
             y = y + offset_y
-
-        x,y = add_noise(x,y,track_length)
+        
+        
 
         return x,y,t

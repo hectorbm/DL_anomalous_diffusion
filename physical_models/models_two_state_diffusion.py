@@ -1,6 +1,6 @@
 import numpy as np
 from . import models
-from tools.noise import add_noise
+from . import models_noise
 
 class TwoStateDiffusion:
     """
@@ -31,14 +31,19 @@ class TwoStateDiffusion:
         model = cls(k_state0, k_state1, D_state0, D_state1)
         return model
     @classmethod
-    def create_with_coefficients(k_state0, k_state1, D_state0, D_state1):
+    def create_with_coefficients(cls,k_state0, k_state1, D_state0, D_state1):
         assert(D_state0 >= 0.05 and D_state0 <= 0.3), "Invalid Diffusion coeficient state-0"
         assert(D_state1 >= 0.001 and D_state1 <= 0.05), "Invalid Diffusion coeficient state-1"
         assert(k_state0 >= 0.01 and k_state0 <= 0.08), "Invalid switching rate state-0"
         assert(k_state0 >= 0.007 and k_state0 <= 0.2), "Invalid switching rate state-1"
         return cls(k_state0, k_state1, D_state0, D_state1)
 
-    def simulate_track(self, track_length, T,noise):
+    def get_D_state0(self):
+        return self.D_state0 / 1000000
+    def get_D_state1(self):
+        return self.D_state1 / 1000000
+
+    def simulate_track(self, track_length, T,noise=True):
         x = np.random.normal(loc=0, scale=1, size=track_length)
         y = np.random.normal(loc=0, scale=1, size=track_length)
 
@@ -92,7 +97,7 @@ class TwoStateDiffusion:
 
         # Add noise
         if noise:
-            x,y = add_noise(x,y,track_length)
+            x,y = models_noise.add_noise(x,y,track_length)
 
         if np.min(x) < 0:
             x =  x + np.absolute(np.min(x)) # Add offset to x
@@ -110,3 +115,63 @@ class TwoStateDiffusion:
 
         return x,y,t,state,switching
 
+    def simulate_track_only_state0(self, track_length, T,noise=True):
+        x = np.random.normal(loc=0, scale=1, size=track_length)
+        y = np.random.normal(loc=0, scale=1, size=track_length)
+
+        for i in range(track_length):
+            x[i] = x[i] * np.sqrt(self.D_state0 * ((T/track_length) ** self.beta0))
+            y[i] = y[i] * np.sqrt(self.D_state0 * ((T/track_length) ** self.beta0))
+
+        x = np.cumsum(x)
+        y = np.cumsum(y)
+
+        # Add noise
+        if noise:
+            x,y = models_noise.add_noise(x,y,track_length)
+
+        if np.min(x) < 0:
+            x =  x + np.absolute(np.min(x)) # Add offset to x
+        if np.min(y) < 0:
+            y = y + np.absolute(np.min(y)) #Add offset to y
+
+        offset_x = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(x)))
+        offset_y = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(y)))
+
+        x = x + offset_x 
+        y = y + offset_y
+
+        t = np.arange(0,track_length,1)/track_length
+        t = t*T
+
+        return x,y,t
+    def simulate_track_only_state1(self, track_length, T,noise=True):
+        x = np.random.normal(loc=0, scale=1, size=track_length)
+        y = np.random.normal(loc=0, scale=1, size=track_length)
+
+        for i in range(track_length):
+            x[i] = x[i] * np.sqrt(self.D_state1 * ((T/track_length) ** self.beta1))
+            y[i] = y[i] * np.sqrt(self.D_state1 * ((T/track_length) ** self.beta1))
+
+        x = np.cumsum(x)
+        y = np.cumsum(y)
+
+        # Add noise
+        if noise:
+            x,y = models_noise.add_noise(x,y,track_length)
+
+        if np.min(x) < 0:
+            x =  x + np.absolute(np.min(x)) # Add offset to x
+        if np.min(y) < 0:
+            y = y + np.absolute(np.min(y)) #Add offset to y
+
+        offset_x = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(x)))
+        offset_y = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(y)))
+
+        x = x + offset_x 
+        y = y + offset_y
+
+        t = np.arange(0,track_length,1)/track_length
+        t = t*T
+
+        return x,y,t
