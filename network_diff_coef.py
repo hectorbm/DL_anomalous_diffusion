@@ -22,7 +22,7 @@ def train_diff_network(batchsize, track_length, track_time, sigma, model_id,stat
     model = Model(inputs=inputs, outputs=dense2)
 
     optimizer = Adam(lr=1e-5)
-    model.compile(optimizer=optimizer, loss= 'mse')
+    model.compile(optimizer=optimizer, loss= 'mse',metrics=['mse'])
     model.summary()
 
     callbacks = [EarlyStopping(monitor='val_loss',

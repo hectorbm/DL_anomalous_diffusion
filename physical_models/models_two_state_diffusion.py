@@ -24,8 +24,12 @@ class TwoStateDiffusion:
     def create_random(cls):
         # k_state(i) dimensions = 1 / frame
         # D_state(i) dimensions = um^2 * s^(-beta)
-        D_state0 = np.random.uniform(low=0.05 ,high=0.1) 
-        D_state1 = np.random.uniform(low=0.001 , high=0.05)
+        cls.d0_low = 0.05
+        cls.d0_high = 0.3
+        cls.d1_low = 0.001
+        cls.d1_high = 0.05
+        D_state0 = np.random.uniform(low=cls.d0_low ,high=cls.d0_high) 
+        D_state1 = np.random.uniform(low=cls.d1_low , high=cls.d1_high)
         k_state0 = np.random.uniform(low=0.01 ,high=0.08) 
         k_state1 = np.random.uniform(low=0.007 ,high=0.2)
         model = cls(k_state0, k_state1, D_state0, D_state1)
@@ -42,6 +46,23 @@ class TwoStateDiffusion:
         return self.D_state0 / 1000000
     def get_D_state1(self):
         return self.D_state1 / 1000000
+    def normalize_d_coefficient_to_net(self,state_number):
+        assert (state_number == 0 or state_number == 1), "Not a valid state"
+        delta_d0 = self.d0_high - self.d0_low
+        delta_d1 = self.d1_high - self.d1_low
+        if state_number == 0:
+            return (1/delta_d0)*(self.get_D_state0()-self.d0_low)
+        else:
+            return (1/delta_d1)*(self.get_D_state1()-self.d1_low)
+    def denormalize_d_coefficient_to_net(self,state_number):
+        assert (state_number == 0 or state_number == 1), "Not a valid state"
+        delta_d0 = self.d0_high - self.d0_low
+        delta_d1 = self.d1_high - self.d1_low
+        if state_number == 0:
+            return self.normalize_d_coefficient_to_net(state_number=0) * delta_d0 + self.d0_low
+        else:
+            return self.normalize_d_coefficient_to_net(state_number=1) * delta_d1 + self.d1_low
+
 
     def simulate_track(self, track_length, T,noise=True):
         x = np.random.normal(loc=0, scale=1, size=track_length)

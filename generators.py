@@ -129,11 +129,11 @@ def generator_coeff_network(batchsize,track_length,track_time,sigma,state):
             two_state_model = TwoStateDiffusion.create_random()
             if state == 0:
                 x,y,t = two_state_model.simulate_track_only_state0(track_length,T_sample,noise=True)
-                label[i,0] = two_state_model.get_D_state0()
+                label[i,0] = two_state_model.normalize_d_coefficient_to_net(state_number=0)
             else: 
                 x,y,t = two_state_model.simulate_track_only_state1(track_length,T_sample,noise=True)
-                label[i,0] = two_state_model.get_D_state1()
-            
+                label[i,0] = two_state_model.normalize_d_coefficient_to_net(state_number=1)
+
             dx = np.diff(x,axis=0)
             m = np.mean(np.abs(dx),axis=0)
             s = np.std(dx,axis=0)
@@ -141,4 +141,3 @@ def generator_coeff_network(batchsize,track_length,track_time,sigma,state):
             out[i,:,0] = [m,s]
 
         yield out,label
-
