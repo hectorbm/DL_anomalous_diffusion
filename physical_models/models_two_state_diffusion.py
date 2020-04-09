@@ -54,6 +54,7 @@ class TwoStateDiffusion:
             return (1/delta_d0)*(self.get_D_state0()-self.d0_low)
         else:
             return (1/delta_d1)*(self.get_D_state1()-self.d1_low)
+            
     def denormalize_d_coefficient_to_net(self,state_number):
         assert (state_number == 0 or state_number == 1), "Not a valid state"
         delta_d0 = self.d0_high - self.d0_low
@@ -116,25 +117,44 @@ class TwoStateDiffusion:
         x = np.cumsum(x)
         y = np.cumsum(y)
 
-        # Add noise
-        if noise:
-            x,y = models_noise.add_noise(x,y,track_length)
+        noise_x,noise_y = models_noise.add_noise(track_length)
+        
+        x_noisy = x + noise_x
+        y_noisy = y + noise_y
 
-        if np.min(x) < 0:
-            x =  x + np.absolute(np.min(x)) # Add offset to x
-        if np.min(y) < 0:
-            y = y + np.absolute(np.min(y)) #Add offset to y
 
-        offset_x = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(x)))
-        offset_y = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(y)))
+        if np.min(x_noisy) < np.min(x) and np.min(x_noisy) < 0:
+            min_noisy_x = np.absolute(np.min(x_noisy))
+            x_noisy =  x_noisy + min_noisy_x # Convert to positive 
+            x = x + min_noisy_x
+
+        if np.min(x_noisy) > np.min(x) and np.min(x) < 0:
+            min_x = np.absolute(np.min(x))
+            x_noisy =  x_noisy + min_x # Convert to positive 
+            x = x + min_x
+
+        if np.min(y_noisy) < np.min(y) and np.min(y_noisy) < 0:
+            min_noisy_y = np.absolute(np.min(y_noisy))
+            y_noisy =  y_noisy + min_noisy_y # Convert to positive 
+            y = y + min_noisy_y
+
+        if np.min(y_noisy) > np.min(y) and np.min(y) < 0:
+            min_y = np.absolute(np.min(y))
+            y_noisy =  y_noisy + min_y # Convert to positive 
+            y = y + min_y
+
+        offset_x = np.ones(shape=track_length) * np.random.uniform(low=0, high=(10000-np.minimum(np.max(x),np.max(x_noisy))))
+        offset_y = np.ones(shape=track_length) * np.random.uniform(low=0, high=(10000-np.minimum(np.max(y),np.max(y_noisy))))
 
         x = x + offset_x 
         y = y + offset_y
-
+        x_noisy = x_noisy + offset_x
+        y_noisy = y_noisy + offset_y
+        
         t = np.arange(0,track_length,1)/track_length
         t = t*T
 
-        return x,y,t,state,switching
+        return x_noisy,y_noisy,x,y,t,state,switching
 
     def simulate_track_only_state0(self, track_length, T,noise=True):
         x = np.random.normal(loc=0, scale=1, size=track_length)
@@ -147,25 +167,46 @@ class TwoStateDiffusion:
         x = np.cumsum(x)
         y = np.cumsum(y)
 
-        # Add noise
-        if noise:
-            x,y = models_noise.add_noise(x,y,track_length)
+        noise_x,noise_y = models_noise.add_noise(track_length)
+        
+        x_noisy = x + noise_x
+        y_noisy = y + noise_y
 
-        if np.min(x) < 0:
-            x =  x + np.absolute(np.min(x)) # Add offset to x
-        if np.min(y) < 0:
-            y = y + np.absolute(np.min(y)) #Add offset to y
 
-        offset_x = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(x)))
-        offset_y = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(y)))
+        if np.min(x_noisy) < np.min(x) and np.min(x_noisy) < 0:
+            min_noisy_x = np.absolute(np.min(x_noisy))
+            x_noisy =  x_noisy + min_noisy_x # Convert to positive 
+            x = x + min_noisy_x
+
+        if np.min(x_noisy) > np.min(x) and np.min(x) < 0:
+            min_x = np.absolute(np.min(x))
+            x_noisy =  x_noisy + min_x # Convert to positive 
+            x = x + min_x
+
+        if np.min(y_noisy) < np.min(y) and np.min(y_noisy) < 0:
+            min_noisy_y = np.absolute(np.min(y_noisy))
+            y_noisy =  y_noisy + min_noisy_y # Convert to positive 
+            y = y + min_noisy_y
+
+        if np.min(y_noisy) > np.min(y) and np.min(y) < 0:
+            min_y = np.absolute(np.min(y))
+            y_noisy =  y_noisy + min_y # Convert to positive 
+            y = y + min_y
+
+        offset_x = np.ones(shape=track_length) * np.random.uniform(low=0, high=(10000-np.minimum(np.max(x),np.max(x_noisy))))
+        offset_y = np.ones(shape=track_length) * np.random.uniform(low=0, high=(10000-np.minimum(np.max(y),np.max(y_noisy))))
 
         x = x + offset_x 
         y = y + offset_y
-
+        x_noisy = x_noisy + offset_x
+        y_noisy = y_noisy + offset_y
+        
         t = np.arange(0,track_length,1)/track_length
         t = t*T
 
-        return x,y,t
+        return x_noisy,y_noisy,x,y,t
+
+
     def simulate_track_only_state1(self, track_length, T,noise=True):
         x = np.random.normal(loc=0, scale=1, size=track_length)
         y = np.random.normal(loc=0, scale=1, size=track_length)
@@ -177,22 +218,41 @@ class TwoStateDiffusion:
         x = np.cumsum(x)
         y = np.cumsum(y)
 
-        # Add noise
-        if noise:
-            x,y = models_noise.add_noise(x,y,track_length)
+        noise_x,noise_y = models_noise.add_noise(track_length)
+        
+        x_noisy = x + noise_x
+        y_noisy = y + noise_y
 
-        if np.min(x) < 0:
-            x =  x + np.absolute(np.min(x)) # Add offset to x
-        if np.min(y) < 0:
-            y = y + np.absolute(np.min(y)) #Add offset to y
 
-        offset_x = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(x)))
-        offset_y = np.ones(shape=x.shape) * np.random.uniform(low=0, high=(10000-np.max(y)))
+        if np.min(x_noisy) < np.min(x) and np.min(x_noisy) < 0:
+            min_noisy_x = np.absolute(np.min(x_noisy))
+            x_noisy =  x_noisy + min_noisy_x # Convert to positive 
+            x = x + min_noisy_x
+
+        if np.min(x_noisy) > np.min(x) and np.min(x) < 0:
+            min_x = np.absolute(np.min(x))
+            x_noisy =  x_noisy + min_x # Convert to positive 
+            x = x + min_x
+
+        if np.min(y_noisy) < np.min(y) and np.min(y_noisy) < 0:
+            min_noisy_y = np.absolute(np.min(y_noisy))
+            y_noisy =  y_noisy + min_noisy_y # Convert to positive 
+            y = y + min_noisy_y
+
+        if np.min(y_noisy) > np.min(y) and np.min(y) < 0:
+            min_y = np.absolute(np.min(y))
+            y_noisy =  y_noisy + min_y # Convert to positive 
+            y = y + min_y
+
+        offset_x = np.ones(shape=track_length) * np.random.uniform(low=0, high=(10000-np.minimum(np.max(x),np.max(x_noisy))))
+        offset_y = np.ones(shape=track_length) * np.random.uniform(low=0, high=(10000-np.minimum(np.max(y),np.max(y_noisy))))
 
         x = x + offset_x 
         y = y + offset_y
+        x_noisy = x_noisy + offset_x
+        y_noisy = y_noisy + offset_y
 
         t = np.arange(0,track_length,1)/track_length
         t = t*T
 
-        return x,y,t
+        return x_noisy,y_noisy,x,y,t

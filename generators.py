@@ -121,8 +121,39 @@ def generator_coeff_network(batchsize,track_length,track_time,sigma,state):
 
     while True:
         T_sample = np.random.choice(np.arange(track_time,track_time+1,0.5))
-        out = np.zeros([batchsize,2,1])        
+        out = np.zeros([batchsize,2,1])
         label = np.zeros([batchsize,1])
+        noisy_out = np.zeros([batchsize,track_length])
+        for i in range(batchsize):
+            
+            two_state_model = TwoStateDiffusion.create_random()
+            if state == 0:
+                x,y,t = two_state_model.simulate_track_only_state0(track_length,T_sample,noise=True)
+                label[i,0] = two_state_model.normalize_d_coefficient_to_net(state_number=0)
+            else: 
+                x_noisy,y_noisy,x,y,t = two_state_model.simulate_track_only_state1(track_length,T_sample,noise=True)
+                label[i,0] = two_state_model.normalize_d_coefficient_to_net(state_number=1)
+            noisy_out[i,:] = x_noisy
+
+        in_net = np.zeros([batchsize,track_length,1])
+        in_net[:,:,0] = noisy_out
+        denoised_x = model_denoising.predict(in_net)
+        dx = np.diff(denoised_x,axis=1)
+        m = np.mean(np.abs(dx),axis=1)
+        s = np.std(dx,axis=1)
+        
+        for i in range(batchsize):    
+            out[i,:,0] = [m[i],s[i]]
+
+        yield out,label
+
+def generator_denoising_net(batchsize,track_length,track_time,sigma,state):
+    assert (state == 0 or state == 1), "State must be 0 or 1"
+
+    while True:
+        T_sample = np.random.choice(np.arange(track_time,track_time+1,0.5))
+        out = np.zeros([batchsize,track_length,1])
+        label = np.zeros([batchsize,track_length])
         
         for i in range(batchsize):
             
@@ -131,13 +162,10 @@ def generator_coeff_network(batchsize,track_length,track_time,sigma,state):
                 x,y,t = two_state_model.simulate_track_only_state0(track_length,T_sample,noise=True)
                 label[i,0] = two_state_model.normalize_d_coefficient_to_net(state_number=0)
             else: 
-                x,y,t = two_state_model.simulate_track_only_state1(track_length,T_sample,noise=True)
+                x_noisy,y_noisy,x,y,t = two_state_model.simulate_track_only_state1(track_length,T_sample,noise=True)
                 label[i,0] = two_state_model.normalize_d_coefficient_to_net(state_number=1)
-
-            dx = np.diff(x,axis=0)
-            m = np.mean(np.abs(dx),axis=0)
-            s = np.std(dx,axis=0)
             
-            out[i,:,0] = [m,s]
+            out[i,:,0] = x_noisy - np.mean(x_noisy)
+            label[i,:] = x - np.mean(x_noisy)
 
         yield out,label
