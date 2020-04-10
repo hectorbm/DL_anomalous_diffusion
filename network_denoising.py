@@ -7,7 +7,7 @@ from keras.optimizers import Adam
 import numpy as np
 from generators import generator_denoising_net
 
-def train_denoising_net(batchsize, steps, T, sigma, model_id):
+def train_denoising_net(batchsize, steps, T, model_id,state):
     initializer = 'he_normal'
     f = 32
 
@@ -42,10 +42,10 @@ def train_denoising_net(batchsize, steps, T, sigma, model_id):
                         save_best_only=True)]
 
     model.fit(
-            x=generator_denoising_net(batchsize=batchsize,track_length=steps,track_time=T,sigma=sigma,state=1),
+            x=generator_denoising_net(batchsize=batchsize,track_length=steps,track_time=T,state=state),
             steps_per_epoch=1000,
             epochs=50,
             callbacks=callbacks,
-            validation_data=generator_denoising_net(batchsize=batchsize,track_length=steps,track_time=T,sigma=sigma,state=1),
+            validation_data=generator_denoising_net(batchsize=batchsize,track_length=steps,track_time=T,state=state),
             validation_steps=100)
-    return model
+    return model 

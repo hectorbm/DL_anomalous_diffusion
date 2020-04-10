@@ -18,7 +18,7 @@ The development of a state-detection network is under consideration to analyze t
 
 Current accuracy for the first network is:
 
-![Image](models/Figure_1.png)
+![Image](models/Figure_1.png) 
 
 And the second network accuracy:
 

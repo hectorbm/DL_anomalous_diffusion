@@ -9,7 +9,7 @@ from physical_models.models_two_state_diffusion import TwoStateDiffusion
 import numpy as np
 import matplotlib.pyplot as plt
 
-def train_diff_network(batchsize, track_length, track_time, sigma, model_id,state):
+def train_diff_network(batchsize, track_length, track_time, model_id,state):
 
     initializer = 'he_normal'
     f = 32
@@ -45,13 +45,14 @@ def train_diff_network(batchsize, track_length, track_time, sigma, model_id,stat
                             save_weights_only=False)]
 
 
-    history = model.fit_generator(generator=generator_coeff_network(batchsize,track_length,track_time,sigma,state),
+    history = model.fit_generator(generator=generator_coeff_network(batchsize,track_length,track_time,state),
             steps_per_epoch=1000,
             epochs=100,
             callbacks=callbacks,
-            validation_data=generator_coeff_network(batchsize,track_length,track_time,sigma,state),
+            validation_data=generator_coeff_network(batchsize,track_length,track_time,state),
             validation_steps=100)
 
+    
     return model,history
 
 
