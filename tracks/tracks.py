@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 
 class Tracks:
 
-    def __init__(self, track_length, time_length, n_axes):
+    def __init__(self, track_length, track_time, n_axes):
         self.track_length = track_length
-        self.track_time = time_length
+        self.track_time = track_time
         self.n_axes = n_axes
         self.axes_data = np.zeros(shape=[self.n_axes, self.track_length])
         self.time_axis = np.zeros(shape=self.track_length)

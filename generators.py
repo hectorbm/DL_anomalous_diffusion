@@ -23,17 +23,21 @@ def generate_batch_of_samples_l1(batch_size, track_length, track_time):
         physical_model_type = np.random.choice(["fbm", "ctrw", "two-state"])
         if physical_model_type == "fbm":
             physical_model = FBM.create_random()
-            x_noisy, y_noisy, x, y, t = physical_model.simulate_track(track_length_sample, t_sample)
+            x_noisy, y_noisy, x, y, t = physical_model.simulate_track(track_length=track_length_sample,
+                                                                      track_time=t_sample)
             label[i, 0] = 0
         elif physical_model_type == "ctrw":
             physical_model = CTRW.create_random()
-            x_noisy, y_noisy, x, y, t = physical_model.simulate_track(track_length_sample, t_sample)
+            x_noisy, y_noisy, x, y, t = physical_model.simulate_track(track_length=track_length_sample,
+                                                                      track_time=t_sample)
             label[i, 0] = 1
         else:
             physical_model = TwoStateDiffusion.create_random()
             switching = False
             while not switching:
-                x_noisy, y_noisy, x, y, t, state, switching = physical_model.simulate_track(track_length_sample, t_sample)
+                x_noisy, y_noisy, x, y, t, state, switching = physical_model.simulate_track(
+                                                                                       track_length=track_length_sample,
+                                                                                       track_time=t_sample)
             label[i, 0] = 2
 
         out[i, :, 0] = axis_adaptation_to_net(axis_data=x_noisy, track_length=track_length)
@@ -63,7 +67,7 @@ def generate_batch_of_samples_l2(batch_size, track_length, track_time):
             model = FBM.create_random_superdiffusive()
             label[i, 0] = 2
 
-        x_noisy, y_noisy, x, y, t = model.simulate_track(track_length_sample, t_sample)
+        x_noisy, y_noisy, x, y, t = model.simulate_track(track_length=track_length_sample, track_time=t_sample)
 
         out[i, :, 0] = axis_adaptation_to_net(axis_data=x_noisy, track_length=track_length)
         out[i, :, 1] = axis_adaptation_to_net(axis_data=y_noisy, track_length=track_length)
@@ -76,7 +80,7 @@ def generator_first_layer(batch_size, track_length, track_time):
         out, label = generate_batch_of_samples_l1(batch_size=batch_size,
                                                   track_length=track_length,
                                                   track_time=track_time)
-        label = to_categorical(label, num_classes=3)
+        label = to_categorical(y=label, num_classes=3)
         input_net = np.zeros(shape=[batch_size, track_length - 1, 1])
 
         for i in range(batch_size):
@@ -90,7 +94,7 @@ def generator_second_layer(batch_size, track_length, track_time):
         out, label = generate_batch_of_samples_l2(batch_size=batch_size,
                                                   track_length=track_length,
                                                   track_time=track_time)
-        label = to_categorical(label, num_classes=3)
+        label = to_categorical(y=label, num_classes=3)
         input_net = np.zeros(shape=[batch_size, track_length - 1, 1])
         for i in range(batch_size):
             input_net[i, :, 0] = out[i, :, 0]
@@ -108,12 +112,13 @@ def generate_batch_of_samples_state_net(batch_size, track_length, track_time):
         model = TwoStateDiffusion.create_random()
         switching = False
         while not switching:
-            x_noisy, y_noisy, x, y, t, state, switching = model.simulate_track(track_length_sample, t_sample)
+            x_noisy, y_noisy, x, y, t, state, switching = model.simulate_track(track_length=track_length_sample,
+                                                                               track_time=t_sample)
 
-        axis_reshaped = np.reshape(x_noisy, [1, len(x)])[:, :track_length]
+        axis_reshaped = np.reshape(x_noisy, [1, len(x_noisy)])[:, :track_length]
         out[i, :, 0] = axis_reshaped - np.mean(axis_reshaped)
 
-        axis_reshaped = np.reshape(y_noisy, [1, len(y)])[:, :track_length]
+        axis_reshaped = np.reshape(y_noisy, [1, len(y_noisy)])[:, :track_length]
         out[i, :, 1] = axis_reshaped - np.mean(axis_reshaped)
 
         label[i, :] = state[:track_length]
@@ -127,7 +132,7 @@ def generator_state_net(batch_size, track_length, track_time):
                                                          track_length=track_length,
                                                          track_time=track_time)
 
-        input_net = np.zeros([batch_size, track_length, 1])
+        input_net = np.zeros(shape=[batch_size, track_length, 1])
         for i in range(batch_size):
             input_net[i, :, 0] = out[i, :, 0]
 
@@ -148,13 +153,14 @@ def generator_diffusion_coefficient_network(batch_size, track_length, track_time
 
             two_state_model = TwoStateDiffusion.create_random()
             if state == 0:
-                x_noisy, y_noisy, x, y, t = two_state_model.simulate_track_only_state0(track_length, t_sample,
-                                                                                       noise=True)
+                x_noisy, y_noisy, x, y, t = two_state_model.simulate_track_only_state0(track_length=track_length,
+                                                                                       track_time=t_sample)
                 label[i, 0] = two_state_model.normalize_d_coefficient_to_net(state_number=0)
             else:
-                x_noisy, y_noisy, x, y, t = two_state_model.simulate_track_only_state1(track_length, t_sample,
-                                                                                       noise=True)
+                x_noisy, y_noisy, x, y, t = two_state_model.simulate_track_only_state1(track_length=track_length,
+                                                                                       track_time=t_sample)
                 label[i, 0] = two_state_model.normalize_d_coefficient_to_net(state_number=1)
+
             noisy_out[i, :] = x_noisy
 
         if state == 1:
@@ -187,12 +193,12 @@ def generator_noise_reduction_net(batch_size, track_length, track_time, diffusio
 
             two_state_model = TwoStateDiffusion.create_random()
             if diffusion_model_state == 0:
-                x_noisy, y_noisy, x, y, t = two_state_model.simulate_track_only_state0(track_length, t_sample,
-                                                                                       noise=True)
+                x_noisy, y_noisy, x, y, t = two_state_model.simulate_track_only_state0(track_length=track_length,
+                                                                                       track_time=t_sample)
                 label[i, 0] = two_state_model.normalize_d_coefficient_to_net(state_number=0)
             else:
-                x_noisy, y_noisy, x, y, t = two_state_model.simulate_track_only_state1(track_length, t_sample,
-                                                                                       noise=True)
+                x_noisy, y_noisy, x, y, t = two_state_model.simulate_track_only_state1(track_length=track_length,
+                                                                                       track_time=t_sample)
                 label[i, 0] = two_state_model.normalize_d_coefficient_to_net(state_number=1)
 
             out[i, :, 0] = x_noisy - np.mean(x_noisy)

@@ -10,7 +10,7 @@ def train_noise_reduction_net(batch_size, track_length, track_time, model_id, di
     filters_size = 20
     kernel_size = 2
 
-    inputs = Input((track_length, 1))
+    inputs = Input(shape=(track_length, 1))
     x = Conv1D(filters=filters_size, kernel_size=kernel_size, padding='causal', activation='relu',
                kernel_initializer=initializer)(inputs)
     x = BatchNormalization()(x)

@@ -3,7 +3,7 @@ from . import models
 from . import models_noise
 
 
-class TwoStateDiffusion:
+class TwoStateDiffusion(models.Models):
     """
     State-0: Free Diffusion
     State-1: Confined Diffusion
