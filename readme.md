@@ -1,4 +1,4 @@
-## Diffusion processes classification with Deep Learning 
+## Diffusion processes analysis with Deep Learning 
 
 First network: Fractional Brownian Motion, 2-State Diffusion and CTRW
 

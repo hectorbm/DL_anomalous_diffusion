@@ -1,64 +1,68 @@
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
+from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPooling1D
 from keras.models import Model
-from keras.layers import Dense,BatchNormalization,Conv1D,Dropout
-from keras.layers import Input,GlobalMaxPooling1D
 from keras.optimizers import Adam
-from keras.callbacks import EarlyStopping,ReduceLROnPlateau,ModelCheckpoint
-from generators import generator_coeff_network
-from tools.load_model import load_model_from_file
-from physical_models.models_two_state_diffusion import TwoStateDiffusion
-import numpy as np
-import matplotlib.pyplot as plt
+from generators import generator_diffusion_coefficient_network
 
-def train_diff_network(batchsize, track_length, track_time, model_id,state):
 
+def train_diff_network(batch_size, track_length, track_time, model_id, diffusion_model_state, noise_reduction_model):
     initializer = 'he_normal'
-    f = 32
-    inputs = Input((2,1))
+    filters_size = 32
+    x_kernel_size = 2
 
-    #
-    x2 = Conv1D(f,2,padding='same',activation='relu',kernel_initializer=initializer)(inputs)
-    x2 = BatchNormalization()(x2)
-    x2 = GlobalMaxPooling1D()(x2)
+    inputs = Input(shape=(2, 1))
 
-    dense = Dense(512,activation='relu')(x2)
-    dense = Dense(256,activation='relu')(dense)
-    dense2 = Dense(1,activation='sigmoid')(dense)
-    model = Model(inputs=inputs, outputs=dense2)
+    x = Conv1D(filters=filters_size, kernel_size=x_kernel_size, padding='same', activation='relu',
+               kernel_initializer=initializer)(inputs)
+    x = BatchNormalization()(x)
+    x = GlobalMaxPooling1D()(x)
+
+    dense_1 = Dense(units=512, activation='relu')(x)
+    dense_2 = Dense(units=256, activation='relu')(dense_1)
+    output_network = Dense(units=1, activation='sigmoid')(dense_2)
+    diffusion_coefficient_network_model = Model(inputs=inputs, outputs=output_network)
 
     optimizer = Adam(lr=1e-4)
-    model.compile(optimizer=optimizer, loss= 'mse',metrics=['mse'])
-    model.summary()
+    diffusion_coefficient_network_model.compile(optimizer=optimizer, loss='mse', metrics=['mse'])
+    diffusion_coefficient_network_model.summary()
 
     callbacks = [EarlyStopping(monitor='val_loss',
-                        patience=20,
-                        verbose=1,
-                        min_delta=1e-4),
-            ReduceLROnPlateau(monitor='val_loss',
-                            factor=0.1,
-                            patience=4,
-                            verbose=1,
-                            min_lr=1e-12),
-            ModelCheckpoint(filepath="{}.h5".format(model_id),
-                            monitor='val_loss',
-                            save_best_only=True,
-                            mode='min',
-                            save_weights_only=False)]
+                               patience=20,
+                               verbose=1,
+                               min_delta=1e-4),
+                 ReduceLROnPlateau(monitor='val_loss',
+                                   factor=0.1,
+                                   patience=4,
+                                   verbose=1,
+                                   min_lr=1e-12),
+                 ModelCheckpoint(filepath="models/{}.h5".format(model_id),
+                                 monitor='val_loss',
+                                 save_best_only=True,
+                                 mode='min',
+                                 save_weights_only=False)]
 
+    history = diffusion_coefficient_network_model.fit(x=generator_diffusion_coefficient_network(batch_size,
+                                                                                                track_length,
+                                                                                                track_time,
+                                                                                                diffusion_model_state,
+                                                                                                noise_reduction_model),
+                                                      steps_per_epoch=1000,
+                                                      epochs=100,
+                                                      callbacks=callbacks,
+                                                      validation_data=
+                                                      generator_diffusion_coefficient_network(batch_size,
+                                                                                              track_length,
+                                                                                              track_time,
+                                                                                              diffusion_model_state,
+                                                                                              noise_reduction_model),
+                                                      validation_steps=100)
 
-    history = model.fit_generator(generator=generator_coeff_network(batchsize,track_length,track_time,state),
-            steps_per_epoch=1000,
-            epochs=100,
-            callbacks=callbacks,
-            validation_data=generator_coeff_network(batchsize,track_length,track_time,state),
-            validation_steps=100)
-
-    
-    return model,history
-
+    return diffusion_coefficient_network_model, history
 
 
 if __name__ == "__main__":
-    model = train_diff_network(batchsize=64,track_length=30,track_time=0.5,sigma=0,model_id="net_diff_coeff_1_state1",state=1)
+    model = train_diff_network(batch_size=64, track_length=30, track_time=0.5,
+                               model_id="net_diff_coeff_1_state1", diffusion_model_state=0, noise_reduction_model=None)
     """model = load_model_from_file("models/net_diff_coeff_1_state1.h5")
     for i in range(10):
         out = np.zeros([1,2,1])
@@ -86,5 +90,3 @@ if __name__ == "__main__":
         plt.scatter(i,pred[0,0], color='r')
         print('Ground truth:{:.4}  prediction:{:.4}  error:{:.4}'.format(label,pred[0,0],np.abs(pred-label)[0,0]))
     plt.show()"""
-
-
