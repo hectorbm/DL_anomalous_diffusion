@@ -6,6 +6,8 @@ from generators import generator_state_net, generate_batch_of_samples_state_net
 from tools.analysis_tools import plot_confusion_matrix_for_layer
 import numpy as np
 
+from tools.load_model import load_model_from_file
+
 
 def train_states_net(batch_size, track_length, track_time, model_id):
     initializer = 'he_normal'
@@ -145,6 +147,6 @@ def validate_test_data_over_model(model, n_axes, track_length, track_time):
 
 if __name__ == "__main__":
     # For testing
-    train_states_net(batch_size=32, track_length=100, track_time=1.2, model_id='state_net_1')
-    # model = load_model_from_file("models/state_net_1.h5")
-    # validate_test_data_over_model(model, 2, 100, 1.2, 0)
+    #train_states_net(batch_size=32, track_length=100, track_time=1.2, model_id='state_net_1')
+    model = load_model_from_file("models/state_net_1.h5")
+    validate_test_data_over_model(model=model, n_axes=2, track_length=100, track_time=1.2)

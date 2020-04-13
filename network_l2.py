@@ -150,4 +150,4 @@ if __name__ == "__main__":
     # For testing
     #train_l2_net(batch_size=64, track_length=100, track_time=1.2, model_id='second_layer_1')
     model = load_model_from_file("models/second_layer_1.h5")
-    validate_test_data_over_model(model, 2, 100, 1.2, 0)
+    validate_test_data_over_model(l2_net_model=model, n_axes=2, track_length=100, track_time=1.2)

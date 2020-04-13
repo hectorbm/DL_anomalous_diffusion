@@ -143,6 +143,6 @@ def validate_with_test_data_over_model(l1_net_model, n_axes, track_length, track
 
 if __name__ == "__main__":
     # For testing
-    train_l1_net(batch_size=64, track_length=100, track_time=1.2, model_id='first_layer_1')
+    #train_l1_net(batch_size=64, track_length=100, track_time=1.2, model_id='first_layer_1')
     model = load_model_from_file("models/first_layer_1.h5")
     validate_with_test_data_over_model(model, n_axes=2, track_length=100, track_time=1.2)
