@@ -1,13 +1,15 @@
-import numpy as np
 from . import tracks
+from mongoengine import StringField, ObjectIdField
+
+LABELING_METHODS = ['btx', 'mAb']
+EXPERIMENTAL_CONDITIONS = ['control', 'CDx-Chol', 'CDx']
 
 
 class ExperimentalTracks(tracks.Tracks):
+    labeling_method = StringField(choices=LABELING_METHODS, required=True)
+    experimental_condition = StringField(choices=EXPERIMENTAL_CONDITIONS, required=True)
+    origin_file = ObjectIdField(required=True)
 
-    def __init__(self, track_length, track_time, n_axes, noise_level, label):
-        assert (label == 'btx' or label == 'mAb')
-        super().__init__(track_length, track_time, n_axes)
-        self.label = label
 
     def set_predicted_model_type(self, model_type_prediction, network_id):
         # Network id: unique id assigned to each network trained

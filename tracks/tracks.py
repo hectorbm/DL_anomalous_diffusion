@@ -1,15 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mongoengine import Document, IntField, ListField
 
 
-class Tracks:
+class Tracks(Document):
+    track_length = IntField(min_value=1, required=True)
+    track_time = IntField(min_value=0, required=True)
+    n_axes = IntField(min_value=1, required=True)
+    #time_axis = ListField(required=True)
+    #axes_data = ListField(required=True)
 
-    def __init__(self, track_length, track_time, n_axes):
-        self.track_length = track_length
-        self.track_time = track_time
-        self.n_axes = n_axes
-        self.axes_data = np.zeros(shape=[self.n_axes, self.track_length])
-        self.time_axis = np.zeros(shape=self.track_length)
+    meta = {'allow_inheritance': True}
+
 
     def plot_xy(self):
         assert (self.n_axes == 2), "Track n_axes ~= 2!"
@@ -41,9 +43,11 @@ class Tracks:
         return self.track_length
 
     def set_axes_data(self, axes_data):
+        self.axes_data = np.zeros(shape=[self.n_axes, self.track_length])
         assert (axes_data.shape == self.axes_data.shape)
         self.axes_data = axes_data
 
     def set_time_axis(self, time_axis_data):
+        self.time_axis = np.zeros(shape=self.track_length)
         assert (time_axis_data.shape == self.time_axis.shape)
         self.time_axis = time_axis_data
