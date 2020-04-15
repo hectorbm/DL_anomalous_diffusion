@@ -2,10 +2,10 @@ from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
 from keras.layers import Dense, BatchNormalization, Conv1D, Flatten, Input
 from keras.models import Model
 from keras.optimizers import Adam
-from generators import generator_noise_reduction_net
+from network_models.generators import generator_noise_reduction_net
 
 
-def train_noise_reduction_net(batch_size, track_length, track_time, model_id, diffusion_model_state):
+def train_network(batch_size, track_length, track_time, model_id, diffusion_model_state):
     initializer = 'he_normal'
     filters_size = 20
     kernel_size = 2

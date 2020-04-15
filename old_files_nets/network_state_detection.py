@@ -2,14 +2,14 @@ from keras.models import Model
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalAveragePooling1D, concatenate
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
 from keras.optimizers import Adam
-from generators import generator_state_net, generate_batch_of_samples_state_net
+from network_models.generators import generator_state_net, generate_batch_of_samples_state_net
 from tools.analysis_tools import plot_confusion_matrix_for_layer
 import numpy as np
 
 from tools.load_model import load_model_from_file
 
 
-def train_states_net(batch_size, track_length, track_time, model_id):
+def train_network(batch_size, track_length, track_time, model_id):
     initializer = 'he_normal'
     filters_size = 32
     x1_kernel_size = 4
@@ -137,8 +137,7 @@ def validate_test_data_over_model(model, n_axes, track_length, track_time):
                                                            n_axes=n_axes,
                                                            track_length=track_length)
 
-    plot_confusion_matrix_for_layer(model=model,
-                                    layer_name='State-Detection',
+    plot_confusion_matrix_for_layer(layer_name='State-Detection',
                                     ground_truth=ground_truth.flatten(),
                                     predicted_value=predictions.flatten(),
                                     labels=["State-0", "State-1"],
@@ -148,5 +147,5 @@ def validate_test_data_over_model(model, n_axes, track_length, track_time):
 if __name__ == "__main__":
     # For testing
     #train_states_net(batch_size=32, track_length=100, track_time=1.2, model_id='state_net_1')
-    model = load_model_from_file("models/state_net_1.h5")
+    model = load_model_from_file("../models/state_net_1.h5")
     validate_test_data_over_model(model=model, n_axes=2, track_length=100, track_time=1.2)

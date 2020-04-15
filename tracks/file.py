@@ -1,4 +1,4 @@
-from mongoengine import Document, StringField, FileField
+from mongoengine import Document, StringField, FileField, FloatField
 import pandas as pd
 import numpy as np
 from . import experimental_tracks
@@ -10,7 +10,7 @@ class File(Document):
     experimental_condition = StringField(choices=experimental_tracks.EXPERIMENTAL_CONDITIONS, required=True)
     labeling_method = StringField(choices=experimental_tracks.LABELING_METHODS, required=True)
     raw_file = FileField(required=True)
-    file_fps = 58.333
+    file_fps = FloatField(default=58.333)
 
     def add_raw_file(self, filename):
         self.parse_filename(filename)

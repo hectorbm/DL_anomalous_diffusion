@@ -2,10 +2,10 @@ from keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPooling1D
 from keras.models import Model
 from keras.optimizers import Adam
-from generators import generator_diffusion_coefficient_network
+from network_models.generators import generator_diffusion_coefficient_network
 
 
-def train_diff_network(batch_size, track_length, track_time, model_id, diffusion_model_state, noise_reduction_model):
+def train_network(batch_size, track_length, track_time, model_id, diffusion_model_state, noise_reduction_model):
     initializer = 'he_normal'
     filters_size = 32
     x_kernel_size = 2
@@ -61,8 +61,8 @@ def train_diff_network(batch_size, track_length, track_time, model_id, diffusion
 
 
 if __name__ == "__main__":
-    model = train_diff_network(batch_size=64, track_length=30, track_time=0.5,
-                               model_id="net_diff_coeff_1_state1", diffusion_model_state=0, noise_reduction_model=None)
+    model = train_network(batch_size=64, track_length=30, track_time=0.5,
+                          model_id="net_diff_coeff_1_state1", diffusion_model_state=0, noise_reduction_model=None)
     """model = load_model_from_file("models/net_diff_coeff_1_state1.h5")
     for i in range(10):
         out = np.zeros([1,2,1])
