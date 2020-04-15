@@ -3,10 +3,13 @@ from keras.models import Model
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPooling1D, concatenate
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
 from keras.optimizers import Adam
-from network_models.generators import generator_second_layer
+from network_models.generators import generator_second_layer, axis_adaptation_to_net
+import numpy as np
 
 
 class L2NetworkModel(network_model.NetworkModel):
+
+    output_categories = 3
 
     def train_network(self, batch_size, track_time):
         initializer = 'he_normal'
@@ -93,7 +96,7 @@ class L2NetworkModel(network_model.NetworkModel):
         x_concat = concatenate(inputs=[x1, x2, x3, x4, x5, x6])
         dense_1 = Dense(units=615, activation='relu')(x_concat)
         dense_2 = Dense(units=150, activation='relu')(dense_1)
-        output_network = Dense(units=3, activation='softmax')(dense_2)
+        output_network = Dense(units=self.output_categories, activation='softmax')(dense_2)
         l2_keras_model = Model(inputs=inputs, outputs=output_network)
 
         optimizer = Adam(lr=1e-5)
@@ -117,14 +120,30 @@ class L2NetworkModel(network_model.NetworkModel):
         history_training = l2_keras_model.fit(
             x=generator_second_layer(batch_size=batch_size, track_length=self.track_length, track_time=track_time),
             steps_per_epoch=4000,
-            epochs=50,
+            epochs=5,
             callbacks=callbacks,
             validation_data=generator_second_layer(batch_size=batch_size, track_length=self.track_length,
                                                    track_time=track_time),
             validation_steps=100)
-
         self.keras_model = l2_keras_model
-        self.history = history_training.history
+        self.convert_history_to_db_format(history_training)
 
     def evaluate_track_input(self, track):
-        pass
+        assert (track.track_length == self.track_length), "Invalid input track length"
+
+        if self.keras_model is None:
+            self.load_model_from_file()
+
+        model_predictions = np.zeros(shape=self.output_categories)
+
+        axis_data_diff = np.zeros(shape=[1, self.track_length - 1, track.n_axes])
+        for i in range(track.n_axes):
+            axis_data_diff[0, :, i] = axis_adaptation_to_net(axis_data=track.axes_data[str(i)],
+                                                             track_length=self.track_length)
+
+        for axis in range(track.n_axes):
+            input_net = np.zeros([1, self.track_length - 1, 1])
+            input_net[0, :, 0] = axis_data_diff[0, :, axis]
+            model_predictions = (self.keras_model.predict(input_net)[0, :]) + model_predictions
+        mean_prediction = np.argmax(model_predictions / track.n_axes)
+        return mean_prediction

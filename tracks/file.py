@@ -83,14 +83,18 @@ class File(Document):
         return tracks_list
 
     def create_track_from_track_dict(self, key, tracks_dict):
-        x = np.asarray(tracks_dict[key]["x"])
-        y = np.asarray(tracks_dict[key]["y"])
+
         frames = tracks_dict[key]["frame"]
         track_length = len(frames)
+
+        # To analyze more dimensions the next lines must be modified
+        x = np.asarray(tracks_dict[key]["x"])
+        y = np.asarray(tracks_dict[key]["y"])
         n_axes = 2
         axes_data = np.zeros(shape=(n_axes, track_length))
         axes_data[0] = x
         axes_data[1] = y
+
         min_t = min(frames) * (1 / self.file_fps)
         max_t = max(frames) * (1 / self.file_fps)
         track_time = max_t - min_t
@@ -102,4 +106,5 @@ class File(Document):
                                                            experimental_condition=self.experimental_condition)
         new_track.set_axes_data(axes_data)
         new_track.set_time_axis(time_axis)
+
         return new_track

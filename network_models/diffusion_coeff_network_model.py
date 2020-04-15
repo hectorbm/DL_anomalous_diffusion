@@ -4,6 +4,9 @@ from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPool
 from keras.models import Model
 from keras.optimizers import Adam
 from network_models.generators import generator_diffusion_coefficient_network
+from physical_models.models_two_state_diffusion import denormalize_d_coefficient_to_net
+
+import numpy as np
 
 
 class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
@@ -51,7 +54,7 @@ class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
                                                       diffusion_model_state,
                                                       noise_reduction_model),
             steps_per_epoch=1000,
-            epochs=100,
+            epochs=5,
             callbacks=callbacks,
             validation_data=
             generator_diffusion_coefficient_network(batch_size,
@@ -60,9 +63,22 @@ class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
                                                     diffusion_model_state,
                                                     noise_reduction_model),
             validation_steps=100)
-
-        self.history = history_training.history
+        self.convert_history_to_db_format(history_training)
         self.keras_model = diffusion_coefficient_keras_model
 
-    def evaluate_track_input(self, track):
-        pass
+    def evaluate_track_input(self, track, diffusion_model_state=0):
+        assert track.track_length == self.track_length, "Invalid track length"
+        prediction = np.zeros(shape=track.n_axes)
+        out = np.zeros(shape=(1, 2, 1))
+
+        for axis in range(track.n_axes):
+            d = np.diff(track.axes_data[str(axis)], axis=0)
+            m = np.mean(np.abs(d), axis=0)
+            s = np.std(d, axis=0)
+            out[0, :, 0] = [m, s]
+            prediction[axis] = self.keras_model.predict(out[:, :, :])
+
+        mean_prediction = denormalize_d_coefficient_to_net(output_coefficient_net=np.mean(prediction),
+                                                           state_number=diffusion_model_state)
+
+        return mean_prediction

@@ -1,3 +1,4 @@
+import numpy as np
 from keras.models import Model
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalAveragePooling1D, concatenate
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
@@ -109,8 +110,29 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
                                                 track_time=track_time),
             validation_steps=200)
 
-        self.history = history_training.history
+        self.convert_history_to_db_format(history_training)
         self.keras_model = state_detection_keras_model
 
     def evaluate_track_input(self, track):
-        pass
+        assert track.track_length == self.track_length, "Invalid track length"
+
+        if self.keras_model is None:
+            self.load_model_from_file()
+
+        model_predictions = np.zeros(shape=self.track_length)
+
+        for axis in range(track.n_axes):
+            input_net = np.zeros(shape=[1, self.track_length, 1])
+            input_net[0, :, 0] = track.axes_data[str(axis)]
+            model_predictions = (self.keras_model.predict(input_net)[0, :]) + model_predictions
+
+        mean_prediction = model_predictions / track.n_axes
+
+        # Convert to state values
+        for i in range(self.track_length):
+            if mean_prediction[i] < 0.5:
+                mean_prediction[i] = 0
+            else:
+                mean_prediction[i] = 1
+
+        return mean_prediction

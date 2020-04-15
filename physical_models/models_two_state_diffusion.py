@@ -3,6 +3,16 @@ from . import models
 from . import models_noise
 
 
+def denormalize_d_coefficient_to_net(output_coefficient_net, state_number):
+    assert (state_number == 0 or state_number == 1), "Not a valid state"
+    delta_d0 = TwoStateDiffusion.d0_high - TwoStateDiffusion.d0_low
+    delta_d1 = TwoStateDiffusion.d1_high - TwoStateDiffusion.d1_low
+    if state_number == 0:
+        return output_coefficient_net * delta_d0 + TwoStateDiffusion.d0_low
+    else:
+        return output_coefficient_net * delta_d1 + TwoStateDiffusion.d1_low
+
+
 class TwoStateDiffusion(models.Models):
     """
     State-0: Free Diffusion

@@ -4,6 +4,7 @@ from keras.layers import Dense, BatchNormalization, Conv1D, Flatten, Input
 from keras.models import Model
 from keras.optimizers import Adam
 from network_models.generators import generator_noise_reduction_net
+import numpy as np
 
 
 class NoiseReductionNetworkModel(network_model.NetworkModel):
@@ -48,7 +49,7 @@ class NoiseReductionNetworkModel(network_model.NetworkModel):
                                             track_time=track_time,
                                             diffusion_model_state=diffusion_model_state),
             steps_per_epoch=1000,
-            epochs=50,
+            epochs=3,
             callbacks=callbacks,
             validation_data=generator_noise_reduction_net(batch_size=batch_size,
                                                           track_length=self.track_length,
@@ -57,7 +58,20 @@ class NoiseReductionNetworkModel(network_model.NetworkModel):
             validation_steps=100)
 
         self.keras_model = noise_reduction_keras_model
-        self.history = history_training.history
+        self.convert_history_to_db_format(history_training)
 
     def evaluate_track_input(self, track):
-        pass
+        assert track.track_length == self.track_length, "Invalid track length"
+
+        if self.keras_model is None:
+            self.load_model_from_file()
+
+        model_predictions = np.zeros(shape=(track.n_axes, self.track_length))
+
+        for axis in range(track.n_axes):
+            input_net = np.zeros(shape=[1, self.track_length, 1])
+            m_noisy = np.mean(track.axes_data[str(axis)])
+            input_net[0, :, 0] = track.axes_data[str(axis)] - m_noisy
+            model_predictions[axis, :] = (self.keras_model.predict(input_net)[0, :]) + m_noisy
+
+        return model_predictions
