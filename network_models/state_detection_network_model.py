@@ -4,11 +4,17 @@ from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalAverage
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
 from keras.optimizers import Adam
 from network_models.generators import generator_state_net
+from physical_models.models_two_state_diffusion import TwoStateDiffusion
+from tools.analysis_tools import plot_confusion_matrix_for_layer
+from tracks.simulated_tracks import SimulatedTrack
 from . import network_model
 
 
 class StateDetectionNetworkModel(network_model.NetworkModel):
-    def train_network(self, batch_size, track_time):
+    output_categories_labels = ["State-0", "State-1"]
+    model_name = 'State Detection Network'
+
+    def train_network(self, batch_size):
         initializer = 'he_normal'
         filters_size = 32
         x1_kernel_size = 4
@@ -102,12 +108,12 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
                                      save_best_only=True)]
 
         history_training = state_detection_keras_model.fit(
-            x=generator_state_net(batch_size=batch_size, track_length=self.track_length, track_time=track_time),
+            x=generator_state_net(batch_size=batch_size, track_length=self.track_length, track_time=self.track_time),
             steps_per_epoch=8000,
             epochs=50,
             callbacks=callbacks,
             validation_data=generator_state_net(batch_size=batch_size, track_length=self.track_length,
-                                                track_time=track_time),
+                                                track_time=self.track_time),
             validation_steps=200)
 
         self.convert_history_to_db_format(history_training)
@@ -136,3 +142,26 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
                 mean_prediction[i] = 1
 
         return mean_prediction
+
+    def validate_test_data_accuracy(self, n_axes, normalized=True):
+        test_batch_size = 10
+        ground_truth = np.zeros(shape=(test_batch_size, self.track_length))
+        predicted_value = np.zeros(shape=(test_batch_size, self.track_length))
+        for i in range(test_batch_size):
+            physical_model = TwoStateDiffusion.create_random()
+            x_noisy, y_noisy, x, y, t, state, switching = physical_model.simulate_track(self.track_length,
+                                                                                        self.track_time)
+            ground_truth[i, :] = state
+            track = SimulatedTrack(track_length=self.track_length, track_time=self.track_time,
+                                   n_axes=n_axes, model_type=physical_model.__class__.__name__)
+            track.set_axes_data([x_noisy, y_noisy])
+            track.set_time_axis(t)
+
+            predicted_value[i, :] = self.evaluate_track_input(track=track)
+        ground_truth = ground_truth.flatten()
+        predicted_value = predicted_value.flatten()
+        plot_confusion_matrix_for_layer(layer_name=self.model_name,
+                                        ground_truth=ground_truth,
+                                        predicted_value=predicted_value,
+                                        labels=self.output_categories_labels,
+                                        normalized=normalized)

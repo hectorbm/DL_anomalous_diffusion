@@ -5,13 +5,18 @@ from keras.models import Model
 from keras.optimizers import Adam
 from network_models.generators import generator_diffusion_coefficient_network
 from physical_models.models_two_state_diffusion import denormalize_d_coefficient_to_net
-
+from mongoengine import IntField
 import numpy as np
 
 
 class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
+    diffusion_model_state = IntField(choices=[0, 1], required=True)
+    noise_reduction_model = None
 
-    def train_network(self, batch_size, track_time, diffusion_model_state, noise_reduction_model):
+    def set_noise_reduction_model(self, noise_reduction_model):
+        self.noise_reduction_model = noise_reduction_model
+
+    def train_network(self, batch_size):
         initializer = 'he_normal'
         filters_size = 32
         x_kernel_size = 2
@@ -50,23 +55,23 @@ class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
         history_training = diffusion_coefficient_keras_model.fit(
             x=generator_diffusion_coefficient_network(batch_size,
                                                       self.track_length,
-                                                      track_time,
-                                                      diffusion_model_state,
-                                                      noise_reduction_model),
+                                                      self.track_time,
+                                                      self.diffusion_model_state,
+                                                      self.noise_reduction_model),
             steps_per_epoch=1000,
             epochs=5,
             callbacks=callbacks,
             validation_data=
             generator_diffusion_coefficient_network(batch_size,
                                                     self.track_length,
-                                                    track_time,
-                                                    diffusion_model_state,
-                                                    noise_reduction_model),
+                                                    self.track_time,
+                                                    self.diffusion_model_state,
+                                                    self.noise_reduction_model),
             validation_steps=100)
         self.convert_history_to_db_format(history_training)
         self.keras_model = diffusion_coefficient_keras_model
 
-    def evaluate_track_input(self, track, diffusion_model_state=0):
+    def evaluate_track_input(self, track):
         assert track.track_length == self.track_length, "Invalid track length"
         prediction = np.zeros(shape=track.n_axes)
         out = np.zeros(shape=(1, 2, 1))
@@ -79,6 +84,9 @@ class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
             prediction[axis] = self.keras_model.predict(out[:, :, :])
 
         mean_prediction = denormalize_d_coefficient_to_net(output_coefficient_net=np.mean(prediction),
-                                                           state_number=diffusion_model_state)
+                                                           state_number=self.diffusion_model_state)
 
         return mean_prediction
+
+    def validate_test_data_mse(self, n_axes):
+        pass

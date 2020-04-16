@@ -34,6 +34,7 @@ if __name__ == '__main__':
 if __name__ == '__main__':
     connect_to_db()
     model = L1NetworkModel.objects(id='5e976ce557a6c42451718382')[0]
+    model.validate_test_data_accuracy(n_axes=2, normalized=True)
     for track in Tracks.objects():
         if track.track_length == model.track_length:
             model.evaluate_track_input(track)
@@ -45,10 +46,11 @@ if __name__ == '__main__':
 """
 if __name__ == '__main__':
     connect_to_db()
-    model = NoiseReductionNetworkModel.objects(id='5e97860926231d1674b58efd')[0]
+    model = NoiseReductionNetworkModel(track_length=15, diffusion_model_state=1)
+    #model = NoiseReductionNetworkModel.objects(id='5e97860926231d1674b58efd')[0]
     # noise_reduction_model = NoiseReductionNetworkModel.objects(id='')[0]
     # noise_reduction_model.save()
-    # model.train_network(batch_size=64, track_time=0.2, diffusion_model_state=1)
+    # model.train_network(batch_size=64, track_time=0.2)
     # model.save()
     # model.plot_mse_model()
     # model.plot_loss_model()
@@ -63,36 +65,42 @@ if __name__ == '__main__':
 if __name__ == '__main__':
     connect_to_db()
     model = L2NetworkModel.objects(id='5e977898537f5d994a6a880f')[0]
-    # model.train_network(batch_size=32, track_time=0.2)
-    # model.save()
+    #model.train_network(batch_size=32)
+    #model.save()
+    model.validate_test_data_accuracy(n_axes=2)
     for track in Tracks.objects():
         if track.track_length == model.track_length:
-            print(model.evaluate_track_input(track))
+            model.evaluate_track_input(track)
 
     disconnect_to_db()
+
 """
+
 """
 if __name__ == '__main__':
     connect_to_db()
     model = StateDetectionNetworkModel.objects(id='5e97822192a3e24e26f0dddb')[0]
     #model.train_network(batch_size=32, track_time=0.3)
-    #model.save()
+    model.track_time = 0.2
+    model.save()
+    model.validate_test_data_accuracy(n_axes=2)
     tracks = list(Tracks.objects())
     for track in tracks:
         if track.track_length == model.track_length:
-            print(model.evaluate_track_input(track))
+            model.evaluate_track_input(track)
     disconnect_to_db()
-
 
 """
 
-
+"""
 if __name__ == '__main__':
     connect_to_db()
-    model = DiffusionCoefficientNetworkModel(track_length=15)
-    model.train_network(batch_size=32, track_time=0.2, diffusion_model_state=0, noise_reduction_model=None)
+    model = DiffusionCoefficientNetworkModel(track_length=15, diffusion_model_state=0)
+    model.train_network(batch_size=32, track_time=0.2)
     model.save()
     for track in Tracks.objects():
         if track.track_length == model.track_length:
             print(model.evaluate_track_input(track))
     disconnect_to_db()
+
+"""

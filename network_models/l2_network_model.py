@@ -1,3 +1,6 @@
+from physical_models.models_fbm import FBM
+from tools.analysis_tools import plot_confusion_matrix_for_layer
+from tracks.simulated_tracks import SimulatedTrack
 from . import network_model
 from keras.models import Model
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPooling1D, concatenate
@@ -8,10 +11,11 @@ import numpy as np
 
 
 class L2NetworkModel(network_model.NetworkModel):
-
     output_categories = 3
+    output_categories_labels = ["H<0.4", "0.4<H<0.6", "H>0.6"]
+    model_name = 'L2 Network'
 
-    def train_network(self, batch_size, track_time):
+    def train_network(self, batch_size):
         initializer = 'he_normal'
         filters_size = 32
         x1_kernel_size = 4
@@ -118,12 +122,12 @@ class L2NetworkModel(network_model.NetworkModel):
                                      save_best_only=True)]
 
         history_training = l2_keras_model.fit(
-            x=generator_second_layer(batch_size=batch_size, track_length=self.track_length, track_time=track_time),
+            x=generator_second_layer(batch_size=batch_size, track_length=self.track_length, track_time=self.track_time),
             steps_per_epoch=4000,
             epochs=5,
             callbacks=callbacks,
             validation_data=generator_second_layer(batch_size=batch_size, track_length=self.track_length,
-                                                   track_time=track_time),
+                                                   track_time=self.track_time),
             validation_steps=100)
         self.keras_model = l2_keras_model
         self.convert_history_to_db_format(history_training)
@@ -147,3 +151,30 @@ class L2NetworkModel(network_model.NetworkModel):
             model_predictions = (self.keras_model.predict(input_net)[0, :]) + model_predictions
         mean_prediction = np.argmax(model_predictions / track.n_axes)
         return mean_prediction
+
+    def validate_test_data_accuracy(self, n_axes, normalized=True):
+        test_batch_size = 100
+        ground_truth = np.zeros(shape=test_batch_size)
+        predicted_value = np.zeros(shape=test_batch_size)
+        for i in range(test_batch_size):
+            ground_truth[i] = np.random.choice([0, 1, 2])
+            if ground_truth[i] == 0:
+                physical_model = FBM.create_random_subdiffusive()
+            elif ground_truth[i] == 1:
+                physical_model = FBM.create_random_brownian()
+            else:
+                physical_model = FBM.create_random_superdiffusive()
+
+            x_noisy, y_noisy, x, y, t = physical_model.simulate_track(self.track_length, self.track_time)
+            track = SimulatedTrack(track_length=self.track_length, track_time=self.track_time,
+                                   n_axes=n_axes, model_type=physical_model.__class__.__name__)
+            track.set_axes_data([x_noisy, y_noisy])
+            track.set_time_axis(t)
+
+            predicted_value[i] = self.evaluate_track_input(track=track)
+
+        plot_confusion_matrix_for_layer(layer_name=self.model_name,
+                                        ground_truth=ground_truth,
+                                        predicted_value=predicted_value,
+                                        labels=self.output_categories_labels,
+                                        normalized=normalized)

@@ -1,4 +1,5 @@
 from . import network_model
+from mongoengine import IntField
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
 from keras.layers import Dense, BatchNormalization, Conv1D, Flatten, Input
 from keras.models import Model
@@ -8,8 +9,9 @@ import numpy as np
 
 
 class NoiseReductionNetworkModel(network_model.NetworkModel):
+    diffusion_model_state = IntField(choices=[0, 1], required=True)
 
-    def train_network(self, batch_size, track_time, diffusion_model_state):
+    def train_network(self, batch_size):
         initializer = 'he_normal'
         filters_size = 20
         kernel_size = 2
@@ -46,15 +48,15 @@ class NoiseReductionNetworkModel(network_model.NetworkModel):
         history_training = noise_reduction_keras_model.fit(
             x=generator_noise_reduction_net(batch_size=batch_size,
                                             track_length=self.track_length,
-                                            track_time=track_time,
-                                            diffusion_model_state=diffusion_model_state),
+                                            track_time=self.track_time,
+                                            diffusion_model_state=self.diffusion_model_state),
             steps_per_epoch=1000,
             epochs=3,
             callbacks=callbacks,
             validation_data=generator_noise_reduction_net(batch_size=batch_size,
                                                           track_length=self.track_length,
-                                                          track_time=track_time,
-                                                          diffusion_model_state=diffusion_model_state),
+                                                          track_time=self.track_time,
+                                                          diffusion_model_state=self.diffusion_model_state),
             validation_steps=100)
 
         self.keras_model = noise_reduction_keras_model
@@ -75,3 +77,6 @@ class NoiseReductionNetworkModel(network_model.NetworkModel):
             model_predictions[axis, :] = (self.keras_model.predict(input_net)[0, :]) + m_noisy
 
         return model_predictions
+
+    def validate_test_data_mse(self, n_axes):
+        pass

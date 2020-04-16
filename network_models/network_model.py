@@ -1,4 +1,4 @@
-from mongoengine import DictField, StringField, Document, IntField
+from mongoengine import DictField, StringField, Document, IntField, FloatField
 import matplotlib.pyplot as plt
 import numpy as np
 from keras.models import load_model
@@ -6,6 +6,7 @@ from keras.models import load_model
 
 class NetworkModel(Document):
     track_length = IntField(required=True)
+    track_time = FloatField(required=True)
     history = DictField(required=False)
     model_params = DictField(required=False)
     model_file = StringField(required=False)
@@ -23,6 +24,12 @@ class NetworkModel(Document):
         pass
 
     def evaluate_track_input(self, track):
+        pass
+
+    def validate_test_data_accuracy(self, n_axes, normalized=True):
+        pass
+
+    def validate_test_data_mse(self, n_axes):
         pass
 
     def convert_history_to_db_format(self, history_training):
