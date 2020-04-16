@@ -4,12 +4,13 @@ from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
 from keras.layers import Dense, BatchNormalization, Conv1D, Flatten, Input
 from keras.models import Model
 from keras.optimizers import Adam
-from network_models.generators import generator_noise_reduction_net
+from networks.generators import generator_noise_reduction_net
 import numpy as np
 
 
 class NoiseReductionNetworkModel(network_model.NetworkModel):
     diffusion_model_state = IntField(choices=[0, 1], required=True)
+    model_name = 'Noise Reduction Network'
 
     def train_network(self, batch_size):
         initializer = 'he_normal'
@@ -79,4 +80,6 @@ class NoiseReductionNetworkModel(network_model.NetworkModel):
         return model_predictions
 
     def validate_test_data_mse(self, n_axes):
-        pass
+        test_batch_size = 100
+        for i in range(test_batch_size):
+            pass # TODO: Continue the mean MSE implementation

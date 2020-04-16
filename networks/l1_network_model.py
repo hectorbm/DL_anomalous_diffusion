@@ -2,7 +2,7 @@ from keras.models import Model
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPooling1D, concatenate
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
 from keras.optimizers import Adam
-from network_models.generators import generator_first_layer, axis_adaptation_to_net
+from networks.generators import generator_first_layer, axis_adaptation_to_net
 import numpy as np
 
 from physical_models.models_ctrw import CTRW

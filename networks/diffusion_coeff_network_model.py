@@ -3,7 +3,7 @@ from keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPooling1D
 from keras.models import Model
 from keras.optimizers import Adam
-from network_models.generators import generator_diffusion_coefficient_network
+from networks.generators import generator_diffusion_coefficient_network
 from physical_models.models_two_state_diffusion import denormalize_d_coefficient_to_net
 from mongoengine import IntField
 import numpy as np
@@ -89,4 +89,6 @@ class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
         return mean_prediction
 
     def validate_test_data_mse(self, n_axes):
-        pass
+        test_batch_size = 100
+        for i in range(test_batch_size):
+            pass  # TODO: Continue the mean MSE implementation
