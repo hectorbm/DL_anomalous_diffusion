@@ -15,8 +15,9 @@ def axis_adaptation_to_net(axis_data, track_length):
 def generate_batch_of_samples_l1(batch_size, track_length, track_time):
     out = np.zeros(shape=[batch_size, track_length - 1, 2])
     label = np.zeros(shape=[batch_size, 1])
-    t_sample = np.random.choice(np.arange(track_time - 2*(track_time/track_length),
-                                          track_time + 2*(track_time/track_length), (track_time/(track_length*2))))
+    t_sample = np.random.choice(np.arange(track_time - 2 * (track_time / track_length),
+                                          track_time + 2 * (track_time / track_length),
+                                          (track_time / (track_length * 2))))
     track_length_sample = int(np.random.choice(np.arange(track_length, np.ceil(track_length * 1.05), 1)))
 
     for i in range(batch_size):
@@ -36,8 +37,8 @@ def generate_batch_of_samples_l1(batch_size, track_length, track_time):
             switching = False
             while not switching:
                 x_noisy, y_noisy, x, y, t, state, switching = physical_model.simulate_track(
-                                                                                       track_length=track_length_sample,
-                                                                                       track_time=t_sample)
+                    track_length=track_length_sample,
+                    track_time=t_sample)
             label[i, 0] = 2
 
         out[i, :, 0] = axis_adaptation_to_net(axis_data=x_noisy, track_length=track_length)
@@ -49,8 +50,9 @@ def generate_batch_of_samples_l1(batch_size, track_length, track_time):
 def generate_batch_of_samples_l2(batch_size, track_length, track_time):
     out = np.zeros(shape=[batch_size, track_length - 1, 2])
     label = np.zeros(shape=[batch_size, 1])
-    t_sample = np.random.choice(np.arange(track_time - 2*(track_time/track_length),
-                                          track_time + 2*(track_time/track_length), (track_time/(track_length*2))))
+    t_sample = np.random.choice(np.arange(track_time - 2 * (track_time / track_length),
+                                          track_time + 2 * (track_time / track_length),
+                                          (track_time / (track_length * 2))))
     track_length_sample = int(np.random.choice(np.arange(track_length, np.ceil(track_length * 1.05), 1)))
 
     for i in range(batch_size):
@@ -104,8 +106,9 @@ def generator_second_layer(batch_size, track_length, track_time):
 def generate_batch_of_samples_state_net(batch_size, track_length, track_time):
     out = np.zeros(shape=[batch_size, track_length, 2])
     label = np.zeros(shape=[batch_size, track_length])
-    t_sample = np.random.choice(np.arange(track_time - 2*(track_time/track_length),
-                                          track_time + 2*(track_time/track_length), (track_time/(track_length*2))))
+    t_sample = np.random.choice(np.arange(track_time - 2 * (track_time / track_length),
+                                          track_time + 2 * (track_time / track_length),
+                                          (track_time / (track_length * 2))))
     track_length_sample = int(np.random.choice(np.arange(track_length, np.ceil(track_length * 1.05), 1)))
 
     for i in range(batch_size):
@@ -139,15 +142,17 @@ def generator_state_net(batch_size, track_length, track_time):
         yield input_net, label
 
 
-def generator_diffusion_coefficient_network(batch_size, track_length, track_time, state, noise_reduction_model):
+def generator_diffusion_coefficient_network(batch_size, track_length, track_time, state, denoising_model):
     assert (state == 0 or state == 1), "State must be 0 or 1"
-
+    assert denoising_model.diffusion_model_state == state, "Invalid state denoising model"
     while True:
-        t_sample = np.random.choice(np.arange(track_time - 2*(track_time/track_length),
-                                              track_time + 2*(track_time/track_length), (track_time/(track_length*2))))
+        t_sample = np.random.choice(np.arange(track_time - 2 * (track_time / track_length),
+                                              track_time + 2 * (track_time / track_length),
+                                              (track_time / (track_length * 2))))
         out = np.zeros(shape=[batch_size, 2, 1])
         label = np.zeros(shape=[batch_size, 1])
         noisy_out = np.zeros(shape=[batch_size, track_length])
+        m_noisy_out = np.zeros(shape=batch_size)
 
         for i in range(batch_size):
 
@@ -161,12 +166,15 @@ def generator_diffusion_coefficient_network(batch_size, track_length, track_time
                                                                                        track_time=t_sample)
                 label[i, 0] = two_state_model.normalize_d_coefficient_to_net(state_number=1)
 
-            noisy_out[i, :] = x_noisy
+            m_noisy_out[i] = np.mean(x_noisy)
+            noisy_out[i, :] = x_noisy - m_noisy_out[i]
 
         if state == 1:
             in_net = np.zeros(shape=[batch_size, track_length, 1])
             in_net[:, :, 0] = noisy_out
-            noise_reduced_x = noise_reduction_model.predict(in_net)
+            noise_reduced_x = denoising_model.keras_model.predict(in_net)
+            for j in range(batch_size):
+                noise_reduced_x[j, :] = m_noisy_out[j] * np.ones(shape=track_length)
         else:
             noise_reduced_x = noisy_out  # Reducing noise does not make a major improvement using state 0
 
@@ -184,8 +192,10 @@ def generator_noise_reduction_net(batch_size, track_length, track_time, diffusio
     assert (diffusion_model_state == 0 or diffusion_model_state == 1), "State must be 0 or 1"
 
     while True:
-        t_sample = np.random.choice(np.arange(track_time - 2*(track_time/track_length),
-                                              track_time + 2*(track_time/track_length), (track_time/(track_length*2))))
+        t_sample = np.random.choice(np.arange(track_time - 2 * (track_time / track_length),
+                                              track_time + 2 * (track_time / track_length),
+                                              (track_time / (track_length * 2))))
+
         out = np.zeros(shape=[batch_size, track_length, 1])
         label = np.zeros(shape=[batch_size, track_length])
 
@@ -195,11 +205,10 @@ def generator_noise_reduction_net(batch_size, track_length, track_time, diffusio
             if diffusion_model_state == 0:
                 x_noisy, y_noisy, x, y, t = two_state_model.simulate_track_only_state0(track_length=track_length,
                                                                                        track_time=t_sample)
-                label[i, 0] = two_state_model.normalize_d_coefficient_to_net(state_number=0)
+
             else:
                 x_noisy, y_noisy, x, y, t = two_state_model.simulate_track_only_state1(track_length=track_length,
                                                                                        track_time=t_sample)
-                label[i, 0] = two_state_model.normalize_d_coefficient_to_net(state_number=1)
 
             out[i, :, 0] = x_noisy - np.mean(x_noisy)
             label[i, :] = x - np.mean(x_noisy)

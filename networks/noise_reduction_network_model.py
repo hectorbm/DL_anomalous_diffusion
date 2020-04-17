@@ -1,3 +1,5 @@
+from physical_models.models_two_state_diffusion import TwoStateDiffusion
+from tracks.simulated_tracks import SimulatedTrack
 from . import network_model
 from mongoengine import IntField
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
@@ -6,6 +8,7 @@ from keras.models import Model
 from keras.optimizers import Adam
 from networks.generators import generator_noise_reduction_net
 import numpy as np
+from sklearn.metrics import mean_squared_error
 
 
 class NoiseReductionNetworkModel(network_model.NetworkModel):
@@ -52,7 +55,7 @@ class NoiseReductionNetworkModel(network_model.NetworkModel):
                                             track_time=self.track_time,
                                             diffusion_model_state=self.diffusion_model_state),
             steps_per_epoch=1000,
-            epochs=3,
+            epochs=10,
             callbacks=callbacks,
             validation_data=generator_noise_reduction_net(batch_size=batch_size,
                                                           track_length=self.track_length,
@@ -79,7 +82,29 @@ class NoiseReductionNetworkModel(network_model.NetworkModel):
 
         return model_predictions
 
-    def validate_test_data_mse(self, n_axes):
-        test_batch_size = 100
+    def validate_test_data_mse(self, n_axes, test_batch_size=100):
+        mse_avg = np.zeros(shape=test_batch_size)
         for i in range(test_batch_size):
-            pass # TODO: Continue the mean MSE implementation
+            two_state_model = TwoStateDiffusion.create_random()
+            if self.diffusion_model_state == 0:
+                x_noisy, y_noisy, x, y, t = two_state_model.simulate_track_only_state0(track_length=self.track_length,
+                                                                                       track_time=self.track_time)
+
+            else:
+                x_noisy, y_noisy, x, y, t = two_state_model.simulate_track_only_state1(track_length=self.track_length,
+                                                                                       track_time=self.track_time)
+            noisy_data = [x_noisy, y_noisy]
+            ground_truth = [x, y]
+            track = SimulatedTrack(track_length=self.track_length, track_time=self.track_time,
+                                   n_axes=n_axes, model_type=two_state_model.__class__.__name__)
+            track.set_axes_data(axes_data=noisy_data)
+            track.set_time_axis(time_axis_data=t)
+            denoised_axes_data = self.evaluate_track_input(track)
+
+            mse_axis = np.zeros(shape=track.n_axes)
+            for axis in range(track.n_axes):
+                mse_axis[axis] = mean_squared_error(y_true=ground_truth[axis], y_pred=denoised_axes_data[axis])
+            mse_avg[i] = np.mean(mse_axis)
+
+        return np.mean(mse_avg)
+

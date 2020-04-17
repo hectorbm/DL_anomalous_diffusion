@@ -1,10 +1,13 @@
+from sklearn.metrics import mean_squared_error
+
+from tracks.simulated_tracks import SimulatedTrack
 from . import network_model
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPooling1D
 from keras.models import Model
 from keras.optimizers import Adam
 from networks.generators import generator_diffusion_coefficient_network
-from physical_models.models_two_state_diffusion import denormalize_d_coefficient_to_net
+from physical_models.models_two_state_diffusion import denormalize_d_coefficient_to_net, TwoStateDiffusion
 from mongoengine import IntField
 import numpy as np
 
@@ -59,7 +62,8 @@ class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
                                                       self.diffusion_model_state,
                                                       self.noise_reduction_model),
             steps_per_epoch=1000,
-            epochs=5,
+            epochs=15,
+            workers=0,
             callbacks=callbacks,
             validation_data=
             generator_diffusion_coefficient_network(batch_size,
@@ -76,8 +80,17 @@ class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
         prediction = np.zeros(shape=track.n_axes)
         out = np.zeros(shape=(1, 2, 1))
 
+        if self.noise_reduction_model is not None and self.diffusion_model_state == 1:
+            axes_data = self.noise_reduction_model.evaluate_track_input(track)
+            axes_data_dict = {}
+            for i in range(track.n_axes):
+                axes_data_dict[str(i)] = axes_data[i, :]
+            axes_data = axes_data_dict
+        else:
+            axes_data = track.axes_data
+
         for axis in range(track.n_axes):
-            d = np.diff(track.axes_data[str(axis)], axis=0)
+            d = np.diff(axes_data[str(axis)], axis=0)
             m = np.mean(np.abs(d), axis=0)
             s = np.std(d, axis=0)
             out[0, :, 0] = [m, s]
@@ -88,7 +101,25 @@ class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
 
         return mean_prediction
 
-    def validate_test_data_mse(self, n_axes):
-        test_batch_size = 100
+    def validate_test_data_mse(self, n_axes, test_batch_size=100):
+        mse_avg = np.zeros(shape=test_batch_size)
         for i in range(test_batch_size):
-            pass  # TODO: Continue the mean MSE implementation
+            two_state_model = TwoStateDiffusion.create_random()
+            if self.diffusion_model_state == 0:
+                x_noisy, y_noisy, x, y, t = two_state_model.simulate_track_only_state0(track_length=self.track_length,
+                                                                                       track_time=self.track_time)
+                ground_truth = two_state_model.get_d_state0()
+            else:
+                x_noisy, y_noisy, x, y, t = two_state_model.simulate_track_only_state1(track_length=self.track_length,
+                                                                                       track_time=self.track_time)
+                ground_truth = two_state_model.get_d_state1()
+
+            noisy_data = [x_noisy, y_noisy]
+            track = SimulatedTrack(track_length=self.track_length, track_time=self.track_time,
+                                   n_axes=n_axes, model_type=two_state_model.__class__.__name__)
+            track.set_axes_data(axes_data=noisy_data)
+            track.set_time_axis(time_axis_data=t)
+            predicted_coefficient = self.evaluate_track_input(track)
+            mse_avg[i] = mean_squared_error(y_true=[ground_truth], y_pred=[predicted_coefficient])
+
+        return np.mean(mse_avg)

@@ -1,11 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from mongoengine import Document, IntField, ListField, DictField
+from mongoengine import Document, IntField, ListField, DictField, FloatField
 
 
 class Tracks(Document):
     track_length = IntField(min_value=1, required=True)
-    track_time = IntField(min_value=0, required=True)
+    track_time = FloatField(min_value=0, required=True)
     n_axes = IntField(min_value=1, required=True)
     time_axis = ListField(required=True)
     axes_data = DictField(required=True)

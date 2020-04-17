@@ -1,3 +1,5 @@
+import os
+
 from mongoengine import Document, StringField, FileField, FloatField
 import pandas as pd
 import numpy as np
@@ -6,11 +8,24 @@ from . import tracks_dict_parser
 import sys
 
 
+def get_files_in_path(path_name):
+    files = []
+    with os.scandir(path_name) as it:
+        print(it)
+        for entry in it:
+            if not entry.name.startswith('.') and entry.is_file():
+                file_extension = entry.name.split('.')
+                if file_extension[len(file_extension) - 1] == "csv":
+                    filename = ''.join([path_name, entry.name])
+                    files.append(filename)
+    return files
+
+
 class File(Document):
     experimental_condition = StringField(choices=experimental_tracks.EXPERIMENTAL_CONDITIONS, required=True)
     labeling_method = StringField(choices=experimental_tracks.LABELING_METHODS, required=True)
     raw_file = FileField(required=True)
-    file_fps = FloatField(default=58.333)
+    file_fps = FloatField(default=50)
 
     def add_raw_file(self, filename):
         self.parse_filename(filename)
@@ -36,25 +51,30 @@ class File(Document):
         label_method_detected = False
 
         for substr in only_file_split:
-            if experimental_tracks.EXPERIMENTAL_CONDITIONS[0] in substr:
+            if (experimental_tracks.EXPERIMENTAL_CONDITIONS[0] in substr) or (
+                    experimental_tracks.EXPERIMENTAL_CONDITIONS[0].upper() in substr):
                 self.experimental_condition = experimental_tracks.EXPERIMENTAL_CONDITIONS[0]
                 exp_cond_detected = True
                 break
-            if experimental_tracks.EXPERIMENTAL_CONDITIONS[1] in substr:
+            if (experimental_tracks.EXPERIMENTAL_CONDITIONS[1] in substr) or (
+                    experimental_tracks.EXPERIMENTAL_CONDITIONS[1].upper() in substr):
                 self.experimental_condition = experimental_tracks.EXPERIMENTAL_CONDITIONS[1]
                 exp_cond_detected = True
                 break
-            if experimental_tracks.EXPERIMENTAL_CONDITIONS[2] in substr:
+            if (experimental_tracks.EXPERIMENTAL_CONDITIONS[2] in substr) or (
+                    experimental_tracks.EXPERIMENTAL_CONDITIONS[2].upper() in substr):
                 self.experimental_condition = experimental_tracks.EXPERIMENTAL_CONDITIONS[2]
                 exp_cond_detected = True
                 break
 
         for substr in only_file_split:
-            if experimental_tracks.LABELING_METHODS[0] in substr:
+            if (experimental_tracks.LABELING_METHODS[0] in substr) or (
+                    experimental_tracks.LABELING_METHODS[0].upper() in substr):
                 self.labeling_method = experimental_tracks.LABELING_METHODS[0]
                 label_method_detected = True
                 break
-            if experimental_tracks.LABELING_METHODS[1] in substr:
+            if (experimental_tracks.LABELING_METHODS[1] in substr) or (
+                    experimental_tracks.LABELING_METHODS[1].upper() in substr):
                 self.labeling_method = experimental_tracks.LABELING_METHODS[1]
                 label_method_detected = True
                 break
@@ -103,7 +123,8 @@ class File(Document):
                                                            track_time=track_time,
                                                            n_axes=n_axes,
                                                            labeling_method=self.labeling_method,
-                                                           experimental_condition=self.experimental_condition)
+                                                           experimental_condition=self.experimental_condition,
+                                                           origin_file=self.id)
         new_track.set_axes_data(axes_data)
         new_track.set_time_axis(time_axis)
 

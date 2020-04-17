@@ -8,7 +8,6 @@ class NetworkModel(Document):
     track_length = IntField(required=True)
     track_time = FloatField(required=True)
     history = DictField(required=False)
-    model_params = DictField(required=False)
     model_file = StringField(required=False)
     keras_model = None
 
