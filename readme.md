@@ -9,7 +9,7 @@ Second Network: Sub-diffusive, Brownian and Super-diffusive
 ---
 
 ##### Current architecture:
-![Image](models/networks_diagram.png)
+![Image](readme_docs/networks_diagram.png)
 
 Simulations and models adapted to STORM(Stochastic Optical Reconstruction Microscopy) data.
 Raw data is extracted from experimental observations, a pre-processing with ThunderSTORM and Jaqaman allows to obtain data localization and tracks reconstruction. 
@@ -18,13 +18,13 @@ The development of a state-detection network is under consideration to analyze t
 
 Current accuracy for the first network is:
 
-![Image](models/Figure_1.png) 
+![Image](readme_docs/Figure_1.png) 
 
 And the second network accuracy:
 
-![Image](models/conf_matlayer2.png)
+![Image](readme_docs/conf_matlayer2.png)
 
 
 State-Detection: 
 
-![Image](models/State-Detection_net.png)
+![Image](readme_docs/State-Detection_net.png)
