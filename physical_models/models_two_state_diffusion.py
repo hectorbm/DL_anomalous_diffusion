@@ -125,11 +125,11 @@ class TwoStateDiffusion(models.Models):
 
         for i in range(len(state)):
             if state[i] == 0:
-                x[i] = x[i] * np.sqrt(self.D_state0 * ((track_time / track_length) ** self.beta0))
-                y[i] = y[i] * np.sqrt(self.D_state0 * ((track_time / track_length) ** self.beta0))
+                x[i] = x[i] * np.sqrt(2 * self.D_state0 * ((track_time / track_length) ** self.beta0))
+                y[i] = y[i] * np.sqrt(2 * self.D_state0 * ((track_time / track_length) ** self.beta0))
             else:
-                x[i] = x[i] * np.sqrt(self.D_state1 * ((track_time / track_length) ** self.beta1))
-                y[i] = y[i] * np.sqrt(self.D_state1 * ((track_time / track_length) ** self.beta1))
+                x[i] = x[i] * np.sqrt(2 * self.D_state1 * ((track_time / track_length) ** self.beta1))
+                y[i] = y[i] * np.sqrt(2 * self.D_state1 * ((track_time / track_length) ** self.beta1))
         x = np.cumsum(x)
         y = np.cumsum(y)
 
@@ -178,8 +178,8 @@ class TwoStateDiffusion(models.Models):
         y = np.random.normal(loc=0, scale=1, size=track_length)
 
         for i in range(track_length):
-            x[i] = x[i] * np.sqrt(self.D_state0 * ((track_time / track_length) ** self.beta0))
-            y[i] = y[i] * np.sqrt(self.D_state0 * ((track_time / track_length) ** self.beta0))
+            x[i] = x[i] * np.sqrt(2 * self.D_state0 * ((track_time / track_length) ** self.beta0))
+            y[i] = y[i] * np.sqrt(2 * self.D_state0 * ((track_time / track_length) ** self.beta0))
 
         x = np.cumsum(x)
         y = np.cumsum(y)
@@ -229,8 +229,8 @@ class TwoStateDiffusion(models.Models):
         y = np.random.normal(loc=0, scale=1, size=track_length)
 
         for i in range(track_length):
-            x[i] = x[i] * np.sqrt(self.D_state1 * ((track_time / track_length) ** self.beta1))
-            y[i] = y[i] * np.sqrt(self.D_state1 * ((track_time / track_length) ** self.beta1))
+            x[i] = x[i] * np.sqrt(2 * self.D_state1 * ((track_time / track_length) ** self.beta1))
+            y[i] = y[i] * np.sqrt(2 * self.D_state1 * ((track_time / track_length) ** self.beta1))
 
         x = np.cumsum(x)
         y = np.cumsum(y)
