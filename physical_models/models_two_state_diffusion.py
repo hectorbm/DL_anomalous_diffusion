@@ -19,28 +19,24 @@ class TwoStateDiffusion(models.Models):
     State-1: Confined Diffusion
     """
 
-    # De aca se puede sacar algunas conclusiones
     # http://www.columbia.edu/~ks20/4404-Sigman/4404-Notes-sim-BM.pdf
-    # Saque el 2 del scaling de grebenkov, cual es la explicacion de 
-    # utilizar esta constante que sale de la nada? shetchman en su 
-    # simulacion de brownian no lo utiliza tampoco.
+
+    d0_low = 0.05
+    d0_high = 0.3
+    d1_low = 0.001
+    d1_high = 0.05
 
     def __init__(self, k_state0, k_state1, d_state0, d_state1):
         self.k_state0 = k_state0
         self.k_state1 = k_state1
         self.D_state0 = d_state0 * 1000000  # Convert from um^2 -> nm^2
         self.D_state1 = d_state1 * 1000000
-        self.beta0 = 1
-        self.beta1 = 2
 
     @classmethod
     def create_random(cls):
         # k_state(i) dimensions = 1 / frame
         # D_state(i) dimensions = um^2 * s^(-beta)
-        cls.d0_low = 0.05
-        cls.d0_high = 0.3
-        cls.d1_low = 0.001
-        cls.d1_high = 0.05
+
         d_state0 = np.random.uniform(low=cls.d0_low, high=cls.d0_high)
         d_state1 = np.random.uniform(low=cls.d1_low, high=cls.d1_high)
         k_state0 = np.random.uniform(low=0.01, high=0.08)
@@ -125,11 +121,11 @@ class TwoStateDiffusion(models.Models):
 
         for i in range(len(state)):
             if state[i] == 0:
-                x[i] = x[i] * np.sqrt(2 * self.D_state0 * ((track_time / track_length) ** self.beta0))
-                y[i] = y[i] * np.sqrt(2 * self.D_state0 * ((track_time / track_length) ** self.beta0))
+                x[i] = x[i] * np.sqrt(2 * self.D_state0 * (track_time / track_length))
+                y[i] = y[i] * np.sqrt(2 * self.D_state0 * (track_time / track_length))
             else:
-                x[i] = x[i] * np.sqrt(2 * self.D_state1 * ((track_time / track_length) ** self.beta1))
-                y[i] = y[i] * np.sqrt(2 * self.D_state1 * ((track_time / track_length) ** self.beta1))
+                x[i] = x[i] * np.sqrt(2 * self.D_state1 * (track_time / track_length))
+                y[i] = y[i] * np.sqrt(2 * self.D_state1 * (track_time / track_length))
         x = np.cumsum(x)
         y = np.cumsum(y)
 
@@ -178,8 +174,8 @@ class TwoStateDiffusion(models.Models):
         y = np.random.normal(loc=0, scale=1, size=track_length)
 
         for i in range(track_length):
-            x[i] = x[i] * np.sqrt(2 * self.D_state0 * ((track_time / track_length) ** self.beta0))
-            y[i] = y[i] * np.sqrt(2 * self.D_state0 * ((track_time / track_length) ** self.beta0))
+            x[i] = x[i] * np.sqrt(2 * self.D_state0 * (track_time / track_length))
+            y[i] = y[i] * np.sqrt(2 * self.D_state0 * (track_time / track_length))
 
         x = np.cumsum(x)
         y = np.cumsum(y)
@@ -229,8 +225,8 @@ class TwoStateDiffusion(models.Models):
         y = np.random.normal(loc=0, scale=1, size=track_length)
 
         for i in range(track_length):
-            x[i] = x[i] * np.sqrt(2 * self.D_state1 * ((track_time / track_length) ** self.beta1))
-            y[i] = y[i] * np.sqrt(2 * self.D_state1 * ((track_time / track_length) ** self.beta1))
+            x[i] = x[i] * np.sqrt(2 * self.D_state1 * (track_time / track_length))
+            y[i] = y[i] * np.sqrt(2 * self.D_state1 * (track_time / track_length))
 
         x = np.cumsum(x)
         y = np.cumsum(y)

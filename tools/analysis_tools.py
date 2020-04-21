@@ -1,3 +1,4 @@
+from scipy.optimize import curve_fit
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
 import pandas as pd
@@ -22,3 +23,28 @@ def plot_confusion_matrix_for_layer(layer_name, ground_truth, predicted_value, l
     plt.show()
 
 
+def linear_func(x, beta, d):
+    return d * (x ** beta)
+
+
+def mean_squared_displacement(x, y, time_length, non_linear=True):
+    data = np.sqrt(x ** 2 + y ** 2)
+    n_data = np.size(data)
+    number_of_delta_t = np.int((n_data - 1))
+    t_vec = np.arange(1, np.int(number_of_delta_t))
+
+    msd = np.zeros([len(t_vec), 1])
+    for dt, ind in zip(t_vec, range(len(t_vec))):
+        squared_displacement = (data[1 + dt:] - data[:-1 - dt]) ** 2
+        msd[ind] = np.mean(squared_displacement, axis=0)
+
+    msd = np.array(msd)
+
+    t_vec = np.linspace(0.0001, time_length, len(x)-2)
+    msd = np.array(msd).ravel()
+    if non_linear:
+        a, b = curve_fit(linear_func, t_vec, msd, bounds=((0, 0), (2, np.inf)), maxfev=2000)
+    else:
+        a, b = curve_fit(linear_func, t_vec, msd, bounds=((0, 0, -np.inf), (2, np.inf, np.inf)), maxfev=2000)
+
+    return t_vec, msd, a

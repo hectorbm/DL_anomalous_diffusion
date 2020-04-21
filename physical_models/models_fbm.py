@@ -2,7 +2,7 @@ import numpy as np
 from scipy import fftpack
 from . import models
 from . import models_noise
-
+from tracks.file import File
 
 class FBM(models.Models):
     sub_diff_min_max = [0.1, 0.42]
@@ -84,14 +84,8 @@ class FBM(models.Models):
             y = y + np.absolute(np.min(y))  # Add offset to y
 
         # Scale to nm and add a random offset
-        if np.max(x) != 0:
-            x = x * (1 / np.max(x)) * np.min([10000, ((track_length ** 1.1) * np.random.uniform(low=3, high=4))])
-        else:
-            x = x * np.min([10000, ((track_length ** 1.1) * np.random.uniform(low=3, high=4))])
-        if np.max(y) != 0:
-            y = y * (1 / np.max(y)) * np.min([10000, ((track_length ** 1.1) * np.random.uniform(low=3, high=4))])
-        else:
-            y = y * np.min([10000, ((track_length ** 1.1) * np.random.uniform(low=3, high=4))])
+        x = x*File.file_pixel_size
+        y = y*File.file_pixel_size
 
         noise_x, noise_y = models_noise.add_noise(track_length)
 

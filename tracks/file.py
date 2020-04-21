@@ -26,6 +26,7 @@ class File(Document):
     labeling_method = StringField(choices=experimental_tracks.LABELING_METHODS, required=True)
     raw_file = FileField(required=True)
     file_fps = FloatField(default=50)
+    file_pixel_size = 106
 
     def add_raw_file(self, filename):
         self.parse_filename(filename)
