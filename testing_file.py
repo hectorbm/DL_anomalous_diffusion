@@ -80,15 +80,15 @@ if __name__ == '__main__':
 """
 
 
-if __name__ == '__main__':
-    connect_to_db()
-    model = L1NetworkModel.objects(track_length=15)[0]
-    model.validate_test_data_accuracy(n_axes=2, normalized=True)
-    # for track in Tracks.objects():
-    #     if track.track_length == model.track_length:
-    #         model.evaluate_track_input(track)
-
-    disconnect_to_db()
+# if __name__ == '__main__':
+#     connect_to_db()
+#     model = L1NetworkModel.objects(track_length=15)[0]
+#     model.validate_test_data_accuracy(n_axes=2, normalized=True)
+#     # for track in Tracks.objects():
+#     #     if track.track_length == model.track_length:
+#     #         model.evaluate_track_input(track)
+#
+#     disconnect_to_db()
 
 
 """

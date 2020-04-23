@@ -17,7 +17,7 @@ class NoiseReductionNetworkModel(network_model.NetworkModel):
 
     def train_network(self, batch_size):
         initializer = 'he_normal'
-        filters_size = 20
+        filters_size = 10
         kernel_size = 2
 
         inputs = Input(shape=(self.track_length, 1))
@@ -26,7 +26,7 @@ class NoiseReductionNetworkModel(network_model.NetworkModel):
         x = BatchNormalization()(x)
         x = Flatten()(x)
 
-        dense_1 = Dense(units=self.track_length, activation='relu')(x)
+        dense_1 = Dense(units=self.track_length*filters_size, activation='relu')(x)
         output_network = Dense(units=self.track_length)(dense_1)
 
         noise_reduction_keras_model = Model(inputs=inputs, outputs=output_network)

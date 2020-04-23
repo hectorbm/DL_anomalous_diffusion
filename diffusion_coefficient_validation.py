@@ -6,11 +6,12 @@ from tools.analysis_tools import mean_squared_displacement
 
 
 def coefficient_validation(track_length, track_time, state_diff):
-    mse_d = np.zeros(shape=100)
-    d = np.zeros(shape=100)
-    beta = np.zeros(shape=100)
+    validation_size = 1000
+    mse_d = np.zeros(shape=validation_size)
+    d = np.zeros(shape=validation_size)
+    beta = np.zeros(shape=validation_size)
 
-    for i in range(100):
+    for i in range(validation_size):
         phys_model = TwoStateDiffusion.create_random()
         if state_diff == 0:
             x_noisy, y_noisy, x, y, t = phys_model.simulate_track_only_state0(track_length=track_length,
@@ -38,8 +39,8 @@ def coefficient_validation(track_length, track_time, state_diff):
 
 if __name__ == '__main__':
     # Set this params
-    tl = 15
-    state = 0
+    tl = 10
+    state = 1
 
     T = tl / 50
     mse = np.mean(coefficient_validation(tl, T, state))
