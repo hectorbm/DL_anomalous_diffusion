@@ -39,10 +39,10 @@ def coefficient_validation(track_length, track_time, state_diff):
 
 if __name__ == '__main__':
     # Set this params
-    tl = 10
-    state = 1
+    tl = 15
+    state = 0
 
-    T = tl / 50
+    T = 0.33
     mse = np.mean(coefficient_validation(tl, T, state))
-    print('RMSE: {:.6}'.format(np.sqrt(mse)))
+    print('MSE: {:.6}'.format(mse))
 

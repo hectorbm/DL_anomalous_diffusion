@@ -129,7 +129,7 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
 
         for axis in range(track.n_axes):
             input_net = np.zeros(shape=[1, self.track_length, 1])
-            input_net[0, :, 0] = track.axes_data[str(axis)]
+            input_net[0, :, 0] = track.axes_data[str(axis)] - np.mean(track.axes_data[str(axis)])
             model_predictions = (self.keras_model.predict(input_net)[0, :]) + model_predictions
 
         mean_prediction = model_predictions / track.n_axes
@@ -149,8 +149,12 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
         predicted_value = np.zeros(shape=(test_batch_size, self.track_length))
         for i in range(test_batch_size):
             physical_model = TwoStateDiffusion.create_random()
-            x_noisy, y_noisy, x, y, t, state, switching = physical_model.simulate_track(self.track_length,
-                                                                                        self.track_time)
+
+            switching = False
+            while not switching:
+                x_noisy, y_noisy, x, y, t, state, switching = physical_model.simulate_track(self.track_length,
+                                                                                            self.track_time)
+
             ground_truth[i, :] = state
             track = SimulatedTrack(track_length=self.track_length, track_time=self.track_time,
                                    n_axes=n_axes, model_type=physical_model.__class__.__name__)

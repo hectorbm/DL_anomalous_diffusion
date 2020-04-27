@@ -144,21 +144,21 @@ if __name__ == '__main__':
 
 """
 
-"""
+
 if __name__ == '__main__':
     connect_to_db()
-    model = StateDetectionNetworkModel.objects(id='5e97822192a3e24e26f0dddb')[0]
-    #model.train_network(batch_size=32, track_time=0.3)
-    model.track_time = 0.2
+    #model = StateDetectionNetworkModel.objects(id='5ea2137da299af0fad7ad391')[0]
+    model = StateDetectionNetworkModel(track_length=5, track_time=0.14)
+    model.train_network(batch_size=32)
     model.save()
+    # model.load_model_from_file()
     model.validate_test_data_accuracy(n_axes=2)
-    tracks = list(Tracks.objects())
-    for track in tracks:
-        if track.track_length == model.track_length:
-            model.evaluate_track_input(track)
+    # tracks = list(Tracks.objects())
+    # for track in tracks:
+    #     if track.track_length == model.track_length:
+    #         model.evaluate_track_input(track)
     disconnect_to_db()
 
-"""
 
 """
 
