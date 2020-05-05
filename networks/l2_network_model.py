@@ -124,7 +124,7 @@ class L2NetworkModel(network_model.NetworkModel):
         history_training = l2_keras_model.fit(
             x=generator_second_layer(batch_size=batch_size, track_length=self.track_length, track_time=self.track_time),
             steps_per_epoch=4000,
-            epochs=5,
+            epochs=7,
             callbacks=callbacks,
             validation_data=generator_second_layer(batch_size=batch_size, track_length=self.track_length,
                                                    track_time=self.track_time),

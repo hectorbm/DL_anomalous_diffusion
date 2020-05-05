@@ -4,6 +4,7 @@ from . import models
 from . import models_noise
 from tracks.file import File
 
+
 class FBM(models.Models):
     sub_diff_min_max = [0.1, 0.42]
     super_diff_min_max = [0.58, 0.9]
@@ -60,7 +61,7 @@ class FBM(models.Models):
         r[0] = 1
         idx = np.arange(1, track_length + 1, 1)
         r[idx] = 0.5 * ((idx + 1) ** (2 * self.hurst_exp) - 2 * idx ** (2 * self.hurst_exp) + (idx - 1) ** (
-                    2 * self.hurst_exp))
+                2 * self.hurst_exp))
         r = np.concatenate((r, r[np.arange(len(r) - 2, 0, -1)]))
 
         # get eigenvalues through fourier transform
@@ -68,12 +69,12 @@ class FBM(models.Models):
 
         # get trajectory using fft: dimensions assumed uncoupled
         x = fftpack.fft(np.sqrt(lamda) * (
-                    np.random.normal(size=(2 * track_length)) + 1j * np.random.normal(size=(2 * track_length))))
+                np.random.normal(size=(2 * track_length)) + 1j * np.random.normal(size=(2 * track_length))))
         x = track_length ** (-self.hurst_exp) * np.cumsum(np.real(x[:track_length]))  # rescale
         x = ((track_time ** self.hurst_exp) * x)  # resulting trajectory in x
 
         y = fftpack.fft(np.sqrt(lamda) * (
-                    np.random.normal(size=(2 * track_length)) + 1j * np.random.normal(size=(2 * track_length))))
+                np.random.normal(size=(2 * track_length)) + 1j * np.random.normal(size=(2 * track_length))))
         y = track_length ** (-self.hurst_exp) * np.cumsum(np.real(y[:track_length]))  # rescale
         y = ((track_time ** self.hurst_exp) * y)  # resulting trajectory in y
 
@@ -84,46 +85,12 @@ class FBM(models.Models):
             y = y + np.absolute(np.min(y))  # Add offset to y
 
         # Scale to nm and add a random offset
-        x = x*File.file_pixel_size
-        y = y*File.file_pixel_size
+        x = x * File.file_pixel_size
+        y = y * File.file_pixel_size
 
-        noise_x, noise_y = models_noise.add_noise(track_length)
+        x, x_noisy, y, y_noisy = models_noise.add_noise_and_offset(track_length, x, y)
 
-        x_noisy = x + noise_x
-        y_noisy = y + noise_y
-
-        if np.min(x_noisy) < np.min(x) and np.min(x_noisy) < 0:
-            min_noisy_x = np.absolute(np.min(x_noisy))
-            x_noisy = x_noisy + min_noisy_x  # Convert to positive
-            x = x + min_noisy_x
-
-        if np.min(x_noisy) > np.min(x) and np.min(x) < 0:
-            min_x = np.absolute(np.min(x))
-            x_noisy = x_noisy + min_x  # Convert to positive
-            x = x + min_x
-
-        if np.min(y_noisy) < np.min(y) and np.min(y_noisy) < 0:
-            min_noisy_y = np.absolute(np.min(y_noisy))
-            y_noisy = y_noisy + min_noisy_y  # Convert to positive
-            y = y + min_noisy_y
-
-        if np.min(y_noisy) > np.min(y) and np.min(y) < 0:
-            min_y = np.absolute(np.min(y))
-            y_noisy = y_noisy + min_y  # Convert to positive
-            y = y + min_y
-
-        offset_x = np.ones(shape=track_length) * np.random.uniform(low=0, high=(
-                10000 - np.minimum(np.max(x), np.max(x_noisy))))
-        offset_y = np.ones(shape=track_length) * np.random.uniform(low=0, high=(
-                10000 - np.minimum(np.max(y), np.max(y_noisy))))
-
-        x = x + offset_x
-        y = y + offset_y
-        x_noisy = x_noisy + offset_x
-        y_noisy = y_noisy + offset_y
-
-        t = np.arange(0, track_length, 1) / track_length
-        t = t * track_time  # scale for final time T
+        t = np.linspace(0, track_time, track_length)
 
         return x_noisy, y_noisy, x, y, t
 

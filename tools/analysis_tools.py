@@ -24,7 +24,7 @@ def plot_confusion_matrix_for_layer(layer_name, ground_truth, predicted_value, l
 
 
 def linear_func(x, beta, d):
-    return d * (x ** beta)
+    return d * (x ** 1)
 
 
 def mean_squared_displacement(x, y, time_length, non_linear=True):

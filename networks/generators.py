@@ -1,5 +1,6 @@
 import numpy as np
 from keras.utils import to_categorical
+
 from physical_models.models_ctrw import CTRW
 from physical_models.models_fbm import FBM
 from physical_models.models_two_state_diffusion import TwoStateDiffusion
@@ -15,9 +16,7 @@ def axis_adaptation_to_net(axis_data, track_length):
 def generate_batch_of_samples_l1(batch_size, track_length, track_time):
     out = np.zeros(shape=[batch_size, track_length - 1, 2])
     label = np.zeros(shape=[batch_size, 1])
-    t_sample = np.random.choice(np.arange(track_time - 2 * (track_time / track_length),
-                                          track_time + 2 * (track_time / track_length),
-                                          (track_time / (track_length * 2))))
+    t_sample = np.random.choice(np.linspace(track_time*0.85, track_time*1.15,50))
     track_length_sample = int(np.random.choice(np.arange(track_length, np.ceil(track_length * 1.05), 1)))
 
     for i in range(batch_size):
@@ -50,9 +49,7 @@ def generate_batch_of_samples_l1(batch_size, track_length, track_time):
 def generate_batch_of_samples_l2(batch_size, track_length, track_time):
     out = np.zeros(shape=[batch_size, track_length - 1, 2])
     label = np.zeros(shape=[batch_size, 1])
-    t_sample = np.random.choice(np.arange(track_time - 2 * (track_time / track_length),
-                                          track_time + 2 * (track_time / track_length),
-                                          (track_time / (track_length * 2))))
+    t_sample = np.random.choice(np.linspace(track_time*0.85, track_time*1.15,50))
     track_length_sample = int(np.random.choice(np.arange(track_length, np.ceil(track_length * 1.05), 1)))
 
     for i in range(batch_size):
@@ -106,9 +103,7 @@ def generator_second_layer(batch_size, track_length, track_time):
 def generate_batch_of_samples_state_net(batch_size, track_length, track_time):
     out = np.zeros(shape=[batch_size, track_length, 2])
     label = np.zeros(shape=[batch_size, track_length])
-    t_sample = np.random.choice(np.arange(track_time - 2 * (track_time / track_length),
-                                          track_time + 2 * (track_time / track_length),
-                                          (track_time / (track_length * 2))))
+    t_sample = np.random.choice(np.linspace(track_time*0.85, track_time*1.15, 50))
     track_length_sample = int(np.random.choice(np.arange(track_length, np.ceil(track_length * 1.05), 1)))
 
     for i in range(batch_size):
@@ -146,9 +141,7 @@ def generator_diffusion_coefficient_network(batch_size, track_length, track_time
     assert (state == 0 or state == 1), "State must be 0 or 1"
     assert denoising_model.diffusion_model_state == state, "Invalid state denoising model"
     while True:
-        t_sample = np.random.choice(np.arange(track_time - 2 * (track_time / track_length),
-                                              track_time + 2 * (track_time / track_length),
-                                              (track_time / (track_length * 2))))
+        t_sample = np.random.choice(np.linspace(track_time*0.85, track_time*1.15,50))
         out = np.zeros(shape=[batch_size, 2, 1])
         label = np.zeros(shape=[batch_size, 1])
         noisy_out = np.zeros(shape=[batch_size, track_length])
@@ -192,10 +185,7 @@ def generator_noise_reduction_net(batch_size, track_length, track_time, diffusio
     assert (diffusion_model_state == 0 or diffusion_model_state == 1), "State must be 0 or 1"
 
     while True:
-        t_sample = np.random.choice(np.arange(track_time - 2 * (track_time / track_length),
-                                              track_time + 2 * (track_time / track_length),
-                                              (track_time / (track_length * 2))))
-
+        t_sample = np.random.choice(np.linspace(track_time*0.85, track_time*1.15,50))
         out = np.zeros(shape=[batch_size, track_length, 1])
         label = np.zeros(shape=[batch_size, track_length])
 
@@ -214,3 +204,4 @@ def generator_noise_reduction_net(batch_size, track_length, track_time, diffusio
             label[i, :] = x - np.mean(x_noisy)
 
         yield out, label
+

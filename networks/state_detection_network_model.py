@@ -110,7 +110,7 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
         history_training = state_detection_keras_model.fit(
             x=generator_state_net(batch_size=batch_size, track_length=self.track_length, track_time=self.track_time),
             steps_per_epoch=8000,
-            epochs=50,
+            epochs=15,
             callbacks=callbacks,
             validation_data=generator_state_net(batch_size=batch_size, track_length=self.track_length,
                                                 track_time=self.track_time),
