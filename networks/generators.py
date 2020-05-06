@@ -16,7 +16,7 @@ def axis_adaptation_to_net(axis_data, track_length):
 def generate_batch_of_samples_l1(batch_size, track_length, track_time):
     out = np.zeros(shape=[batch_size, track_length - 1, 2])
     label = np.zeros(shape=[batch_size, 1])
-    t_sample = np.random.choice(np.linspace(track_time*0.85, track_time*1.15,50))
+    t_sample = np.random.choice(np.linspace(track_time * 0.85, track_time * 1.15, 50))
     track_length_sample = int(np.random.choice(np.arange(track_length, np.ceil(track_length * 1.05), 1)))
 
     for i in range(batch_size):
@@ -49,7 +49,7 @@ def generate_batch_of_samples_l1(batch_size, track_length, track_time):
 def generate_batch_of_samples_l2(batch_size, track_length, track_time):
     out = np.zeros(shape=[batch_size, track_length - 1, 2])
     label = np.zeros(shape=[batch_size, 1])
-    t_sample = np.random.choice(np.linspace(track_time*0.85, track_time*1.15,50))
+    t_sample = np.random.choice(np.linspace(track_time * 0.85, track_time * 1.15, 50))
     track_length_sample = int(np.random.choice(np.arange(track_length, np.ceil(track_length * 1.05), 1)))
 
     for i in range(batch_size):
@@ -103,7 +103,7 @@ def generator_second_layer(batch_size, track_length, track_time):
 def generate_batch_of_samples_state_net(batch_size, track_length, track_time):
     out = np.zeros(shape=[batch_size, track_length, 2])
     label = np.zeros(shape=[batch_size, track_length])
-    t_sample = np.random.choice(np.linspace(track_time*0.85, track_time*1.15, 50))
+    t_sample = np.random.choice(np.linspace(track_time * 0.85, track_time * 1.15, 50))
     track_length_sample = int(np.random.choice(np.arange(track_length, np.ceil(track_length * 1.05), 1)))
 
     for i in range(batch_size):
@@ -141,7 +141,7 @@ def generator_diffusion_coefficient_network(batch_size, track_length, track_time
     assert (state == 0 or state == 1), "State must be 0 or 1"
     assert denoising_model.diffusion_model_state == state, "Invalid state denoising model"
     while True:
-        t_sample = np.random.choice(np.linspace(track_time*0.85, track_time*1.15,50))
+        t_sample = np.random.choice(np.linspace(track_time * 0.85, track_time * 1.15, 50))
         out = np.zeros(shape=[batch_size, 2, 1])
         label = np.zeros(shape=[batch_size, 1])
         noisy_out = np.zeros(shape=[batch_size, track_length])
@@ -185,7 +185,7 @@ def generator_noise_reduction_net(batch_size, track_length, track_time, diffusio
     assert (diffusion_model_state == 0 or diffusion_model_state == 1), "State must be 0 or 1"
 
     while True:
-        t_sample = np.random.choice(np.linspace(track_time*0.85, track_time*1.15,50))
+        t_sample = np.random.choice(np.linspace(track_time * 0.85, track_time * 1.15, 50))
         out = np.zeros(shape=[batch_size, track_length, 1])
         label = np.zeros(shape=[batch_size, track_length])
 
@@ -205,3 +205,24 @@ def generator_noise_reduction_net(batch_size, track_length, track_time, diffusio
 
         yield out, label
 
+
+def generator_hurst_exp_network(batch_size, track_length, track_time, fbm_type):
+    while True:
+        out = np.zeros(shape=(batch_size, 2, track_length))
+        label = np.zeros(shape=(batch_size, 1))
+        t_sample = np.random.choice(np.linspace(track_time * 0.85, track_time * 1.15, 50))
+        for i in range(batch_size):
+            if fbm_type == 'subdiffusive':
+                model_sample = FBM.create_random_subdiffusive()
+            else:
+                model_sample = FBM.create_random_superdiffusive()
+
+            x_noisy, y_nosy, x, y, t = model_sample.simulate_track(track_length=track_length, track_time=t_sample)
+            label[i, 0] = model_sample.hurst_exp
+
+            zero_mean_x = x_noisy - np.mean(x_noisy)
+            zero_mean_x = zero_mean_x / np.std(zero_mean_x)
+            out[i, 0, :] = zero_mean_x
+            out[i, 1, :] = np.linspace(0, 1, track_length)
+
+        yield out, label

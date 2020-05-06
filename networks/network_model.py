@@ -19,7 +19,7 @@ class NetworkModel(Document):
             self.save()
         self.model_file = ''.join(['models/', str(self.id), '.h5'])
 
-    def train_network(self, batch_size, track_time):
+    def train_network(self, batch_size):
         pass
 
     def evaluate_track_input(self, track):
@@ -86,3 +86,9 @@ class NetworkModel(Document):
 
         plt.legend()
         plt.show()
+
+    def is_valid_network_track_time(self, track_time):
+        if (self.track_time * 0.85) <= track_time <= (self.track_time * 1.15):
+            return True
+        else:
+            return False
