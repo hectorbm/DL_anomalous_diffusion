@@ -1,7 +1,7 @@
 import numpy as np
 from keras.utils import to_categorical
 
-from networks.hurst_exp_network_model_original_paper import autocorr
+from networks.hurst_exp_network_model_granik import autocorr
 from physical_models.models_ctrw import CTRW
 from physical_models.models_fbm import FBM
 from physical_models.models_two_state_diffusion import TwoStateDiffusion
