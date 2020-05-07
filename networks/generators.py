@@ -1,6 +1,7 @@
 import numpy as np
 from keras.utils import to_categorical
 
+from networks.hurst_exp_network_model_original_paper import autocorr
 from physical_models.models_ctrw import CTRW
 from physical_models.models_fbm import FBM
 from physical_models.models_two_state_diffusion import TwoStateDiffusion
@@ -224,5 +225,25 @@ def generator_hurst_exp_network(batch_size, track_length, track_time, fbm_type):
             zero_mean_x = zero_mean_x / np.std(zero_mean_x)
             out[i, 0, :] = zero_mean_x
             out[i, 1, :] = np.linspace(0, 1, track_length)
+
+        yield out, label
+
+
+def generator_hurst_exp_network_granik(batch_size, track_length, track_time, fbm_type):
+    while True:
+        out = np.zeros(shape=(batch_size, track_length - 1, 1))
+        label = np.zeros(shape=(batch_size, 1))
+        t_sample = np.random.choice(np.linspace(track_time * 0.85, track_time * 1.15, 50))
+
+        for i in range(batch_size):
+            if fbm_type == 'subdiffusive':
+                model_sample = FBM.create_random_subdiffusive()
+            else:
+                model_sample = FBM.create_random_superdiffusive()
+            x_noisy, y_nosy, x, y, t = model_sample.simulate_track(track_length=track_length, track_time=t_sample)
+            label[i, 0] = model_sample.hurst_exp
+
+            dx = np.diff(x_noisy, axis=0)
+            out[i, :, 0] = autocorr((dx - np.mean(dx)) / (np.std(dx)))
 
         yield out, label

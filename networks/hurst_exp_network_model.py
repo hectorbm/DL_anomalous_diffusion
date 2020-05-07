@@ -37,7 +37,7 @@ class HurstExponentNetworkModel(NetworkModel):
                                        patience=4,
                                        verbose=1,
                                        min_lr=1e-12),
-                     ModelCheckpoint(filepath="test_h.h5",
+                     ModelCheckpoint(filepath="models/{}.h5".format(self.id),
                                      monitor='val_loss',
                                      verbose=1,
                                      save_best_only=True)]
@@ -82,7 +82,7 @@ class HurstExponentNetworkModel(NetworkModel):
             x_noisy, y_noisy, x, y, t = model_sample.simulate_track(track_length=self.track_length,
                                                                     track_time=self.track_time)
             ground_truth = model_sample.hurst_exp
-            noisy_data = noisy_data = [x_noisy, y_noisy]
+            noisy_data = [x_noisy, y_noisy]
             track = SimulatedTrack(track_length=self.track_length, track_time=self.track_time,
                                    n_axes=n_axes, model_type=model_sample.__class__.__name__)
             track.set_axes_data(axes_data=noisy_data)
