@@ -157,7 +157,8 @@ class L1NetworkModel(network_model.NetworkModel):
             if ground_truth[i] < 2:
                 x_noisy, y_noisy, x, y, t = physical_model.simulate_track(self.track_length, self.track_time)
             else:
-                x_noisy, y_noisy, x, y, t, state, switching = physical_model.simulate_track(self.track_length, self.track_time)
+                x_noisy, y_noisy, x, y, t, state, switching = physical_model.simulate_track(self.track_length,
+                                                                                            self.track_time)
 
             track = SimulatedTrack(track_length=self.track_length, track_time=self.track_time,
                                    n_axes=n_axes, model_type=physical_model.__class__.__name__)
@@ -171,3 +172,6 @@ class L1NetworkModel(network_model.NetworkModel):
                                         predicted_value=predicted_value,
                                         labels=self.output_categories_labels,
                                         normalized=normalized)
+
+    def output_net_to_labels(self, output_net):
+        return self.output_categories_labels[output_net]

@@ -175,3 +175,6 @@ class L2NetworkModel(network_model.NetworkModel):
                                         predicted_value=predicted_value,
                                         labels=self.output_categories_labels,
                                         normalized=normalized)
+
+    def output_net_to_labels(self, output_net):
+        return self.output_categories_labels[output_net]
