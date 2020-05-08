@@ -169,3 +169,6 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
                                         predicted_value=predicted_value,
                                         labels=self.output_categories_labels,
                                         normalized=normalized)
+
+    def convert_output_to_db(self, states_net_output):
+        return states_net_output.tolist()

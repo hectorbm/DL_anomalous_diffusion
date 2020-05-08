@@ -26,7 +26,7 @@ class NoiseReductionNetworkModel(network_model.NetworkModel):
         x = BatchNormalization()(x)
         x = Flatten()(x)
 
-        dense_1 = Dense(units=self.track_length*filters_size, activation='relu')(x)
+        dense_1 = Dense(units=self.track_length * filters_size, activation='relu')(x)
         output_network = Dense(units=self.track_length)(dense_1)
 
         noise_reduction_keras_model = Model(inputs=inputs, outputs=output_network)
@@ -108,3 +108,8 @@ class NoiseReductionNetworkModel(network_model.NetworkModel):
 
         return np.mean(mse_avg)
 
+    def convert_output_to_db(self, track, noise_reduction_net_output):
+        axes_data_noise_reduced = {}
+        for i in range(track.n_axes):
+            axes_data_noise_reduced[str(i)] = noise_reduction_net_output[i, :]
+        return axes_data_noise_reduced
