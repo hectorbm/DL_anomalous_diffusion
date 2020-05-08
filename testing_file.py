@@ -1,20 +1,7 @@
-import sys
-
-import numpy
-
-from networks.diffusion_coeff_network_model import DiffusionCoefficientNetworkModel
-from networks.l1_network_model import L1NetworkModel
-from networks.l2_network_model import L2NetworkModel
-from networks.state_detection_network_model import StateDetectionNetworkModel
+from networks.l1_sprectrum_network_model import L1NetworkSpectrumModel
+from networks.l2_spectrum_network_model import L2NetworkSpectrumModel
 from tools.db_connection import *
-from networks.network_model import NetworkModel
-from networks.noise_reduction_network_model import NoiseReductionNetworkModel
-from tracks.experimental_tracks import ExperimentalTracks
 from tracks.file import File, get_files_in_path
-from tracks.tracks import Tracks
-import matplotlib.pyplot as plt
-import numpy as np
-from palettable.colorbrewer.qualitative import Pastel1_7
 
 
 def load_files_and_tracks(path_name):
@@ -179,11 +166,12 @@ if __name__ == '__main__':
 if __name__ == '__main__':
     connect_to_db()
     #model = StateDetectionNetworkModel.objects(id='5ea2137da299af0fad7ad391')[0]
-    model = L1NetworkModel(track_length=25, track_time=0.55)
-    #model = L1NetworkModel.objects(id='5eab9e58a6463d45d93bd51a')[0]
-    model.train_network(batch_size=64)
-    model.save()
-    # model.load_model_from_file()
+    #model = L1NetworkSpectrumModel(track_length=15, track_time=0.33)
+    model = L1NetworkSpectrumModel.objects(id='5eb4e3f45707f5c43b9a4f5f')[0]
+    #model.train_network(batch_size=64)
+    #model.save()
+    model.load_model_from_file()
+    #model.save()
     model.validate_test_data_accuracy(n_axes=2)
     # tracks = list(Tracks.objects())
     # for track in tracks:

@@ -135,9 +135,6 @@ class L2NetworkModel(network_model.NetworkModel):
     def evaluate_track_input(self, track):
         assert (track.track_length == self.track_length), "Invalid input track length"
 
-        if self.keras_model is None:
-            self.load_model_from_file()
-
         model_predictions = np.zeros(shape=self.output_categories)
 
         axis_data_diff = np.zeros(shape=[1, self.track_length - 1, track.n_axes])

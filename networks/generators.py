@@ -1,7 +1,6 @@
 import numpy as np
 from keras.utils import to_categorical
 
-from networks.hurst_exp_network_model_granik import autocorr
 from physical_models.models_ctrw import CTRW
 from physical_models.models_fbm import FBM
 from physical_models.models_two_state_diffusion import TwoStateDiffusion
@@ -229,6 +228,11 @@ def generator_hurst_exp_network(batch_size, track_length, track_time, fbm_type):
         yield out, label
 
 
+def autocorr(x):
+    result = np.correlate(x, x, mode='full')
+    return result[np.int(result.size / 2):]
+
+
 def generator_hurst_exp_network_granik(batch_size, track_length, track_time, fbm_type):
     while True:
         out = np.zeros(shape=(batch_size, track_length - 1, 1))
@@ -247,3 +251,104 @@ def generator_hurst_exp_network_granik(batch_size, track_length, track_time, fbm
             out[i, :, 0] = autocorr((dx - np.mean(dx)) / (np.std(dx)))
 
         yield out, label
+
+
+def axis_adaptation_to_net_spectrum(axis_data, track_length):
+    data_fft = np.fft.fft(axis_data)
+    real_component = data_fft.real
+    im_component = data_fft.imag
+    axis_data_spectrum = np.zeros(shape=(2, track_length))
+    axis_data_spectrum[0, :] = real_component[:track_length]
+    axis_data_spectrum[1, :] = im_component[:track_length]
+
+    axis_data_spectrum[0, :] = axis_data_spectrum[0, :] - np.mean(axis_data_spectrum[0, :])
+    axis_data_spectrum[1, :] = axis_data_spectrum[1, :] - np.mean(axis_data_spectrum[1, :])
+    return axis_data_spectrum
+
+
+def generate_batch_of_samples_l1_spectrum(batch_size, track_length, track_time):
+    out = np.zeros(shape=[batch_size, 2, track_length, 2])
+    label = np.zeros(shape=[batch_size, 1])
+    t_sample = np.random.choice(np.linspace(track_time * 0.85, track_time * 1.15, 50))
+    track_length_sample = int(np.random.choice(np.arange(track_length, np.ceil(track_length * 1.05), 1)))
+
+    for i in range(batch_size):
+        model_sample = np.random.choice(["fBm", "CTRW", "2-State"])
+        if model_sample == "fBm":
+            model = FBM.create_random()
+            x_noisy, y_noisy, x, y, t = model.simulate_track(track_length=track_length_sample, track_time=t_sample)
+            label[i, 0] = 0
+
+        elif model_sample == "CTRW":
+            model = CTRW.create_random()
+            x_noisy, y_noisy, x, y, t = model.simulate_track(track_length=track_length_sample, track_time=t_sample)
+            label[i, 0] = 1
+
+        else:
+            model = TwoStateDiffusion.create_random()
+            switching = False
+            while not switching:
+                x_noisy, y_noisy, x, y, t, state, switching = model.simulate_track(track_length=track_length_sample,
+                                                                                   track_time=t_sample)
+            label[i, 0] = 2
+
+        out[i, :, :, 0] = axis_adaptation_to_net_spectrum(axis_data=x_noisy, track_length=track_length)
+        out[i, :, :, 1] = axis_adaptation_to_net_spectrum(axis_data=y_noisy, track_length=track_length)
+
+    return out, label
+
+
+def generator_first_layer_spectrum(batch_size, track_length, track_time):
+    while True:
+        out, label = generate_batch_of_samples_l1_spectrum(batch_size=batch_size,
+                                                           track_length=track_length,
+                                                           track_time=track_time)
+        label = to_categorical(y=label, num_classes=3)
+        input_net = np.zeros(shape=[batch_size, 2, track_length, 1])
+
+        for i in range(batch_size):
+            input_net[i, :, :, 0] = out[i, :, :, 0]
+
+        yield input_net, label
+
+
+def generate_batch_of_samples_l2_spectrum(batch_size, track_length, track_time):
+    out = np.zeros(shape=[batch_size, 2, track_length, 2])
+    label = np.zeros(shape=[batch_size, 1])
+    t_sample = np.random.choice(np.linspace(track_time * 0.85, track_time * 1.15, 50))
+    track_length_sample = int(np.random.choice(np.arange(track_length, np.ceil(track_length * 1.05), 1)))
+
+    for i in range(batch_size):
+        model_sample = np.random.choice(["subdiffusive", "brownian", "superdiffusive"])
+        if model_sample == "subdiffusive":
+            model = FBM.create_random_subdiffusive()
+            label[i, 0] = 0
+
+        elif model_sample == "brownian":
+            model = FBM.create_random_brownian()
+            label[i, 0] = 1
+
+        else:
+            model = FBM.create_random_superdiffusive()
+            label[i, 0] = 2
+
+        x_noisy, y_noisy, x, y, t = model.simulate_track(track_length=track_length_sample, track_time=t_sample)
+
+        out[i, :, :, 0] = axis_adaptation_to_net_spectrum(axis_data=x_noisy, track_length=track_length)
+        out[i, :, :, 1] = axis_adaptation_to_net_spectrum(axis_data=y_noisy, track_length=track_length)
+
+    return out, label
+
+
+def generator_second_layer_spectrum(batch_size, track_length, track_time):
+    while True:
+        out, label = generate_batch_of_samples_l2_spectrum(batch_size=batch_size,
+                                                           track_length=track_length,
+                                                           track_time=track_time)
+        label = to_categorical(y=label, num_classes=3)
+        input_net = np.zeros(shape=[batch_size, 2, track_length, 1])
+
+        for i in range(batch_size):
+            input_net[i, :, :, 0] = out[i, :, :, 0]
+
+        yield input_net, label
