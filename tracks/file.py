@@ -7,6 +7,8 @@ from . import experimental_tracks
 from . import tracks_dict_parser
 import sys
 
+LABELING_METHODS = ['btx', 'mAb']
+EXPERIMENTAL_CONDITIONS = ['Control', 'CDx-Chol', 'CDx']
 
 def get_files_in_path(path_name):
     files = []
@@ -22,8 +24,8 @@ def get_files_in_path(path_name):
 
 
 class File(Document):
-    experimental_condition = StringField(choices=experimental_tracks.EXPERIMENTAL_CONDITIONS, required=True)
-    labeling_method = StringField(choices=experimental_tracks.LABELING_METHODS, required=True)
+    experimental_condition = StringField(choices=EXPERIMENTAL_CONDITIONS, required=True)
+    labeling_method = StringField(choices=LABELING_METHODS, required=True)
     raw_file = FileField(required=True)
     file_fps = FloatField(default=50)
     file_pixel_size = 106
@@ -52,31 +54,31 @@ class File(Document):
         label_method_detected = False
 
         for substr in only_file_split:
-            if (experimental_tracks.EXPERIMENTAL_CONDITIONS[0] in substr) or (
-                    experimental_tracks.EXPERIMENTAL_CONDITIONS[0].upper() in substr):
-                self.experimental_condition = experimental_tracks.EXPERIMENTAL_CONDITIONS[0]
+            if (EXPERIMENTAL_CONDITIONS[0] in substr) or (
+                    EXPERIMENTAL_CONDITIONS[0].upper() in substr):
+                self.experimental_condition = EXPERIMENTAL_CONDITIONS[0]
                 exp_cond_detected = True
                 break
-            if (experimental_tracks.EXPERIMENTAL_CONDITIONS[1] in substr) or (
-                    experimental_tracks.EXPERIMENTAL_CONDITIONS[1].upper() in substr):
-                self.experimental_condition = experimental_tracks.EXPERIMENTAL_CONDITIONS[1]
+            if (EXPERIMENTAL_CONDITIONS[1] in substr) or (
+                    EXPERIMENTAL_CONDITIONS[1].upper() in substr):
+                self.experimental_condition = EXPERIMENTAL_CONDITIONS[1]
                 exp_cond_detected = True
                 break
-            if (experimental_tracks.EXPERIMENTAL_CONDITIONS[2] in substr) or (
-                    experimental_tracks.EXPERIMENTAL_CONDITIONS[2].upper() in substr):
-                self.experimental_condition = experimental_tracks.EXPERIMENTAL_CONDITIONS[2]
+            if (EXPERIMENTAL_CONDITIONS[2] in substr) or (
+                    EXPERIMENTAL_CONDITIONS[2].upper() in substr):
+                self.experimental_condition = EXPERIMENTAL_CONDITIONS[2]
                 exp_cond_detected = True
                 break
 
         for substr in only_file_split:
-            if (experimental_tracks.LABELING_METHODS[0] in substr) or (
-                    experimental_tracks.LABELING_METHODS[0].upper() in substr):
-                self.labeling_method = experimental_tracks.LABELING_METHODS[0]
+            if (LABELING_METHODS[0] in substr) or (
+                    LABELING_METHODS[0].upper() in substr):
+                self.labeling_method = LABELING_METHODS[0]
                 label_method_detected = True
                 break
-            if (experimental_tracks.LABELING_METHODS[1] in substr) or (
-                    experimental_tracks.LABELING_METHODS[1].upper() in substr):
-                self.labeling_method = experimental_tracks.LABELING_METHODS[1]
+            if (LABELING_METHODS[1] in substr) or (
+                    LABELING_METHODS[1].upper() in substr):
+                self.labeling_method = LABELING_METHODS[1]
                 label_method_detected = True
                 break
 
