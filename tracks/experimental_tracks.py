@@ -18,9 +18,15 @@ class ExperimentalTracks(tracks.Tracks):
     diffusion_coefficient_brownian = FloatField(required=False)
     hurst_exponent_fbm = FloatField(required=False, min_value=0, max_value=1)
 
-    track_states = ListField(required=True)
-    axes_data_noise_reduced = DictField(required=True)
+    track_states = ListField(required=False)
+    axes_data_noise_reduced = DictField(required=False)
 
+    def set_l1_classified(self, label):
+        self.l1_classified_as = label
+
+
+    def set_l2_classified(self, label):
+        self.l1_classified_as = label
 
 
 
