@@ -35,7 +35,7 @@ def classify(range_track_length):
     for net in networks:
         net.load_model_from_file()
         for track in tracks:
-            if net.is_valid_network_track_time(track.track_time):
+            if net.is_valid_network_track_time(track.track_time) and track.track_length == net.track_length:
                 output = net.output_net_to_labels(net.evaluate_track_input(track))
                 track.set_l1_classified(output)
     for track in tracks:
@@ -48,16 +48,19 @@ def show_results(range_track_length, labeling_method, experimental_condition):
                                         experimental_condition=experimental_condition)
     # Get count for each category
     l1_classification_results = [track.l1_classified_as for track in tracks]
-    data = {}
+    data = []
     for i in range(L1NetworkModel.output_categories):
-        data[L1NetworkModel.output_categories_labels[i]] = [0]
+        data.append(0)
         for result in l1_classification_results:
             if result == L1NetworkModel.output_categories_labels[i]:
-                data[L1NetworkModel.output_categories_labels[i]][0] += 1
+                data[i] += 1
 
-    df = pd.DataFrame.from_dict(data)
-    # Show a bar plot
-    sns.barplot(data=df)
+    # Show Circular Plot
+    my_circle = plt.Circle(xy=(0, 0), radius=0.5, color='white')
+    plt.pie(data, labels=L1NetworkModel.output_categories_labels)
+    p = plt.gcf()
+    p.gca().add_artist(my_circle)
+    plt.legend(labels=L1NetworkModel.output_categories_labels, bbox_to_anchor=(0.110, 0.93))
     plt.show()
 
 
