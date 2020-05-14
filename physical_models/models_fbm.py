@@ -2,7 +2,8 @@ import numpy as np
 from scipy import fftpack
 from . import models
 from . import models_noise
-from tracks.file import File
+
+FILE_pixel_size = 106 # nm
 
 
 class FBM(models.Models):
@@ -85,8 +86,8 @@ class FBM(models.Models):
             y = y + np.absolute(np.min(y))  # Add offset to y
 
         # Scale to nm and add a random offset
-        x = x * File.file_pixel_size
-        y = y * File.file_pixel_size
+        x = x * FILE_pixel_size
+        y = y * FILE_pixel_size
 
         x, x_noisy, y, y_noisy = models_noise.add_noise_and_offset(track_length, x, y)
 

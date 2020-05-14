@@ -1,7 +1,8 @@
 import numpy as np
 from . import models
 from . import models_noise
-from tracks.file import File
+
+FILE_pixel_size = 106 # nm
 
 def find_nearest(array, value):
     array = np.asarray(array)
@@ -86,8 +87,8 @@ class CTRW(models.Models):
         if np.min(y) < 0:
             y = y + np.absolute(np.min(y))  # Add offset to y
         # Scale to nm and add a random offset
-        x = x * File.file_pixel_size / 10
-        y = y * File.file_pixel_size / 10
+        x = x * FILE_pixel_size / 10
+        y = y * FILE_pixel_size / 10
 
         x, x_noisy, y, y_noisy = models_noise.add_noise_and_offset(track_length, x, y)
 

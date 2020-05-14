@@ -5,15 +5,16 @@ from mongoengine import StringField, ObjectIdField, FloatField, DictField, ListF
 
 LABELING_METHODS = ['btx', 'mAb']
 EXPERIMENTAL_CONDITIONS = ['Control', 'CDx-Chol', 'CDx']
-
+L2_output_categories_labels = ["Subdiffusive", "Brownian", "Superdiffusive"]
+L1_output_categories_labels = ["fBm", "CTRW", "2-State"]
 
 class ExperimentalTracks(tracks.Tracks):
     labeling_method = StringField(choices=LABELING_METHODS, required=True)
     experimental_condition = StringField(choices=EXPERIMENTAL_CONDITIONS, required=True)
     origin_file = ObjectIdField(required=True)
     # Output Nets
-    l1_classified_as = StringField(choices=L1NetworkModel.output_categories_labels, required=False)
-    l2_classified_as = StringField(choices=L2NetworkModel.output_categories_labels, required=False)
+    l1_classified_as = StringField(choices=L1_output_categories_labels, required=False)
+    l2_classified_as = StringField(choices=L2_output_categories_labels, required=False)
 
     diffusion_coefficient_brownian = FloatField(required=False)
     hurst_exponent_fbm = FloatField(required=False, min_value=0, max_value=1)
