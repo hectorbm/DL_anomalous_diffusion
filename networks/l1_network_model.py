@@ -92,12 +92,12 @@ class L1NetworkModel(network_model.NetworkModel):
         output_network = Dense(units=self.output_categories, activation='softmax')(dense_2)
         l1_keras_model = Model(inputs=inputs, outputs=output_network)
 
-        optimizer = Adam(lr=1e-4)
+        optimizer = Adam(lr=1e-5)
         l1_keras_model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['categorical_accuracy'])
         l1_keras_model.summary()
 
         callbacks = [EarlyStopping(monitor='val_loss',
-                                   patience=10,
+                                   patience=5,
                                    verbose=1,
                                    min_delta=1e-4),
                      ReduceLROnPlateau(monitor='val_loss',
@@ -113,13 +113,13 @@ class L1NetworkModel(network_model.NetworkModel):
         history_training = l1_keras_model.fit(x=generator_first_layer(batch_size=batch_size,
                                                                       track_length=self.track_length,
                                                                       track_time=self.track_time),
-                                              steps_per_epoch=4000,
-                                              epochs=6,
+                                              steps_per_epoch=3000,
+                                              epochs=25,
                                               callbacks=callbacks,
                                               validation_data=generator_first_layer(batch_size=batch_size,
                                                                                     track_length=self.track_length,
                                                                                     track_time=self.track_time),
-                                              validation_steps=100)
+                                              validation_steps=300)
 
         self.convert_history_to_db_format(history_training)
         self.keras_model = l1_keras_model

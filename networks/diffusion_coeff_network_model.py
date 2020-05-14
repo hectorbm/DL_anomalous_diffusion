@@ -62,7 +62,7 @@ class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
                                                       self.diffusion_model_state,
                                                       self.noise_reduction_model),
             steps_per_epoch=1000,
-            epochs=15,
+            epochs=25,
             workers=0,
             callbacks=callbacks,
             validation_data=

@@ -36,7 +36,7 @@ class HurstExponentNetworkModel(NetworkModel):
                                        factor=0.1,
                                        patience=4,
                                        verbose=1,
-                                       min_lr=1e-12),
+                                       min_lr=1e-10),
                      ModelCheckpoint(filepath="models/{}.h5".format(self.id),
                                      monitor='val_loss',
                                      verbose=1,

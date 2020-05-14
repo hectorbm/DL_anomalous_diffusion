@@ -31,19 +31,19 @@ class NoiseReductionNetworkModel(network_model.NetworkModel):
 
         noise_reduction_keras_model = Model(inputs=inputs, outputs=output_network)
 
-        optimizer = Adam(lr=1e-3)
+        optimizer = Adam(lr=1e-4)
         noise_reduction_keras_model.compile(optimizer=optimizer, loss='mse', metrics=['mse'])
         noise_reduction_keras_model.summary()
 
         callbacks = [EarlyStopping(monitor='val_loss',
-                                   patience=20,
+                                   patience=10,
                                    verbose=1,
                                    min_delta=1e-4),
                      ReduceLROnPlateau(monitor='val_loss',
                                        factor=0.1,
                                        patience=4,
                                        verbose=1,
-                                       min_lr=1e-9),
+                                       min_lr=1e-10),
                      ModelCheckpoint(filepath="models/{}.h5".format(self.id),
                                      monitor='val_loss',
                                      verbose=1,
@@ -55,7 +55,7 @@ class NoiseReductionNetworkModel(network_model.NetworkModel):
                                             track_time=self.track_time,
                                             diffusion_model_state=self.diffusion_model_state),
             steps_per_epoch=1000,
-            epochs=10,
+            epochs=25,
             callbacks=callbacks,
             validation_data=generator_noise_reduction_net(batch_size=batch_size,
                                                           track_length=self.track_length,

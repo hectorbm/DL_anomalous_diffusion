@@ -51,7 +51,7 @@ class L2NetworkSpectrumModel(network_model.NetworkModel):
                                        factor=0.1,
                                        patience=4,
                                        verbose=1,
-                                       min_lr=1e-9),
+                                       min_lr=1e-10),
                      ModelCheckpoint(filepath="models/{}.h5".format(self.id),
                                      monitor='val_loss',
                                      verbose=1,
@@ -61,11 +61,11 @@ class L2NetworkSpectrumModel(network_model.NetworkModel):
             x=generator_second_layer_spectrum(batch_size=batch_size, track_length=self.track_length,
                                               track_time=self.track_time),
             steps_per_epoch=3000,
-            epochs=5,
+            epochs=25,
             callbacks=callbacks,
             validation_data=generator_second_layer_spectrum(batch_size=batch_size, track_length=self.track_length,
                                                             track_time=self.track_time),
-            validation_steps=100)
+            validation_steps=300)
 
         self.keras_model = l1_spectrum_keras_model
         self.convert_history_to_db_format(history_training)
