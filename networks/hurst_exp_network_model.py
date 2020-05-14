@@ -12,7 +12,7 @@ from tracks.simulated_tracks import SimulatedTrack
 
 
 class HurstExponentNetworkModel(NetworkModel):
-    fbm_type = StringField(choices=["subdiffusive", "superdiffusive"], required=True)
+    fbm_type = StringField(choices=["Subdiffusive", "Superdiffusive"], required=True)
     model_name = "Hurst Exponent Network"
 
     def train_network(self, batch_size):

@@ -12,7 +12,7 @@ import numpy as np
 
 class L2NetworkModel(network_model.NetworkModel):
     output_categories = 3
-    output_categories_labels = ["H<0.4", "0.4<H<0.6", "H>0.6"]
+    output_categories_labels = ["Subdiffusive", "Brownian", "Superdiffusive"]
     model_name = 'L2 Network'
 
     def train_network(self, batch_size):
@@ -124,7 +124,7 @@ class L2NetworkModel(network_model.NetworkModel):
         history_training = l2_keras_model.fit(
             x=generator_second_layer(batch_size=batch_size, track_length=self.track_length, track_time=self.track_time),
             steps_per_epoch=4000,
-            epochs=7,
+            epochs=25,
             callbacks=callbacks,
             validation_data=generator_second_layer(batch_size=batch_size, track_length=self.track_length,
                                                    track_time=self.track_time),

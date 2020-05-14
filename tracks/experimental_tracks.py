@@ -24,9 +24,11 @@ class ExperimentalTracks(tracks.Tracks):
     def set_l1_classified(self, label):
         self.l1_classified_as = label
 
-
     def set_l2_classified(self, label):
         self.l1_classified_as = label
 
+    def set_hurst_exponent(self, exp_val):
+        self.hurst_exponent_fbm = exp_val
 
-
+    def track_states(self, states):
+        self.track_states = states
