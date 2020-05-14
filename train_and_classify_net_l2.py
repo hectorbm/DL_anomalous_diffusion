@@ -1,19 +1,20 @@
+from networks.l2_network_model import L2NetworkModel
 from tracks.experimental_tracks import ExperimentalTracks
-from networks.l1_network_model import L1NetworkModel
+
 from tools.db_connection import connect_to_db, disconnect_to_db
 import matplotlib.pyplot as plt
 
 
 def train_net(track):
-    model_l1 = L1NetworkModel(track_length=track.track_length, track_time=track.track_time)
-    model_l1.train_network(batch_size=64)
-    model_l1.save()
+    model_l2 = L2NetworkModel(track_length=track.track_length, track_time=track.track_time)
+    model_l2.train_network(batch_size=64)
+    model_l2.save()
 
 
 def train(range_track_length):
-    tracks = ExperimentalTracks.objects(track_length__in=range_track_length)
+    tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='fBm')
     for track in tracks:
-        networks = L1NetworkModel.objects(track_length=track.track_length)
+        networks = L2NetworkModel.objects(track_length=track.track_length)
         net_available = False
         for net in networks:
             if net.is_valid_network_track_time(track.track_time):
@@ -26,14 +27,14 @@ def train(range_track_length):
 
 def classify(range_track_length):
     print('Classifying tracks')
-    networks = L1NetworkModel.objects(track_length__in=range_track_length)
-    tracks = ExperimentalTracks.objects(track_length__in=range_track_length)
+    networks = L2NetworkModel.objects(track_length__in=range_track_length)
+    tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='fBm')
     for net in networks:
         net.load_model_from_file()
         for track in tracks:
             if net.is_valid_network_track_time(track.track_time) and track.track_length == net.track_length:
                 output = net.output_net_to_labels(net.evaluate_track_input(track))
-                track.set_l1_classified(output)
+                track.set_l2_classified(output)
     for track in tracks:
         track.save()
 
@@ -41,22 +42,23 @@ def classify(range_track_length):
 def show_results(range_track_length, labeling_method, experimental_condition):
     tracks = ExperimentalTracks.objects(track_length__in=range_track_length,
                                         labeling_method=labeling_method,
-                                        experimental_condition=experimental_condition)
+                                        experimental_condition=experimental_condition,
+                                        l1_classified_as='fBm')
     # Get count for each category
-    l1_classification_results = [track.l1_classified_as for track in tracks]
+    l2_classification_results = [track.l2_classified_as for track in tracks]
     data = []
-    for i in range(L1NetworkModel.output_categories):
+    for i in range(L2NetworkModel.output_categories):
         data.append(0)
-        for result in l1_classification_results:
-            if result == L1NetworkModel.output_categories_labels[i]:
+        for result in l2_classification_results:
+            if result == L2NetworkModel.output_categories_labels[i]:
                 data[i] += 1
 
     # Show Circular Plot
     my_circle = plt.Circle(xy=(0, 0), radius=0.5, color='white')
-    plt.pie(data, labels=L1NetworkModel.output_categories_labels)
+    plt.pie(data, labels=L2NetworkModel.output_categories_labels)
     p = plt.gcf()
     p.gca().add_artist(my_circle)
-    plt.legend(labels=L1NetworkModel.output_categories_labels, bbox_to_anchor=(0.110, 0.93))
+    plt.legend(labels=L2NetworkModel.output_categories_labels, bbox_to_anchor=(0.110, 0.93))
     plt.show()
 
 
