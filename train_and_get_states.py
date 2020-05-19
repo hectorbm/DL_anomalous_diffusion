@@ -33,8 +33,8 @@ def classify(range_track_length):
         for track in tracks:
             if net.is_valid_network_track_time(track.track_time) and track.track_length == net.track_length:
                 output = net.evaluate_track_input(track)
-                output = track.convert_output_to_db(output)
-                track.set_states(output)
+                output = net.convert_output_to_db(output)
+                track.set_track_states(output)
     for track in tracks:
         track.save()
 

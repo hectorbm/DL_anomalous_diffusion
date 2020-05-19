@@ -1,6 +1,6 @@
 from mongoengine import StringField
 import numpy as np
-from networks.generators import generator_hurst_exp_network, generator_hurst_exp_network_granik
+from networks.generators import generator_hurst_exp_network
 from networks.network_model import NetworkModel
 from keras.layers import Dense, Input, LSTM
 from keras.models import Model
@@ -43,12 +43,12 @@ class HurstExponentNetworkModel(NetworkModel):
                                      save_best_only=True)]
 
         history_training = hurst_exp_keras_model.fit(
-            x=generator_hurst_exp_network_granik(batch_size=batch_size, track_length=self.track_length,
+            x=generator_hurst_exp_network(batch_size=batch_size, track_length=self.track_length,
                                                  track_time=self.track_time, fbm_type=self.fbm_type),
             steps_per_epoch=500,
             epochs=35,
             callbacks=callbacks,
-            validation_data=generator_hurst_exp_network_granik(batch_size=batch_size, track_length=self.track_length,
+            validation_data=generator_hurst_exp_network(batch_size=batch_size, track_length=self.track_length,
                                                                track_time=self.track_time, fbm_type=self.fbm_type),
             validation_steps=50)
 
