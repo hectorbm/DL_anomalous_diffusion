@@ -5,7 +5,7 @@ from tracks.file import get_files_in_path, File
 def load_files_and_tracks(path_name):
     connect_to_db()
     files = get_files_in_path(path_name=path_name)
-    for f in files:  # fig, ax = plt.subplots()
+    for f in files:
 
         try:
             file = File()
