@@ -6,7 +6,7 @@ from tools.db_connection import connect_to_db, disconnect_to_db
 
 def train_net(track):
     model_states_net = StateDetectionNetworkModel(track_length=track.track_length, track_time=track.track_time)
-    model_states_net.train_network(batch_size=64)
+    model_states_net.train_network(batch_size=8)
     model_states_net.save()
 
 

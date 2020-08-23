@@ -6,7 +6,7 @@ from mongoengine import StringField, ObjectIdField, FloatField, DictField, ListF
 LABELING_METHODS = ['btx', 'mAb']
 EXPERIMENTAL_CONDITIONS = ['Control', 'CDx-Chol', 'CDx']
 L2_output_categories_labels = ["Subdiffusive", "Brownian", "Superdiffusive"]
-L1_output_categories_labels = ["fBm", "CTRW", "2-State"]
+L1_output_categories_labels = ["fBm", "CTRW", "2-State-OD"]
 
 
 class ExperimentalTracks(tracks.Tracks):
@@ -19,7 +19,7 @@ class ExperimentalTracks(tracks.Tracks):
 
     diffusion_coefficient_brownian = FloatField(required=False)
     hurst_exponent_fbm = FloatField(required=False, min_value=0, max_value=1)
-
+    frames = ListField(required=True)
     track_states = ListField(required=False)
     axes_data_noise_reduced = DictField(required=False)
 
@@ -34,3 +34,6 @@ class ExperimentalTracks(tracks.Tracks):
 
     def set_track_states(self, states):
         self.track_states = states
+
+    def set_frames(self, frames):
+        self.frames = frames

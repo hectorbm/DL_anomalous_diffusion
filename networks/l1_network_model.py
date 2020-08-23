@@ -93,7 +93,7 @@ class L1NetworkModel(network_model.NetworkModel):
         output_network = Dense(units=self.output_categories, activation='softmax')(dense_2)
         l1_keras_model = Model(inputs=inputs, outputs=output_network)
 
-        optimizer = Adam(lr=1e-5)
+        optimizer = Adam(lr=1e-4)
         l1_keras_model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['categorical_accuracy'])
         l1_keras_model.summary()
 

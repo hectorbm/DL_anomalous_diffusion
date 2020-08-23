@@ -95,14 +95,14 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
         state_detection_keras_model.summary()
 
         callbacks = [EarlyStopping(monitor='val_loss',
-                                   patience=10,
+                                   patience=100,
                                    verbose=1,
                                    min_delta=1e-4),
-                     ReduceLROnPlateau(monitor='val_loss',
-                                       factor=0.1,
-                                       patience=4,
-                                       verbose=1,
-                                       min_lr=1e-10),
+                     # ReduceLROnPlateau(monitor='val_loss',
+                     #                   factor=0.1,
+                     #                   patience=4,
+                     #                   verbose=1,
+                     #                   min_lr=1e-10),
                      ModelCheckpoint(filepath="models/{}.h5".format(self.id),
                                      monitor='val_loss',
                                      verbose=1,
@@ -110,12 +110,12 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
 
         history_training = state_detection_keras_model.fit(
             x=generator_state_net(batch_size=batch_size, track_length=self.track_length, track_time=self.track_time),
-            steps_per_epoch=4000,
-            epochs=25,
+            steps_per_epoch=2400,
+            epochs=50,
             callbacks=callbacks,
             validation_data=generator_state_net(batch_size=batch_size, track_length=self.track_length,
                                                 track_time=self.track_time),
-            validation_steps=400)
+            validation_steps=200)
 
         self.convert_history_to_db_format(history_training)
         self.keras_model = state_detection_keras_model

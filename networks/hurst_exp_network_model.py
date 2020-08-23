@@ -46,7 +46,7 @@ class HurstExponentNetworkModel(NetworkModel):
             x=generator_hurst_exp_network(batch_size=batch_size, track_length=self.track_length,
                                                  track_time=self.track_time, fbm_type=self.fbm_type),
             steps_per_epoch=500,
-            epochs=35,
+            epochs=20,
             callbacks=callbacks,
             validation_data=generator_hurst_exp_network(batch_size=batch_size, track_length=self.track_length,
                                                                track_time=self.track_time, fbm_type=self.fbm_type),

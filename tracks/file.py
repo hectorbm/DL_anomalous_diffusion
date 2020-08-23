@@ -10,6 +10,7 @@ import sys
 LABELING_METHODS = ['btx', 'mAb']
 EXPERIMENTAL_CONDITIONS = ['Control', 'CDx-Chol', 'CDx']
 
+
 def get_files_in_path(path_name):
     files = []
     with os.scandir(path_name) as it:
@@ -130,5 +131,5 @@ class File(Document):
                                                            origin_file=self.id)
         new_track.set_axes_data(axes_data)
         new_track.set_time_axis(time_axis)
-
+        new_track.set_frames(frames)
         return new_track

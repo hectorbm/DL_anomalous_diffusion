@@ -67,7 +67,7 @@ if __name__ == '__main__':
     exp_cond = 'CDx'
 
     connect_to_db()
-    # Train, classify and show results
+    #Train, classify and show results
     train(range_track_length=track_length_range)
     classify(range_track_length=track_length_range)
     show_results(range_track_length=track_length_range,

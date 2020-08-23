@@ -1,6 +1,6 @@
 from physical_models.models_two_state_diffusion import TwoStateDiffusion
 from tracks.simulated_tracks import SimulatedTrack
-from . import network_model
+from networks import network_model
 from mongoengine import IntField
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
 from keras.layers import Dense, BatchNormalization, Conv1D, Flatten, Input

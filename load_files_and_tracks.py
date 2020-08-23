@@ -18,6 +18,8 @@ def load_files_and_tracks(path_name):
                 track.save()
         except AssertionError:
             print("Unable to load file:{}".format(f))
+        finally:
+            print("File loaded")
     disconnect_to_db()
 
 

@@ -1,6 +1,6 @@
 import numpy as np
-from . import models
-from . import models_noise
+from physical_models import models
+from physical_models import models_noise
 
 
 def denormalize_d_coefficient_to_net(output_coefficient_net, state_number):
