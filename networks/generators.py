@@ -4,6 +4,7 @@ from keras.utils import to_categorical
 from physical_models.models_ctrw import CTRW
 from physical_models.models_fbm import FBM
 from physical_models.models_two_state_diffusion import TwoStateDiffusion
+from physical_models.models_two_state_obstructed_diffusion import TwoStateObstructedDiffusion
 
 
 def axis_adaptation_to_net(axis_data, track_length):
@@ -32,7 +33,7 @@ def generate_batch_of_samples_l1(batch_size, track_length, track_time):
                                                                       track_time=t_sample)
             label[i, 0] = 1
         else:
-            physical_model = TwoStateDiffusion.create_random()
+            physical_model = TwoStateObstructedDiffusion.create_random()
             switching = False
             while not switching:
                 x_noisy, y_noisy, x, y, t, state, switching = physical_model.simulate_track(
@@ -107,7 +108,7 @@ def generate_batch_of_samples_state_net(batch_size, track_length, track_time):
     track_length_sample = int(np.random.choice(np.arange(track_length, np.ceil(track_length * 1.05), 1)))
 
     for i in range(batch_size):
-        model = TwoStateDiffusion.create_random()
+        model = TwoStateObstructedDiffusion.create_random()
         switching = False
         while not switching:
             x_noisy, y_noisy, x, y, t, state, switching = model.simulate_track(track_length=track_length_sample,
@@ -149,7 +150,7 @@ def generator_diffusion_coefficient_network(batch_size, track_length, track_time
 
         for i in range(batch_size):
 
-            two_state_model = TwoStateDiffusion.create_random()
+            two_state_model = TwoStateObstructedDiffusion.create_random()
             if state == 0:
                 x_noisy, y_noisy, x, y, t = two_state_model.simulate_track_only_state0(track_length=track_length,
                                                                                        track_time=t_sample)

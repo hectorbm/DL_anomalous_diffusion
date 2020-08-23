@@ -7,7 +7,7 @@ from keras.optimizers import Adam
 from networks.generators import generator_first_layer, axis_adaptation_to_net
 from physical_models.models_ctrw import CTRW
 from physical_models.models_fbm import FBM
-from physical_models.models_two_state_diffusion import TwoStateDiffusion
+from physical_models.models_two_state_obstructed_diffusion import TwoStateObstructedDiffusion
 from tools.analysis_tools import plot_confusion_matrix_for_layer
 from tracks.simulated_tracks import SimulatedTrack
 from . import network_model
@@ -15,7 +15,7 @@ from . import network_model
 
 class L1NetworkModel(network_model.NetworkModel):
     output_categories = 3
-    output_categories_labels = ["fBm", "CTRW", "2-State"]
+    output_categories_labels = ["fBm", "CTRW", "2-State-OD"]
     model_name = 'L1 Network'
 
     def train_network(self, batch_size):
@@ -87,6 +87,7 @@ class L1NetworkModel(network_model.NetworkModel):
         x5 = GlobalMaxPooling1D()(x5)
 
         x_concat = concatenate(inputs=[x1, x2, x3, x4, x5])
+
         dense_1 = Dense(units=512, activation='relu')(x_concat)
         dense_2 = Dense(units=128, activation='relu')(dense_1)
         output_network = Dense(units=self.output_categories, activation='softmax')(dense_2)
@@ -97,14 +98,14 @@ class L1NetworkModel(network_model.NetworkModel):
         l1_keras_model.summary()
 
         callbacks = [EarlyStopping(monitor='val_loss',
-                                   patience=5,
+                                   patience=50,
                                    verbose=1,
                                    min_delta=1e-4),
-                     ReduceLROnPlateau(monitor='val_loss',
-                                       factor=0.1,
-                                       patience=3,
-                                       verbose=1,
-                                       min_lr=1e-9),
+                     # ReduceLROnPlateau(monitor='val_loss',
+                     #                   factor=0.1,
+                     #                   patience=3,
+                     #                   verbose=1,
+                     #                   min_lr=1e-9),
                      ModelCheckpoint(filepath="models/{}.h5".format(self.id),
                                      monitor='val_loss',
                                      verbose=1,
@@ -113,13 +114,13 @@ class L1NetworkModel(network_model.NetworkModel):
         history_training = l1_keras_model.fit(x=generator_first_layer(batch_size=batch_size,
                                                                       track_length=self.track_length,
                                                                       track_time=self.track_time),
-                                              steps_per_epoch=3000,
-                                              epochs=25,
+                                              steps_per_epoch=2400,
+                                              epochs=50,
                                               callbacks=callbacks,
                                               validation_data=generator_first_layer(batch_size=batch_size,
                                                                                     track_length=self.track_length,
                                                                                     track_time=self.track_time),
-                                              validation_steps=300)
+                                              validation_steps=200)
 
         self.convert_history_to_db_format(history_training)
         self.keras_model = l1_keras_model
@@ -152,7 +153,7 @@ class L1NetworkModel(network_model.NetworkModel):
             elif ground_truth[i] == 1:
                 physical_model = CTRW.create_random()
             else:
-                physical_model = TwoStateDiffusion.create_random()
+                physical_model = TwoStateObstructedDiffusion.create_random()
 
             if ground_truth[i] < 2:
                 x_noisy, y_noisy, x, y, t = physical_model.simulate_track(self.track_length, self.track_time)

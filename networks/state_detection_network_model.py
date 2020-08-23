@@ -5,6 +5,7 @@ from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
 from keras.optimizers import Adam
 from networks.generators import generator_state_net
 from physical_models.models_two_state_diffusion import TwoStateDiffusion
+from physical_models.models_two_state_obstructed_diffusion import TwoStateObstructedDiffusion
 from tools.analysis_tools import plot_confusion_matrix_for_layer
 from tracks.simulated_tracks import SimulatedTrack
 from . import network_model
@@ -148,7 +149,7 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
         ground_truth = np.zeros(shape=(test_batch_size, self.track_length))
         predicted_value = np.zeros(shape=(test_batch_size, self.track_length))
         for i in range(test_batch_size):
-            physical_model = TwoStateDiffusion.create_random()
+            physical_model = TwoStateObstructedDiffusion.create_random()
 
             switching = False
             while not switching:

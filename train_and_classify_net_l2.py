@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 def train_net(track):
     model_l2 = L2NetworkModel(track_length=track.track_length, track_time=track.track_time)
-    model_l2.train_network(batch_size=64)
+    model_l2.train_network(batch_size=8)
     model_l2.save()
 
 

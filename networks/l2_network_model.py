@@ -108,14 +108,14 @@ class L2NetworkModel(network_model.NetworkModel):
         l2_keras_model.summary()
 
         callbacks = [EarlyStopping(monitor='val_loss',
-                                   patience=5,
+                                   patience=50,
                                    verbose=1,
                                    min_delta=1e-4),
-                     ReduceLROnPlateau(monitor='val_loss',
-                                       factor=0.1,
-                                       patience=3,
-                                       verbose=1,
-                                       min_lr=1e-9),
+                     # ReduceLROnPlateau(monitor='val_loss',
+                     #                   factor=0.1,
+                     #                   patience=3,
+                     #                   verbose=1,
+                     #                   min_lr=1e-9),
                      ModelCheckpoint(filepath="models/{}.h5".format(self.id),
                                      monitor='val_loss',
                                      verbose=1,
@@ -123,12 +123,12 @@ class L2NetworkModel(network_model.NetworkModel):
 
         history_training = l2_keras_model.fit(
             x=generator_second_layer(batch_size=batch_size, track_length=self.track_length, track_time=self.track_time),
-            steps_per_epoch=3000,
-            epochs=25,
+            steps_per_epoch=2400,
+            epochs=50,
             callbacks=callbacks,
             validation_data=generator_second_layer(batch_size=batch_size, track_length=self.track_length,
                                                    track_time=self.track_time),
-            validation_steps=300)
+            validation_steps=200)
         self.keras_model = l2_keras_model
         self.convert_history_to_db_format(history_training)
 
