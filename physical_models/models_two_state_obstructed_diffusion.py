@@ -40,6 +40,16 @@ class TwoStateObstructedDiffusion(models.Models):
     def get_d_state0(self):
         return self.D_state0 / 1000000
 
+    def normalize_d_coefficient_to_net(self, state_number):
+        assert (state_number == 0), "Not a valid state"
+        delta_d0 = self.d0_high - self.d0_low
+        return (1 / delta_d0) * (self.get_d_state0() - self.d0_low)
+
+    @classmethod
+    def denormalize_d_coefficient_to_net(cls, output_coefficient_net):
+        delta_d0 = cls.d0_high - cls.d0_low
+        return output_coefficient_net * delta_d0 + cls.d0_low
+
     def simulate_track(self, track_length, track_time):
         x = np.zeros(shape=track_length)
         y = np.zeros(shape=track_length)

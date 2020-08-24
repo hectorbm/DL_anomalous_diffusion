@@ -1,10 +1,11 @@
 from networks.state_detection_network_model import StateDetectionNetworkModel
 from tracks.experimental_tracks import ExperimentalTracks
-
 from tools.db_connection import connect_to_db, disconnect_to_db
+from keras import backend as K
 
 
 def train_net(track):
+    K.clear_session()
     model_states_net = StateDetectionNetworkModel(track_length=track.track_length, track_time=track.track_time)
     model_states_net.train_network(batch_size=8)
     model_states_net.save()
@@ -36,14 +37,10 @@ def classify(range_track_length):
                 output = net.convert_output_to_db(output)
                 track.set_track_states(output)
     for track in tracks:
+        track.compute_sequences_length()
+        track.compute_sequences_res_time()
+        track.compute_confinement_regions()
         track.save()
-
-
-def show_results(range_track_length, labeling_method, experimental_condition):
-    tracks = ExperimentalTracks.objects(track_length__in=range_track_length,
-                                        labeling_method=labeling_method,
-                                        experimental_condition=experimental_condition,
-                                        l1_classified_as='2-State')
 
 
 if __name__ == '__main__':
@@ -55,8 +52,5 @@ if __name__ == '__main__':
     # Train, classify and show results
     train(range_track_length=track_length_range)
     classify(range_track_length=track_length_range)
-    show_results(range_track_length=track_length_range,
-                 labeling_method=label,
-                 experimental_condition=exp_cond)
 
     disconnect_to_db()

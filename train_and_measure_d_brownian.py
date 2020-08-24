@@ -1,27 +1,37 @@
-from networks.hurst_exp_network_model import HurstExponentNetworkModel
+from networks.diffusion_coeff_network_model import DiffusionCoefficientNetworkModel
 from tracks.experimental_tracks import ExperimentalTracks
-
 from tools.db_connection import connect_to_db, disconnect_to_db
-import matplotlib.pyplot as plt
 from keras import backend as K
 
 
-def train_net(track):
+def train_test():
     K.clear_session()
-    model_hurst_net = HurstExponentNetworkModel(track_length=track.track_length,
-                                                track_time=track.track_time,
-                                                fbm_type=track.l2_classified_as)
-    model_hurst_net.train_network(batch_size=64)
-    model_hurst_net.save()
+    model_d_net = DiffusionCoefficientNetworkModel(track_length=50,
+                                                   track_time=1.1,
+                                                   diffusion_model_range="Brownian")
+    model_d_net.train_network(batch_size=8)
+    print(model_d_net.validate_test_data_mse(n_axes=2))
+    print(model_d_net.validate_test_data_mse(n_axes=2))
+
+
+def train_net(track):
+    model_d_net = DiffusionCoefficientNetworkModel(track_length=track.track_length,
+                                                   track_time=track.track_time,
+                                                   diffusion_model_range="Brownian")
+
+    print(model_d_net.validate_test_data_mse(n_axes=2))
+    print(model_d_net.validate_test_data_mse(n_axes=2))
+    model_d_net.train_network(batch_size=8)
+    model_d_net.save()
 
 
 def train(range_track_length):
     tracks = ExperimentalTracks.objects(track_length__in=range_track_length,
                                         l1_classified_as='fBm',
-                                        l2_classified_as__in=["Subdiffusive", "Superdiffusive"])
+                                        l2_classified_as__in=["Brownian"])
     for track in tracks:
-        networks = HurstExponentNetworkModel.objects(track_length=track.track_length,
-                                                     fbm_type=track.l2_classified_as)
+        networks = DiffusionCoefficientNetworkModel.objects(track_length=track.track_length,
+                                                            diffusion_model_range=track.l2_classified_as)
         net_available = False
         for net in networks:
             if net.is_valid_network_track_time(track.track_time):
@@ -36,11 +46,11 @@ def train(range_track_length):
 
 def classify(range_track_length):
     print('Classifying tracks')
-    networks = HurstExponentNetworkModel.objects(track_length__in=range_track_length)
+    networks = DiffusionCoefficientNetworkModel.objects(track_length__in=range_track_length)
     tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='fBm')
     for net in networks:
         net.load_model_from_file()
-        for track in tracks.filter(l2_classified_as=net.fbm_type):
+        for track in tracks.filter(l2_classified_as=net.diffusion_model_range):
             if net.is_valid_network_track_time(track.track_time) and track.track_length == net.track_length:
                 output = net.evaluate_track_input(track)
                 track.set_hurst_exponent(output)
@@ -55,7 +65,7 @@ if __name__ == '__main__':
 
     connect_to_db()
     # Train, classify and show results
-    train(range_track_length=track_length_range)
-    classify(range_track_length=track_length_range)
-
+    # train(range_track_length=track_length_range)
+    # classify(range_track_length=track_length_range)
+    train_test()
     disconnect_to_db()

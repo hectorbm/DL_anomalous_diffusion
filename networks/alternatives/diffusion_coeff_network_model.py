@@ -1,20 +1,23 @@
 from sklearn.metrics import mean_squared_error
 
-from physical_models.models_brownian import Brownian
 from tracks.simulated_tracks import SimulatedTrack
-from . import network_model
+from networks import network_model
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPooling1D
 from keras.models import Model
 from keras.optimizers import Adam
 from networks.generators import generator_diffusion_coefficient_network
-from physical_models.models_two_state_obstructed_diffusion import TwoStateObstructedDiffusion
-from mongoengine import StringField
+from physical_models.models_two_state_diffusion import denormalize_d_coefficient_to_net, TwoStateDiffusion
+from mongoengine import IntField
 import numpy as np
 
 
 class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
-    diffusion_model_range = StringField(choices=["2-State-OD", "Brownian"])
+    diffusion_model_state = IntField(choices=[0, 1], required=True)
+    noise_reduction_model = None
+
+    def set_noise_reduction_model(self, noise_reduction_model):
+        self.noise_reduction_model = noise_reduction_model
 
     def train_network(self, batch_size):
         initializer = 'he_normal'
@@ -33,37 +36,42 @@ class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
         output_network = Dense(units=1, activation='sigmoid')(dense_2)
         diffusion_coefficient_keras_model = Model(inputs=inputs, outputs=output_network)
 
-        optimizer = Adam(lr=1e-3)
+        optimizer = Adam(lr=1e-4)
         diffusion_coefficient_keras_model.compile(optimizer=optimizer, loss='mse', metrics=['mse'])
         diffusion_coefficient_keras_model.summary()
 
         callbacks = [EarlyStopping(monitor='val_loss',
-                                   patience=30,
+                                   patience=20,
                                    verbose=1,
                                    min_delta=1e-4),
-                     # ReduceLROnPlateau(monitor='val_loss',
-                     #                   factor=0.1,
-                     #                   patience=4,
-                     #                   verbose=1,
-                     #                   min_lr=1e-12),
+                     ReduceLROnPlateau(monitor='val_loss',
+                                       factor=0.1,
+                                       patience=4,
+                                       verbose=1,
+                                       min_lr=1e-12),
                      ModelCheckpoint(filepath="models/{}.h5".format(self.id),
                                      monitor='val_loss',
                                      save_best_only=True,
-                                     verbose=1)]
+                                     mode='min',
+                                     save_weights_only=False)]
 
         history_training = diffusion_coefficient_keras_model.fit(
             x=generator_diffusion_coefficient_network(batch_size,
                                                       self.track_length,
                                                       self.track_time,
-                                                      self.diffusion_model_range),
-            steps_per_epoch=2400,
-            epochs=10,
+                                                      self.diffusion_model_state,
+                                                      self.noise_reduction_model),
+            steps_per_epoch=1000,
+            epochs=25,
+            workers=0,
             callbacks=callbacks,
-            validation_data=generator_diffusion_coefficient_network(batch_size,
-                                                                    self.track_length,
-                                                                    self.track_time,
-                                                                    self.diffusion_model_range),
-            validation_steps=200)
+            validation_data=
+            generator_diffusion_coefficient_network(batch_size,
+                                                    self.track_length,
+                                                    self.track_time,
+                                                    self.diffusion_model_state,
+                                                    self.noise_reduction_model),
+            validation_steps=100)
         self.convert_history_to_db_format(history_training)
         self.keras_model = diffusion_coefficient_keras_model
 
@@ -72,7 +80,14 @@ class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
         prediction = np.zeros(shape=track.n_axes)
         out = np.zeros(shape=(1, 2, 1))
 
-        axes_data = track.axes_data
+        if self.noise_reduction_model is not None and self.diffusion_model_state == 1:
+            axes_data = self.noise_reduction_model.evaluate_track_input(track)
+            axes_data_dict = {}
+            for i in range(track.n_axes):
+                axes_data_dict[str(i)] = axes_data[i, :]
+            axes_data = axes_data_dict
+        else:
+            axes_data = track.axes_data
 
         for axis in range(track.n_axes):
             d = np.diff(axes_data[str(axis)], axis=0)
@@ -81,35 +96,27 @@ class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
             out[0, :, 0] = [m, s]
             prediction[axis] = self.keras_model.predict(out[:, :, :])
 
-        if self.diffusion_model_range == "2-State_OD":
-            mean_prediction = TwoStateObstructedDiffusion.denormalize_d_coefficient_to_net(
-                output_coefficient_net=np.mean(prediction))
-        else:
-            mean_prediction = Brownian.denormalize_d_coefficient_to_net(
-                output_coefficient_net=np.mean(prediction))
+        mean_prediction = denormalize_d_coefficient_to_net(output_coefficient_net=np.mean(prediction),
+                                                           state_number=self.diffusion_model_state)
 
         return mean_prediction
 
     def validate_test_data_mse(self, n_axes, test_batch_size=100):
         mse_avg = np.zeros(shape=test_batch_size)
         for i in range(test_batch_size):
-
-            if self.diffusion_model_range == "2-State_OD":
-                model = TwoStateObstructedDiffusion.create_random()
-
-                x_noisy, y_noisy, x, y, t = model.simulate_track_only_state0(track_length=self.track_length,
-                                                                             track_time=self.track_time)
-                ground_truth = model.get_d_state0()
-
+            two_state_model = TwoStateDiffusion.create_random()
+            if self.diffusion_model_state == 0:
+                x_noisy, y_noisy, x, y, t = two_state_model.simulate_track_only_state0(track_length=self.track_length,
+                                                                                       track_time=self.track_time)
+                ground_truth = two_state_model.get_d_state0()
             else:
-                model = Brownian.create_random()
-                x_noisy, y_noisy, x, y, t = model.simulate_track(track_length=self.track_length,
-                                                                 track_time=self.track_time)
-                ground_truth = model.get_d_coefficient()
+                x_noisy, y_noisy, x, y, t = two_state_model.simulate_track_only_state1(track_length=self.track_length,
+                                                                                       track_time=self.track_time)
+                ground_truth = two_state_model.get_d_state1()
 
             noisy_data = [x_noisy, y_noisy]
             track = SimulatedTrack(track_length=self.track_length, track_time=self.track_time,
-                                   n_axes=n_axes, model_type=model.__class__.__name__)
+                                   n_axes=n_axes, model_type=two_state_model.__class__.__name__)
             track.set_axes_data(axes_data=noisy_data)
             track.set_time_axis(time_axis_data=t)
             predicted_coefficient = self.evaluate_track_input(track)

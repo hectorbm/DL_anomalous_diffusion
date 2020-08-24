@@ -1,11 +1,12 @@
 from networks.l2_network_model import L2NetworkModel
 from tracks.experimental_tracks import ExperimentalTracks
-
 from tools.db_connection import connect_to_db, disconnect_to_db
 import matplotlib.pyplot as plt
+from keras import backend as K
 
 
 def train_net(track):
+    K.clear_session()
     model_l2 = L2NetworkModel(track_length=track.track_length, track_time=track.track_time)
     model_l2.train_network(batch_size=8)
     model_l2.save()
