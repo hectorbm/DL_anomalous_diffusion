@@ -1,6 +1,7 @@
 from networks.diffusion_coeff_network_model import DiffusionCoefficientNetworkModel
 from tracks.experimental_tracks import ExperimentalTracks
 from tools.db_connection import connect_to_db, disconnect_to_db
+from keras import backend as K
 import numpy as np
 
 lowerLimitTrackLength = 15
@@ -17,6 +18,7 @@ def train_test():
 
 
 def train_net(track_length, track_time):
+    K.clear_session()
     model_d_net = DiffusionCoefficientNetworkModel(track_length=track_length,
                                                    track_time=track_time,
                                                    diffusion_model_range="2-State-OD")
