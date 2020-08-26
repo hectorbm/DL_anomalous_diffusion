@@ -87,7 +87,9 @@ if __name__ == '__main__':
     track_length_range = list(range(20, 21))
     connect_to_db()
     # Train, classify and show results
-    # train(range_track_length=track_length_range)
-    # classify(range_track_length=track_length_range)
+    train(range_track_length=track_length_range)
+    for i in track_length_range:
+        K.clear_session()
+        classify(range_track_length=[i])
     train_test()
     disconnect_to_db()

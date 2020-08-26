@@ -40,29 +40,6 @@ def classify(range_track_length):
         track.save()
 
 
-def show_results(range_track_length, labeling_method, experimental_condition):
-    tracks = ExperimentalTracks.objects(track_length__in=range_track_length,
-                                        labeling_method=labeling_method,
-                                        experimental_condition=experimental_condition,
-                                        l1_classified_as='fBm')
-    # Get count for each category
-    l2_classification_results = [track.l2_classified_as for track in tracks]
-    data = []
-    for i in range(L2NetworkModel.output_categories):
-        data.append(0)
-        for result in l2_classification_results:
-            if result == L2NetworkModel.output_categories_labels[i]:
-                data[i] += 1
-
-    # Show Circular Plot
-    my_circle = plt.Circle(xy=(0, 0), radius=0.5, color='white')
-    plt.pie(data, labels=L2NetworkModel.output_categories_labels)
-    p = plt.gcf()
-    p.gca().add_artist(my_circle)
-    plt.legend(labels=L2NetworkModel.output_categories_labels, bbox_to_anchor=(0.110, 0.93))
-    plt.show()
-
-
 if __name__ == '__main__':
     track_length_range = list(range(20, 21))
     label = 'mAb'
@@ -71,9 +48,7 @@ if __name__ == '__main__':
     connect_to_db()
     # Train, classify and show results
     train(range_track_length=track_length_range)
-    classify(range_track_length=track_length_range)
-    show_results(range_track_length=track_length_range,
-                 labeling_method=label,
-                 experimental_condition=exp_cond)
-
+    for i in track_length_range:
+        K.clear_session()
+        classify(range_track_length=[i])
     disconnect_to_db()
