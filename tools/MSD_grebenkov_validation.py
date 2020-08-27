@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import mean_squared_error
-from physical_models.models_two_state_diffusion import TwoStateDiffusion
+from physical_models.alternatives.models_two_state_diffusion import TwoStateDiffusion
 from tools.analysis_tools import mean_squared_displacement
 
 

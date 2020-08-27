@@ -2,6 +2,7 @@ from tools.db_connection import connect_to_db, disconnect_to_db
 from tracks.experimental_tracks import ExperimentalTracks, L1_output_categories_labels, EXPERIMENTAL_CONDITIONS, \
     L2_output_categories_labels
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def show_tracks_hg():
@@ -61,8 +62,28 @@ def show_classification_results(tl_range, exp_label, net_name):
     plt.show()
 
 
+def super_plot(initial_pos):
+    size_test = 50
+
+    # Next lines are random numbers, substitute with tracks
+    y = np.random.normal(size=size_test).tolist()
+    x = np.random.uniform(low=initial_pos, high=(initial_pos + 2), size=size_test).tolist()
+
+    x_med = [(initial_pos + 1) for i in range(3)]
+    y_med = float(np.mean(y))
+    y_std = float(np.std(y))
+    y_med = [y_med - y_std, y_med, y_med + y_std]
+
+    plt.scatter(x, y, marker='.', s=15)
+    plt.scatter(x_med, y_med, marker='^', color='r', s=42)
+    plt.plot(x_med, y_med, color='r')
+
+
 if __name__ == '__main__':
     # show_tracks_hg()
-    connect_to_db()
-    show_classification_results(list(range(25, 100)), 'btx')
-    disconnect_to_db()
+    # connect_to_db()
+    # show_classification_results(list(range(25, 100)), 'btx')
+    for i in range(2):
+        super_plot(initial_pos=i * 3)
+    plt.show()
+    # disconnect_to_db()

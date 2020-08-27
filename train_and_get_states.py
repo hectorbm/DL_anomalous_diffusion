@@ -12,7 +12,7 @@ def train_net(track):
 
 
 def train(range_track_length):
-    tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='fBm')
+    tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='2-State-OD')
     for track in tracks:
         networks = StateDetectionNetworkModel.objects(track_length=track.track_length)
         net_available = False
@@ -51,6 +51,7 @@ if __name__ == '__main__':
     connect_to_db()
     # Train, classify and show results
     train(range_track_length=track_length_range)
+    K.clear_session()
     for i in track_length_range:
         K.clear_session()
         classify(range_track_length=[i])

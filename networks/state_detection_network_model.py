@@ -4,7 +4,6 @@ from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalAverage
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
 from keras.optimizers import Adam
 from networks.generators import generator_state_net
-from physical_models.models_two_state_diffusion import TwoStateDiffusion
 from physical_models.models_two_state_obstructed_diffusion import TwoStateObstructedDiffusion
 from tools.analysis_tools import plot_confusion_matrix_for_layer
 from tracks.simulated_tracks import SimulatedTrack

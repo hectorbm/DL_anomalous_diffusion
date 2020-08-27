@@ -1,8 +1,6 @@
 from networks.hurst_exp_network_model import HurstExponentNetworkModel
 from tracks.experimental_tracks import ExperimentalTracks
-
 from tools.db_connection import connect_to_db, disconnect_to_db
-import matplotlib.pyplot as plt
 from keras import backend as K
 
 
@@ -56,6 +54,7 @@ if __name__ == '__main__':
     connect_to_db()
     # Train, classify and show results
     train(range_track_length=track_length_range)
+    K.clear_session()
     for i in track_length_range:
         K.clear_session()
         classify(range_track_length=[i])
