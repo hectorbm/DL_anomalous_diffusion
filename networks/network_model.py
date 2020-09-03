@@ -10,7 +10,8 @@ class NetworkModel(Document):
     history = DictField(required=False)
     model_file = StringField(required=False)
     keras_model = None
-
+    net_params = {}
+    analysis_params = {}
     meta = {'allow_inheritance': True}
 
     def __init__(self, *args, **values):
@@ -92,3 +93,52 @@ class NetworkModel(Document):
             return True
         else:
             return False
+
+    def scan_params(self):
+        # Stack names and lists position
+        if len(self.analysis_params) > 0:
+            stack_names = [k for k, v in self.analysis_params.items()]
+            stack = [0 for i in stack_names]
+            tos = len(stack) - 1
+            analysis_ended = False
+            increasing = True
+
+            # Compute and print number of combinations
+            number_of_combinations = len(self.analysis_params[stack_names[0]])
+            for i in range(1, len(stack_names)):
+                number_of_combinations *= len(self.analysis_params[stack_names[i]])
+            print("Total of combinations:{}".format(number_of_combinations))
+
+            # Run the analysis
+            while not analysis_ended:
+                if tos == (len(stack) - 1) and stack[tos] < len(self.analysis_params[stack_names[tos]]):
+                    for i in range(len(stack_names)):
+                        self.net_params[stack_names[i]] = self.analysis_params[stack_names[i]][stack[i]]
+                    print('Evaluating params: {}'.format(self.net_params))
+                    # Insert here the call to train()
+                    self.train_network(batch_size=self.net_params['batch_size'])
+                    stack[tos] += 1
+                elif tos == (len(stack) - 1) and stack[tos] == len(self.analysis_params[stack_names[tos]]):
+                    stack[tos] = 0
+                    tos -= 1
+                    increasing = False
+
+                elif 0 < tos < (len(stack) - 1) and increasing:
+                    tos += 1
+                    increasing = True
+                elif 0 < tos < (len(stack) - 1) and not increasing and stack[tos] + 1 < len(
+                        self.analysis_params[stack_names[tos]]) - 1:
+                    stack[tos] += 1
+                    tos += 1
+                    increasing = True
+                elif 0 < tos < (len(stack) - 1) and not increasing and stack[tos] + 1 == len(
+                        self.analysis_params[stack_names[tos]]) - 1:
+                    stack[tos] = 0
+                    tos -= 1
+                    increasing = False
+                elif tos == 0 and not increasing and stack[tos] + 1 < len(self.analysis_params[stack_names[tos]]):
+                    stack[tos] += 1
+                    tos += 1
+                    increasing = True
+                else:
+                    analysis_ended = True

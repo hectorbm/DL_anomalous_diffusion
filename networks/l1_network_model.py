@@ -17,97 +17,112 @@ class L1NetworkModel(network_model.NetworkModel):
     output_categories = 3
     output_categories_labels = ["fBm", "CTRW", "2-State-OD"]
     model_name = 'L1 Network'
+    net_params = {
+        'initializer': 'he_normal',
+        'filters_size': 32,
+        'x1_kernel': 4,
+        'x2_kernel': 2,
+        'x3_kernel': 3,
+        'x4_kernel': 10,
+        'x5_kernel': 20,
+        'lr': 1e-4,
+        'dense1_units': 512,
+        'dense2_units': 128,
+        'batch_size': 8
+    }
+    # For analysis of hyper-params
+    analysis_params = {}
 
     def train_network(self, batch_size):
-        initializer = 'he_normal'
-        filters_size = 32
-        x1_kernel_size = 4
-        x2_kernel_size = 2
-        x3_kernel_size = 3
-        x4_kernel_size = 10
-        x5_kernel_size = 20
+        initializer = self.net_params['initializer']
+        filters = self.net_params['filters_size']
+        x1_kernel = self.net_params['x1_kernel']
+        x2_kernel = self.net_params['x2_kernel']
+        x3_kernel = self.net_params['x3_kernel']
+        x4_kernel = self.net_params['x4_kernel']
+        x5_kernel = self.net_params['x5_kernel']
 
         inputs = Input(shape=(self.track_length - 1, 1))
 
-        x1 = Conv1D(filters=filters_size, kernel_size=x1_kernel_size, padding='causal', activation='relu',
+        x1 = Conv1D(filters=filters, kernel_size=x1_kernel, padding='causal', activation='relu',
                     kernel_initializer=initializer)(inputs)
         x1 = BatchNormalization()(x1)
-        x1 = Conv1D(filters=filters_size, kernel_size=x1_kernel_size, dilation_rate=2, padding='causal',
+        x1 = Conv1D(filters=filters, kernel_size=x1_kernel, dilation_rate=2, padding='causal',
                     activation='relu',
                     kernel_initializer=initializer)(x1)
         x1 = BatchNormalization()(x1)
-        x1 = Conv1D(filters=filters_size, kernel_size=x1_kernel_size, dilation_rate=4, padding='causal',
+        x1 = Conv1D(filters=filters, kernel_size=x1_kernel, dilation_rate=4, padding='causal',
                     activation='relu',
                     kernel_initializer=initializer)(x1)
         x1 = BatchNormalization()(x1)
         x1 = GlobalMaxPooling1D()(x1)
 
-        x2 = Conv1D(filters=filters_size, kernel_size=x2_kernel_size, padding='causal', activation='relu',
+        x2 = Conv1D(filters=filters, kernel_size=x2_kernel, padding='causal', activation='relu',
                     kernel_initializer=initializer)(inputs)
         x2 = BatchNormalization()(x2)
-        x2 = Conv1D(filters=filters_size, kernel_size=x2_kernel_size, dilation_rate=2, padding='causal',
+        x2 = Conv1D(filters=filters, kernel_size=x2_kernel, dilation_rate=2, padding='causal',
                     activation='relu',
                     kernel_initializer=initializer)(x2)
         x2 = BatchNormalization()(x2)
-        x2 = Conv1D(filters=filters_size, kernel_size=x2_kernel_size, dilation_rate=4, padding='causal',
+        x2 = Conv1D(filters=filters, kernel_size=x2_kernel, dilation_rate=4, padding='causal',
                     activation='relu',
                     kernel_initializer=initializer)(x2)
         x2 = BatchNormalization()(x2)
         x2 = GlobalMaxPooling1D()(x2)
 
-        x3 = Conv1D(filters=filters_size, kernel_size=x3_kernel_size, padding='causal', activation='relu',
+        x3 = Conv1D(filters=filters, kernel_size=x3_kernel, padding='causal', activation='relu',
                     kernel_initializer=initializer)(inputs)
         x3 = BatchNormalization()(x3)
-        x3 = Conv1D(filters=filters_size, kernel_size=x3_kernel_size, dilation_rate=2, padding='causal',
+        x3 = Conv1D(filters=filters, kernel_size=x3_kernel, dilation_rate=2, padding='causal',
                     activation='relu',
                     kernel_initializer=initializer)(x3)
         x3 = BatchNormalization()(x3)
-        x3 = Conv1D(filters=filters_size, kernel_size=x3_kernel_size, dilation_rate=4, padding='causal',
+        x3 = Conv1D(filters=filters, kernel_size=x3_kernel, dilation_rate=4, padding='causal',
                     activation='relu',
                     kernel_initializer=initializer)(x3)
         x3 = BatchNormalization()(x3)
         x3 = GlobalMaxPooling1D()(x3)
 
-        x4 = Conv1D(filters=filters_size, kernel_size=x4_kernel_size, padding='causal', activation='relu',
+        x4 = Conv1D(filters=filters, kernel_size=x4_kernel, padding='causal', activation='relu',
                     kernel_initializer=initializer)(inputs)
         x4 = BatchNormalization()(x4)
-        x4 = Conv1D(filters=filters_size, kernel_size=x4_kernel_size, dilation_rate=4, padding='causal',
+        x4 = Conv1D(filters=filters, kernel_size=x4_kernel, dilation_rate=4, padding='causal',
                     activation='relu',
                     kernel_initializer=initializer)(x4)
         x4 = BatchNormalization()(x4)
-        x4 = Conv1D(filters=filters_size, kernel_size=x4_kernel_size, dilation_rate=8, padding='causal',
+        x4 = Conv1D(filters=filters, kernel_size=x4_kernel, dilation_rate=8, padding='causal',
                     activation='relu',
                     kernel_initializer=initializer)(x4)
         x4 = BatchNormalization()(x4)
         x4 = GlobalMaxPooling1D()(x4)
 
-        x5 = Conv1D(filters=filters_size, kernel_size=x5_kernel_size, padding='same', activation='relu',
+        x5 = Conv1D(filters=filters, kernel_size=x5_kernel, padding='same', activation='relu',
                     kernel_initializer=initializer)(inputs)
         x5 = BatchNormalization()(x5)
         x5 = GlobalMaxPooling1D()(x5)
 
         x_concat = concatenate(inputs=[x1, x2, x3, x4, x5])
 
-        dense_1 = Dense(units=512, activation='relu')(x_concat)
-        dense_2 = Dense(units=128, activation='relu')(dense_1)
+        dense_1 = Dense(units=self.net_params['dense1_units'], activation='relu')(x_concat)
+        dense_2 = Dense(units=self.net_params['dense2_units'], activation='relu')(dense_1)
         output_network = Dense(units=self.output_categories, activation='softmax')(dense_2)
         l1_keras_model = Model(inputs=inputs, outputs=output_network)
 
-        optimizer = Adam(lr=1e-4)
+        optimizer = Adam(lr=self.net_params['lr'])
         l1_keras_model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['categorical_accuracy'])
         l1_keras_model.summary()
 
-        callbacks = [EarlyStopping(monitor='val_loss',
-                                   patience=50,
-                                   verbose=1,
-                                   min_delta=1e-4),
-                     # ReduceLROnPlateau(monitor='val_loss',
+        callbacks = [#EarlyStopping(monitor='val_categorical_accuracy',
+                                   # patience=50,
+                                   # verbose=1,
+                                   # min_delta=1e-4),
+                     # ReduceLROnPlateau(monitor='val_categorical_accuracy',
                      #                   factor=0.1,
-                     #                   patience=3,
+                     #                   patience=30,
                      #                   verbose=1,
                      #                   min_lr=1e-9),
                      ModelCheckpoint(filepath="models/{}.h5".format(self.id),
-                                     monitor='val_loss',
+                                     monitor='val_categorical_accuracy',
                                      verbose=1,
                                      save_best_only=True)]
 

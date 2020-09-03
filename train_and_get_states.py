@@ -36,6 +36,7 @@ def classify(range_track_length):
                 output = net.evaluate_track_input(track)
                 output = net.convert_output_to_db(output)
                 track.set_track_states(output)
+                track.save()
     for track in tracks:
         track.compute_sequences_length()
         track.compute_sequences_res_time()

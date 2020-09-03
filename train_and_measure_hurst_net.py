@@ -26,9 +26,9 @@ def train(range_track_length):
                 net_available = True
 
         if not net_available:
-            print("Training network for track_length:{}, fbm type{} and track_time:{}".format(track.track_length,
-                                                                                              track.l2_classified_as,
-                                                                                              track.track_time))
+            print("Training network for track_length:{}, fbm type:{} and track_time:{}".format(track.track_length,
+                                                                                               track.l2_classified_as,
+                                                                                               track.track_time))
             train_net(track)
 
 
@@ -42,8 +42,7 @@ def classify(range_track_length):
             if net.is_valid_network_track_time(track.track_time) and track.track_length == net.track_length:
                 output = net.evaluate_track_input(track)
                 track.set_hurst_exponent(output)
-    for track in tracks:
-        track.save()
+                track.save()
 
 
 if __name__ == '__main__':

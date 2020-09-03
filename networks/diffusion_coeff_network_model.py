@@ -81,7 +81,7 @@ class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
             out[0, :, 0] = [m, s]
             prediction[axis] = self.keras_model.predict(out[:, :, :])
 
-        if self.diffusion_model_range == "2-State_OD":
+        if self.diffusion_model_range == "2-State-OD":
             mean_prediction = TwoStateObstructedDiffusion.denormalize_d_coefficient_to_net(
                 output_coefficient_net=np.mean(prediction))
         else:
