@@ -32,6 +32,7 @@ def train(range_track_length):
             train_net(track)
 
 
+
 def classify(range_track_length):
     print('Classifying tracks')
     networks = DiffusionCoefficientNetworkModel.objects(track_length__in=range_track_length)

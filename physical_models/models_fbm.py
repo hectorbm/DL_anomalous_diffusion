@@ -15,10 +15,10 @@ class FBM(models.Models):
 
     @classmethod
     def create_random(cls):
-        fbm_type = np.random.choice(["subdiffusive", "superdiffusive", "brownian"])
-        if fbm_type == "subdiffusive":
+        fbm_type = np.random.choice(["Subdiffusive", "Superdiffusive", "Brownian"])
+        if fbm_type == "Subdiffusive":
             model = cls.create_random_subdiffusive()
-        elif fbm_type == "superdiffusive":
+        elif fbm_type == "Superdiffusive":
             model = cls.create_random_superdiffusive()
         else:
             model = cls.create_random_brownian()
@@ -97,8 +97,8 @@ class FBM(models.Models):
 
     def get_diffusion_type(self):
         if self.sub_diff_min_max[0] <= self.hurst_exp <= self.sub_diff_min_max[1]:
-            return "subdiffusive"
+            return "Subdiffusive"
         elif self.sub_diff_min_max[1] < self.hurst_exp < self.super_diff_min_max[0]:
-            return "brownian"
+            return "Brownian"
         else:
-            return "superdiffusive"
+            return "Superdiffusive"

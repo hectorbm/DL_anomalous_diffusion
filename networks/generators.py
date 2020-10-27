@@ -181,6 +181,8 @@ def generator_hurst_exp_network(batch_size, track_length, track_time, fbm_type):
         for i in range(batch_size):
             if fbm_type == 'Subdiffusive':
                 model_sample = FBM.create_random_subdiffusive()
+            elif fbm_type == 'Brownian':
+                model_sample = FBM.create_random_brownian()
             else:
                 model_sample = FBM.create_random_superdiffusive()
 

@@ -50,7 +50,8 @@ class ExperimentalTracks(tracks.Tracks):
     def compute_sequences_res_time(self):
         self.seq_res_time = []
         for i in range(len(self.seq_initial_frame)):
-            self.seq_res_time.append((self.frames[self.seq_final_frame[i]] - self.frames[self.seq_initial_frame[i]]) * (1 / FILE_fps))
+            self.seq_res_time.append(
+                (self.frames[self.seq_final_frame[i]] - self.frames[self.seq_initial_frame[i]]) * (1 / FILE_fps))
 
     def compute_sequences_length(self):
         # Compute sequences initial and final frame, instantiate conf regions ans diff coef

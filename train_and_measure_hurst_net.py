@@ -15,8 +15,7 @@ def train_net(track):
 
 def train(range_track_length):
     tracks = ExperimentalTracks.objects(track_length__in=range_track_length,
-                                        l1_classified_as='fBm',
-                                        l2_classified_as__in=["Subdiffusive", "Superdiffusive"])
+                                        l1_classified_as='fBm')
     for track in tracks:
         networks = HurstExponentNetworkModel.objects(track_length=track.track_length,
                                                      fbm_type=track.l2_classified_as)
@@ -27,13 +26,12 @@ def train(range_track_length):
 
         if not net_available:
             print("Training network for track_length:{}, fbm type:{} and track_time:{}".format(track.track_length,
-                                                                                               track.l2_classified_as,
-                                                                                               track.track_time))
+                                                                                              track.l2_classified_as,
+                                                                                              track.track_time))
             train_net(track)
 
 
 def classify(range_track_length):
-    print('Classifying tracks')
     networks = HurstExponentNetworkModel.objects(track_length__in=range_track_length)
     tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='fBm')
     for net in networks:

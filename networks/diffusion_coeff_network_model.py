@@ -94,7 +94,7 @@ class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
         mse_avg = np.zeros(shape=test_batch_size)
         for i in range(test_batch_size):
 
-            if self.diffusion_model_range == "2-State_OD":
+            if self.diffusion_model_range == "2-State-OD":
                 model = TwoStateObstructedDiffusion.create_random()
 
                 x_noisy, y_noisy, x, y, t = model.simulate_track_only_state0(track_length=self.track_length,

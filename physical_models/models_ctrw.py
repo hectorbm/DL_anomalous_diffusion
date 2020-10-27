@@ -2,7 +2,8 @@ import numpy as np
 from . import models
 from . import models_noise
 
-FILE_pixel_size = 106 # nm
+FILE_pixel_size = 106  # nm
+
 
 def find_nearest(array, value):
     array = np.asarray(array)

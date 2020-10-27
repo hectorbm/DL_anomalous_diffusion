@@ -12,7 +12,7 @@ from tracks.simulated_tracks import SimulatedTrack
 
 
 class HurstExponentNetworkModel(NetworkModel):
-    fbm_type = StringField(choices=["Subdiffusive", "Superdiffusive"], required=True)
+    fbm_type = StringField(choices=["Subdiffusive", "Brownian" , "Superdiffusive"], required=True)
     model_name = "Hurst Exponent Network"
 
     def train_network(self, batch_size):
@@ -74,8 +74,10 @@ class HurstExponentNetworkModel(NetworkModel):
         mse = np.zeros(shape=test_batch_size)
 
         for i in range(test_batch_size):
-            if self.fbm_type == "subdiffusive":
+            if self.fbm_type == "Subdiffusive":
                 model_sample = FBM.create_random_subdiffusive()
+            elif self.fbm_type == 'Brownian':
+                model_sample = FBM.create_random_brownian()
             else:
                 model_sample = FBM.create_random_superdiffusive()
 
@@ -89,3 +91,5 @@ class HurstExponentNetworkModel(NetworkModel):
             track.set_time_axis(time_axis_data=t)
             prediction = self.evaluate_track_input(track)
             mse[i] = mean_squared_error(ground_truth, prediction)
+
+        return np.mean(mse)

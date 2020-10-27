@@ -28,7 +28,7 @@ def train(range_track_length):
 def classify(range_track_length):
     print('Classifying tracks')
     networks = StateDetectionNetworkModel.objects(track_length__in=range_track_length)
-    tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='2-State')
+    tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='2-State-OD')
     for net in networks:
         net.load_model_from_file()
         for track in tracks:

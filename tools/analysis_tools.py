@@ -4,7 +4,6 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.signal import wiener
 
 
 def plot_confusion_matrix_for_layer(layer_name, ground_truth, predicted_value, labels, normalized):
@@ -49,12 +48,3 @@ def mean_squared_displacement(x, y, time_length, non_linear=True):
         a, b = curve_fit(linear_func, t_vec, msd, bounds=((0, 0, -np.inf), (2, np.inf, np.inf)), maxfev=2000)
 
     return t_vec, msd, a
-
-
-def wiener_filter(track):
-    denoised_data = np.zeros(shape=(track.n_axes, track.track_length))
-    for i in range(track.n_axes):
-        mx = np.mean(track.axes_data[str(i)])
-        denoised_data[i, :] = wiener(track.axes_data[str(i)] - mx, mysize=14) + mx
-
-    return denoised_data

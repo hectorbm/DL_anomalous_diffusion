@@ -21,12 +21,14 @@ def show_tracks_hg():
 def show_classification_results(tl_range, exp_label, net_name):
     aux = 0
     for exp_cond in EXPERIMENTAL_CONDITIONS:
+
         if net_name == 'L1 Network':
             tracks = ExperimentalTracks.objects(track_length__in=tl_range, labeling_method=exp_label,
                                                 experimental_condition=exp_cond)
         else:
             tracks = ExperimentalTracks.objects(track_length__in=tl_range, labeling_method=exp_label,
                                                 experimental_condition=exp_cond, l1_classified_as='fBm')
+
         # Count each category
         count = [0 for i in L1_output_categories_labels]
         for track in tracks:
@@ -66,7 +68,7 @@ def show_classification_results(tl_range, exp_label, net_name):
 
 
 def show_hurst_results(range_steps, label):
-    l2_categories = ['Subdiffusive', 'Superdiffusive']
+    l2_categories = ['Subdiffusive', 'Brownian', 'Superdiffusive']
 
     for category in l2_categories:
         aux = 1
@@ -137,7 +139,7 @@ def show_confinement_area(range_steps, label):
         for track in tracks:
             for area in track.confinement_regions_area:
                 if area > 0:
-                    conf_area_values.append(area*(0.001**2))
+                    conf_area_values.append(area * (0.001 ** 2))
 
         plt.violinplot(conf_area_values, widths=1.5, positions=[aux], showextrema=False, showmeans=False)
         plt.scatter(x=np.random.uniform(low=aux - 0.35, high=aux + 0.35, size=len(conf_area_values)),
@@ -163,14 +165,14 @@ if __name__ == '__main__':
     min_steps = 25
     max_steps = 100
     exp_labels = ['mAb', 'btx']
-    net = 'L1 Network'
+    net = 'L2 Network'
 
     range_steps = list(range(min_steps, max_steps))
     # for label in exp_labels:
     #     show_classification_results(range_steps, label, net)
 
     for label in exp_labels:
-        # show_hurst_results(range_steps, label)
-        # show_residence_time(range_steps, label)
-        show_confinement_area(range_steps, label)
+        show_hurst_results(range_steps, label)
+    #     show_residence_time(range_steps, label)
+    #     show_confinement_area(range_steps,label)
     disconnect_to_db()

@@ -115,7 +115,7 @@ class TwoStateObstructedDiffusion(models.Models):
 
         x, x_noisy, y, y_noisy = models_noise.add_noise_and_offset(track_length, x, y)
 
-        t = self.simulate_tract_time(track_length, track_time)
+        t = self.simulate_track_time(track_length, track_time)
 
         return x_noisy, y_noisy, x, y, t, state, switching
 
@@ -132,7 +132,7 @@ class TwoStateObstructedDiffusion(models.Models):
 
         x, x_noisy, y, y_noisy = models_noise.add_noise_and_offset(track_length, x, y)
 
-        t = self.simulate_tract_time(track_length, track_time)
+        t = self.simulate_track_time(track_length, track_time)
 
         return x_noisy, y_noisy, x, y, t
 
@@ -178,11 +178,11 @@ class TwoStateObstructedDiffusion(models.Models):
 
         x, x_noisy, y, y_noisy = models_noise.add_noise_and_offset(track_length, x, y)
 
-        t = self.simulate_tract_time(track_length, track_time)
+        t = self.simulate_track_time(track_length, track_time)
 
         return x_noisy, y_noisy, x, y, t
 
-    def simulate_tract_time(self, track_length, track_time):
+    def simulate_track_time(self, track_length, track_time):
         t = np.linspace(0, track_time, track_length)
         return t
 
