@@ -3,6 +3,7 @@ import os
 from mongoengine import Document, StringField, FileField, FloatField
 import pandas as pd
 import numpy as np
+import pickle
 from . import experimental_tracks
 from . import tracks_dict_parser
 import sys
@@ -28,20 +29,21 @@ class File(Document):
     experimental_condition = StringField(choices=EXPERIMENTAL_CONDITIONS, required=True)
     labeling_method = StringField(choices=LABELING_METHODS, required=True)
     raw_file = FileField(required=True)
+    filename = StringField(required=True)
     file_fps = FloatField(default=50)
     file_pixel_size = 106
 
     def add_raw_file(self, filename):
         self.parse_filename(filename)
         with open(filename, 'rb') as fd:
-            self.raw_file.put(fd)
+            self.raw_file.put(pickle.dumps(fd.read()))
 
     def parse_filename(self, filename):
 
         # Remove folders from filename
         only_file = filename.split('/')
         only_file = only_file[len(only_file) - 1]
-
+        self.filename = only_file
         # Get the file extension for validation
         file_extension = only_file.split('.')
         only_file = ''.join(file_extension[:len(file_extension) - 1])
@@ -133,3 +135,9 @@ class File(Document):
         new_track.set_time_axis(time_axis)
         new_track.set_frames(frames)
         return new_track
+
+    def load_file_from_db(self):
+        raw_file = pickle.loads(self.raw_file.read())
+        raw_file_content = raw_file.decode('utf-8')
+        temp_file = open(self.filename, mode='w')
+        temp_file.write(raw_file_content)
