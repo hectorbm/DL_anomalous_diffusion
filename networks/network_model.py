@@ -1,6 +1,7 @@
-from mongoengine import DictField, StringField, Document, IntField, FloatField
+from mongoengine import DictField, StringField, Document, IntField, FloatField, FileField
 import matplotlib.pyplot as plt
 import numpy as np
+import pickle
 from keras.models import load_model
 
 
@@ -8,7 +9,8 @@ class NetworkModel(Document):
     track_length = IntField(required=True)
     track_time = FloatField(required=True)
     history = DictField(required=False)
-    model_file = StringField(required=False)
+    model_filename = StringField(required=False)
+    model_file = FileField(required=False)
     keras_model = None
     net_params = {}
     analysis_params = {}
@@ -18,7 +20,7 @@ class NetworkModel(Document):
         super().__init__(*args, **values)
         if self.id is None:
             self.save()
-        self.model_file = ''.join(['models/', str(self.id), '.h5'])
+        self.model_filename = ''.join(['models/', str(self.id), '.h5'])
 
     def train_network(self, batch_size):
         pass
@@ -32,17 +34,38 @@ class NetworkModel(Document):
     def validate_test_data_mse(self, n_axes):
         pass
 
+    def build_model(self):
+        pass
+
     def convert_history_to_db_format(self, history_training):
         for k, v in history_training.history.items():
             for i in range(len(history_training.history[k])):
                 history_training.history[k][i] = float(history_training.history[k][i])
         self.history = history_training.history
 
-    def load_model_from_file(self):
+    def load_model_from_file(self, only_local_files=False):
+        load_success = False
         try:
-            self.keras_model = load_model(self.model_file, compile=True)
-        except ValueError:
-            print("File does not exist!")
+            self.keras_model = load_model(self.model_filename, compile=True)
+            load_success = True
+        except (ValueError, OSError) as e:
+            if not only_local_files:
+                try:
+                    print("Local model not available, loading from db")
+                    self.keras_model = self.build_model()
+                    weights = pickle.loads(self.model_file.read())
+                    if weights is not None and self.keras_model is not None:
+                        self.keras_model.set_weights(weights)
+                        load_success = True
+                    else:
+                        raise TypeError
+
+                except TypeError:
+                    print("Weights not available in DB")
+        return load_success
+
+    def save_model_file_to_db(self):
+        self.model_file.put(pickle.dumps(self.keras_model.get_weights()))
 
     def plot_loss_model(self, train=True, val=True):
         plt.xlabel('Epoch')

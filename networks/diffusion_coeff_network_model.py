@@ -17,24 +17,7 @@ class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
     diffusion_model_range = StringField(choices=["2-State-OD", "Brownian"])
 
     def train_network(self, batch_size):
-        initializer = 'he_normal'
-        filters_size = 32
-        x_kernel_size = 2
-
-        inputs = Input(shape=(2, 1))
-
-        x = Conv1D(filters=filters_size, kernel_size=x_kernel_size, padding='same', activation='relu',
-                   kernel_initializer=initializer)(inputs)
-        x = BatchNormalization()(x)
-        x = GlobalMaxPooling1D()(x)
-
-        dense_1 = Dense(units=512, activation='relu')(x)
-        dense_2 = Dense(units=256, activation='relu')(dense_1)
-        output_network = Dense(units=1, activation='sigmoid')(dense_2)
-        diffusion_coefficient_keras_model = Model(inputs=inputs, outputs=output_network)
-
-        optimizer = Adam(lr=1e-3)
-        diffusion_coefficient_keras_model.compile(optimizer=optimizer, loss='mse', metrics=['mse'])
+        diffusion_coefficient_keras_model = self.build_model()
         diffusion_coefficient_keras_model.summary()
 
         callbacks = [EarlyStopping(monitor='val_loss',
@@ -66,6 +49,23 @@ class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
             validation_steps=200)
         self.convert_history_to_db_format(history_training)
         self.keras_model = diffusion_coefficient_keras_model
+
+    def build_model(self):
+        initializer = 'he_normal'
+        filters_size = 32
+        x_kernel_size = 2
+        inputs = Input(shape=(2, 1))
+        x = Conv1D(filters=filters_size, kernel_size=x_kernel_size, padding='same', activation='relu',
+                   kernel_initializer=initializer)(inputs)
+        x = BatchNormalization()(x)
+        x = GlobalMaxPooling1D()(x)
+        dense_1 = Dense(units=512, activation='relu')(x)
+        dense_2 = Dense(units=256, activation='relu')(dense_1)
+        output_network = Dense(units=1, activation='sigmoid')(dense_2)
+        diffusion_coefficient_keras_model = Model(inputs=inputs, outputs=output_network)
+        optimizer = Adam(lr=1e-3)
+        diffusion_coefficient_keras_model.compile(optimizer=optimizer, loss='mse', metrics=['mse'])
+        return diffusion_coefficient_keras_model
 
     def evaluate_track_input(self, track):
         assert track.track_length == self.track_length, "Invalid track length"

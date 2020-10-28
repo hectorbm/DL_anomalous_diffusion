@@ -16,16 +16,7 @@ class HurstExponentNetworkModel(NetworkModel):
     model_name = "Hurst Exponent Network"
 
     def train_network(self, batch_size):
-        inputs = Input(shape=(2, self.track_length))
-        x = LSTM(units=64, return_sequences=True, input_shape=(2, self.track_length))(inputs)
-        x = LSTM(units=16)(x)
-        x = Dense(units=128, activation='selu')(x)
-        output_network = Dense(units=1, activation='sigmoid')(x)
-
-        hurst_exp_keras_model = Model(inputs=inputs, outputs=output_network)
-
-        optimizer = Adam(lr=1e-4)
-        hurst_exp_keras_model.compile(optimizer=optimizer, loss='mse', metrics=['mae'])
+        hurst_exp_keras_model = self.build_model()
         hurst_exp_keras_model.summary()
 
         callbacks = [EarlyStopping(monitor='val_loss',
@@ -54,6 +45,17 @@ class HurstExponentNetworkModel(NetworkModel):
 
         self.convert_history_to_db_format(history_training)
         self.keras_model = hurst_exp_keras_model
+
+    def build_model(self):
+        inputs = Input(shape=(2, self.track_length))
+        x = LSTM(units=64, return_sequences=True, input_shape=(2, self.track_length))(inputs)
+        x = LSTM(units=16)(x)
+        x = Dense(units=128, activation='selu')(x)
+        output_network = Dense(units=1, activation='sigmoid')(x)
+        hurst_exp_keras_model = Model(inputs=inputs, outputs=output_network)
+        optimizer = Adam(lr=1e-4)
+        hurst_exp_keras_model.compile(optimizer=optimizer, loss='mse', metrics=['mae'])
+        return hurst_exp_keras_model
 
     def evaluate_track_input(self, track):
         assert (track.track_length == self.track_length), "Invalid track length"
