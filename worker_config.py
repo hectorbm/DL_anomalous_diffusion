@@ -1,7 +1,7 @@
 import os
 
 # Global worker params
-worker_id = 1
+worker_id = 0
 num_workers = 1
 worker_mode = False
 env_vars_error = True
