@@ -17,35 +17,23 @@ class L1NetworkModel(network_model.NetworkModel):
     output_categories = 3
     output_categories_labels = ["fBm", "CTRW", "2-State-OD"]
     model_name = 'L1 Network'
+
     net_params = {
-        'initializer': 'he_normal',
-        'filters_size': 32,
-        'x1_kernel': 4,
-        'x2_kernel': 2,
-        'x3_kernel': 3,
-        'x4_kernel': 10,
-        'x5_kernel': 20,
         'lr': 1e-4,
-        'dense1_units': 512,
-        'dense2_units': 128,
-        'batch_size': 8
+        'batch_size': 8,
+        'amsgrad': False
     }
     # For analysis of hyper-params
-    analysis_params = {}
+    analysis_params = {
+        'lr': [1e-2, 1e-3, 1e-4, 1e-5],
+        'amsgrad': [False, True],
+        'batch_size': [8]
+    }
 
     def train_network(self, batch_size):
         l1_keras_model = self.build_model()
         l1_keras_model.summary()
-        callbacks = [#EarlyStopping(monitor='val_categorical_accuracy',
-                                   # patience=50,
-                                   # verbose=1,
-                                   # min_delta=1e-4),
-                     # ReduceLROnPlateau(monitor='val_categorical_accuracy',
-                     #                   factor=0.1,
-                     #                   patience=30,
-                     #                   verbose=1,
-                     #                   min_lr=1e-9),
-                     ModelCheckpoint(filepath="models/{}.h5".format(self.id),
+        callbacks = [ModelCheckpoint(filepath="models/{}.h5".format(self.id),
                                      monitor='val_categorical_accuracy',
                                      verbose=1,
                                      save_best_only=True)]
@@ -65,13 +53,13 @@ class L1NetworkModel(network_model.NetworkModel):
         self.keras_model = l1_keras_model
 
     def build_model(self):
-        initializer = self.net_params['initializer']
-        filters = self.net_params['filters_size']
-        x1_kernel = self.net_params['x1_kernel']
-        x2_kernel = self.net_params['x2_kernel']
-        x3_kernel = self.net_params['x3_kernel']
-        x4_kernel = self.net_params['x4_kernel']
-        x5_kernel = self.net_params['x5_kernel']
+        initializer = 'he_normal'
+        filters = 32
+        x1_kernel = 4
+        x2_kernel = 2
+        x3_kernel = 3
+        x4_kernel = 10
+        x5_kernel = 20
         inputs = Input(shape=(self.track_length - 1, 1))
         x1 = Conv1D(filters=filters, kernel_size=x1_kernel, padding='causal', activation='relu',
                     kernel_initializer=initializer)(inputs)
@@ -126,11 +114,11 @@ class L1NetworkModel(network_model.NetworkModel):
         x5 = BatchNormalization()(x5)
         x5 = GlobalMaxPooling1D()(x5)
         x_concat = concatenate(inputs=[x1, x2, x3, x4, x5])
-        dense_1 = Dense(units=self.net_params['dense1_units'], activation='relu')(x_concat)
-        dense_2 = Dense(units=self.net_params['dense2_units'], activation='relu')(dense_1)
+        dense_1 = Dense(units=512, activation='relu')(x_concat)
+        dense_2 = Dense(units=128, activation='relu')(dense_1)
         output_network = Dense(units=self.output_categories, activation='softmax')(dense_2)
         l1_keras_model = Model(inputs=inputs, outputs=output_network)
-        optimizer = Adam(lr=self.net_params['lr'])
+        optimizer = Adam(lr=self.net_params['lr'], amsgrad=self.net_params['amsgrad'])
         l1_keras_model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['categorical_accuracy'])
 
         return l1_keras_model
