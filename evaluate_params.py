@@ -56,9 +56,9 @@ def scan_params(net_name, analysis_params, track_length, track_time):
                     network.net_params[stack_names[i]] = analysis_params[stack_names[i]][stack[i]]
                 print('Evaluating params: {}'.format(network.net_params))
 
-                # network.train_network(batch_size=network.net_params['batch_size'])
-                # network.load_model_from_file()
-                # network.save_model_file_to_db()
+                network.train_network(batch_size=network.net_params['batch_size'])
+                network.load_model_from_file()
+                network.save_model_file_to_db()
                 network.save()
                 stack[tos] += 1
             elif tos == (len(stack) - 1) and stack[tos] == len(analysis_params[stack_names[tos]]):
