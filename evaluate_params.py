@@ -6,30 +6,32 @@ from networks.diffusion_coeff_network_model import DiffusionCoefficientNetworkMo
 from tools.db_connection import connect_to_db, disconnect_to_db
 import matplotlib.pyplot as plt
 
-
 fbm_type_net = 'Subdiffusive'
 
 
 def create_model(net_name):
-    options = {
-        'L1Network': L1NetworkModel(track_length=track_length,
-                                    track_time=track_time,
-                                    hiperparams_opt=True),
-        'L2Network': L2NetworkModel(track_length=track_length,
-                                    track_time=track_time,
-                                    hiperparams_opt=True),
-        'StateDetectionNetwork': StateDetectionNetworkModel(track_length=track_length,
-                                                            track_time=track_time,
-                                                            hiperparams_opt=True),
-        'HurstExponentNetwork': HurstExponentNetworkModel(track_length=track_length,
-                                                          track_time=track_time,
-                                                          fbm_type=fbm_type_net,
-                                                          hiperparams_opt=True),
-        'DiffusionCoefficientNetwork': DiffusionCoefficientNetworkModel(track_length=track_length,
-                                                                        track_time=track_time,
-                                                                        hiperparams_opt=True)
-    }
-    network = options[net_name]
+    if net_name == 'L1Network':
+        network = L1NetworkModel(track_length=track_length,
+                                 track_time=track_time,
+                                 hiperparams_opt=True)
+    elif net_name == 'L2Network':
+        network = L2NetworkModel(track_length=track_length,
+                                 track_time=track_time,
+                                 hiperparams_opt=True)
+    elif net_name == 'StateDetectionNetwork':
+        network = StateDetectionNetworkModel(track_length=track_length,
+                                             track_time=track_time,
+                                             hiperparams_opt=True)
+    elif net_name == 'HurstExponentNetwork':
+        network = HurstExponentNetworkModel(track_length=track_length,
+                                            track_time=track_time,
+                                            fbm_type=fbm_type_net,
+                                            hiperparams_opt=True)
+    else:
+        network = DiffusionCoefficientNetworkModel(track_length=track_length,
+                                                   track_time=track_time,
+                                                   hiperparams_opt=True)
+
     return network
 
 
@@ -102,7 +104,7 @@ def get_params(net_name):
 def plot_analysis():
     networks = L1NetworkModel.objects(hiperparams_opt=True)
     for network in networks:
-        epochs = [(i+1) for i in range(len(network.history['categorical_accuracy']))]
+        epochs = [(i + 1) for i in range(len(network.history['categorical_accuracy']))]
         plt.plot(epochs, network.history['categorical_accuracy'])
     plt.show()
 
