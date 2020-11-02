@@ -5,6 +5,8 @@ from networks.hurst_exp_network_model import HurstExponentNetworkModel
 from networks.diffusion_coeff_network_model import DiffusionCoefficientNetworkModel
 from tools.db_connection import connect_to_db, disconnect_to_db
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 fbm_type_net = 'Subdiffusive'
 
@@ -101,11 +103,40 @@ def get_params(net_name):
     return params
 
 
+def sort_results(e):
+    return e[0]
+
+
 def plot_analysis():
     networks = L1NetworkModel.objects(hiperparams_opt=True)
+    results = [[np.mean(network.history['categorical_accuracy'][40:51]),
+                np.std(network.history['categorical_accuracy'][40:51]),
+                network.id]
+               for network in networks]
+    results.sort(key=sort_results, reverse=True)
+    best_results = results[0:10]
+    print("Training")
     for network in networks:
         epochs = [(i + 1) for i in range(len(network.history['categorical_accuracy']))]
         plt.plot(epochs, network.history['categorical_accuracy'])
+        [print('{}, {} ,{}'.format(network.params_training, result[0], result[1])) for result in best_results if
+         result[2] == network.id]
+
+    plt.show()
+
+    networks = L1NetworkModel.objects(hiperparams_opt=True)
+    results = [[np.mean(network.history['val_categorical_accuracy'][40:51]),
+                np.std(network.history['val_categorical_accuracy'][40:51]),
+                network.id]
+               for network in networks]
+    results.sort(key=sort_results, reverse=True)
+    best_results = results[0:10]
+    print("Validation")
+    for network in networks:
+        epochs = [(i + 1) for i in range(len(network.history['val_categorical_accuracy']))]
+        plt.plot(epochs, network.history['val_categorical_accuracy'])
+        [print('{}, {} ,{}'.format(network.params_training, result[0], result[1])) for result in best_results if
+         result[2] == network.id]
     plt.show()
 
 
@@ -116,6 +147,6 @@ if __name__ == '__main__':
 
     connect_to_db()
     analysis_params = get_params(net)
-    scan_params(net, analysis_params, track_length, track_time)
+    # scan_params(net, analysis_params)
     plot_analysis()
     disconnect_to_db()
