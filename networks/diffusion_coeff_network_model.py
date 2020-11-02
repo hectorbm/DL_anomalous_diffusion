@@ -49,6 +49,8 @@ class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
             validation_steps=200)
         self.convert_history_to_db_format(history_training)
         self.keras_model = diffusion_coefficient_keras_model
+        if self.hiperparams_opt:
+            self.params_training = self.net_params
 
     def build_model(self):
         initializer = 'he_normal'

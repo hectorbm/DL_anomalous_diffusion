@@ -4,13 +4,14 @@ from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPool
 from keras.models import Model
 from keras.optimizers import Adam
 
-from networks.generators import generator_first_layer, axis_adaptation_to_net
+from networks.generators import generator_first_layer, axis_adaptation_to_net, generator_first_layer_validation
 from physical_models.models_ctrw import CTRW
 from physical_models.models_fbm import FBM
 from physical_models.models_two_state_obstructed_diffusion import TwoStateObstructedDiffusion
 from tools.analysis_tools import plot_confusion_matrix_for_layer
 from tracks.simulated_tracks import SimulatedTrack
 from . import network_model
+import math
 
 
 class L1NetworkModel(network_model.NetworkModel):
@@ -21,13 +22,15 @@ class L1NetworkModel(network_model.NetworkModel):
     net_params = {
         'lr': 1e-4,
         'batch_size': 8,
-        'amsgrad': False
+        'amsgrad': False,
+        'epsilon': 1e-7
     }
     # For analysis of hyper-params
     analysis_params = {
         'lr': [1e-2, 1e-3, 1e-4, 1e-5],
         'amsgrad': [False, True],
-        'batch_size': [8]
+        'batch_size': [8, 16, 32],
+        'epsilon': [1e-6, 1e-7, 1e-8]
     }
 
     def train_network(self, batch_size):
@@ -37,20 +40,27 @@ class L1NetworkModel(network_model.NetworkModel):
                                      monitor='val_categorical_accuracy',
                                      verbose=1,
                                      save_best_only=True)]
-
+        if self.hiperparams_opt:
+            validation_generator = generator_first_layer_validation(batch_size=batch_size,
+                                                                    track_length=self.track_length,
+                                                                    track_time=self.track_time)
+        else:
+            validation_generator = generator_first_layer(batch_size=batch_size,
+                                                         track_length=self.track_length,
+                                                         track_time=self.track_time)
         history_training = l1_keras_model.fit(x=generator_first_layer(batch_size=batch_size,
                                                                       track_length=self.track_length,
                                                                       track_time=self.track_time),
-                                              steps_per_epoch=2400,
+                                              steps_per_epoch=math.ceil(19200/self.net_params['batch_size']),
                                               epochs=50,
                                               callbacks=callbacks,
-                                              validation_data=generator_first_layer(batch_size=batch_size,
-                                                                                    track_length=self.track_length,
-                                                                                    track_time=self.track_time),
-                                              validation_steps=200)
+                                              validation_data=validation_generator,
+                                              validation_steps=math.ceil(4800/self.net_params['batch_size']))
 
         self.convert_history_to_db_format(history_training)
         self.keras_model = l1_keras_model
+        if self.hiperparams_opt:
+            self.params_training = self.net_params
 
     def build_model(self):
         initializer = 'he_normal'
@@ -118,7 +128,7 @@ class L1NetworkModel(network_model.NetworkModel):
         dense_2 = Dense(units=128, activation='relu')(dense_1)
         output_network = Dense(units=self.output_categories, activation='softmax')(dense_2)
         l1_keras_model = Model(inputs=inputs, outputs=output_network)
-        optimizer = Adam(lr=self.net_params['lr'], amsgrad=self.net_params['amsgrad'])
+        optimizer = Adam(lr=self.net_params['lr'], amsgrad=self.net_params['amsgrad'], epsilon=self.net_params['epsilon'])
         l1_keras_model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['categorical_accuracy'])
 
         return l1_keras_model

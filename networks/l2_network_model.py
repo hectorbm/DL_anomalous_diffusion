@@ -43,6 +43,8 @@ class L2NetworkModel(network_model.NetworkModel):
             validation_steps=200)
         self.keras_model = l2_keras_model
         self.convert_history_to_db_format(history_training)
+        if self.hiperparams_opt:
+            self.params_training = self.net_params
 
     def build_model(self):
         initializer = 'he_normal'

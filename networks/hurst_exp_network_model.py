@@ -45,6 +45,8 @@ class HurstExponentNetworkModel(NetworkModel):
 
         self.convert_history_to_db_format(history_training)
         self.keras_model = hurst_exp_keras_model
+        if self.hiperparams_opt:
+            self.params_training = self.net_params
 
     def build_model(self):
         inputs = Input(shape=(2, self.track_length))

@@ -43,6 +43,8 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
 
         self.convert_history_to_db_format(history_training)
         self.keras_model = state_detection_keras_model
+        if self.hiperparams_opt:
+            self.params_training = self.net_params
 
     def build_model(self):
         initializer = 'he_normal'
