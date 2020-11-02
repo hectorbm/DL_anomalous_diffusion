@@ -1,3 +1,5 @@
+import pickle
+
 import numpy as np
 from keras.utils import to_categorical
 
@@ -86,6 +88,42 @@ def generator_first_layer(batch_size, track_length, track_time):
         for i in range(batch_size):
             input_net[i, :, 0] = out[i, :, 0]
 
+        yield input_net, label
+
+
+# Generator for classification net optimization
+def generator_first_layer_validation(batch_size, track_length, track_time):
+    with open('networks/val_data/classification_net/x_val_len_{}_time_{}_batch_{}.pkl'.format(track_length,
+                                                                                     track_time,
+                                                                                     batch_size),
+              'rb') as x_val_data:
+        x_val = pickle.load(x_val_data)
+    with open('networks/val_data/classification_net/y_val_len_{}_time_{}_batch_{}.pkl'.format(track_length,
+                                                                                     track_time,
+                                                                                     batch_size),
+              'rb') as y_val_data:
+        y_val = pickle.load(y_val_data)
+    i = 0
+    while True:
+        # Generate random data
+        if i % 2 == 0:
+            out, label = generate_batch_of_samples_l1(batch_size=batch_size,
+                                                      track_length=track_length,
+                                                      track_time=track_time)
+            label = to_categorical(y=label, num_classes=3)
+            input_net = np.zeros(shape=[batch_size, track_length - 1, 1])
+            for i in range(batch_size):
+                input_net[i, :, 0] = out[i, :, 0]
+        # Pre-generated dataset
+        else:
+            out = x_val[i]
+            label = y_val[i]
+            label = to_categorical(y=label, num_classes=3)
+            input_net = np.zeros(shape=[batch_size, track_length - 1, 1])
+            for i in range(batch_size):
+                input_net[i, :, 0] = out[i, :, 0]
+
+        i += 1
         yield input_net, label
 
 
