@@ -35,7 +35,7 @@ def create_model(net_name):
     return network
 
 
-def scan_params(net_name, analysis_params, track_length, track_time):
+def scan_params(net_name, analysis_params):
     # Stack names and lists position
     if len(analysis_params) > 0:
         stack_names = [k for k, v in analysis_params.items()]

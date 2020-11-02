@@ -15,7 +15,7 @@ class NetworkModel(Document):
     keras_model = None
 
     # Net params define optimal setup. Analysis params is for optimization
-    net_params = DictField(required=False)
+    net_params = DictField(required=True)
     analysis_params = {}
 
     meta = {'allow_inheritance': True}
