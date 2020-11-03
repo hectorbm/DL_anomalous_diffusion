@@ -1,9 +1,11 @@
+import math
+
 import numpy as np
 from keras.models import Model
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalAveragePooling1D, concatenate
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
 from keras.optimizers import Adam
-from networks.generators import generator_state_net
+from networks.generators import generator_state_net, generator_state_net_validation
 from physical_models.models_two_state_obstructed_diffusion import TwoStateObstructedDiffusion
 from tools.analysis_tools import plot_confusion_matrix_for_layer
 from tracks.simulated_tracks import SimulatedTrack
@@ -14,32 +16,45 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
     output_categories_labels = ["State-0", "State-1"]
     model_name = 'State Detection Network'
 
+    net_params = {
+        'lr': 1e-4,
+        'batch_size': 8,
+        'amsgrad': False,
+        'epsilon': 1e-7
+    }
+    # For analysis of hyper-params
+    analysis_params = {
+        'lr': [1e-2, 1e-3, 1e-4, 1e-5],
+        'amsgrad': [False, True],
+        'batch_size': [8, 16, 32],
+        'epsilon': [1e-6, 1e-7, 1e-8]
+    }
+
     def train_network(self, batch_size):
         state_detection_keras_model = self.build_model()
         state_detection_keras_model.summary()
 
-        callbacks = [EarlyStopping(monitor='val_loss',
-                                   patience=100,
-                                   verbose=1,
-                                   min_delta=1e-4),
-                     # ReduceLROnPlateau(monitor='val_loss',
-                     #                   factor=0.1,
-                     #                   patience=4,
-                     #                   verbose=1,
-                     #                   min_lr=1e-10),
-                     ModelCheckpoint(filepath="models/{}.h5".format(self.id),
-                                     monitor='val_loss',
-                                     verbose=1,
-                                     save_best_only=True)]
+        callbacks = [
+            ModelCheckpoint(filepath="models/{}.h5".format(self.id),
+                            monitor='val_loss',
+                            verbose=1,
+                            save_best_only=True)]
+        if self.hiperparams_opt:
+            validation_generator = generator_state_net_validation(batch_size=batch_size,
+                                                                  track_length=self.track_length,
+                                                                  track_time=self.track_time)
+        else:
+            validation_generator = generator_state_net(batch_size=batch_size,
+                                                       track_length=self.track_length,
+                                                       track_time=self.track_time)
 
         history_training = state_detection_keras_model.fit(
             x=generator_state_net(batch_size=batch_size, track_length=self.track_length, track_time=self.track_time),
-            steps_per_epoch=2400,
+            steps_per_epoch=math.ceil(19200 / self.net_params['batch_size']),
             epochs=50,
             callbacks=callbacks,
-            validation_data=generator_state_net(batch_size=batch_size, track_length=self.track_length,
-                                                track_time=self.track_time),
-            validation_steps=200)
+            validation_data=validation_generator,
+            validation_steps=math.ceil(4800 / self.net_params['batch_size']))
 
         self.convert_history_to_db_format(history_training)
         self.keras_model = state_detection_keras_model
@@ -112,7 +127,9 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
         dense_2 = Dense(units=self.track_length, activation='relu')(dense_1)
         output_network = Dense(units=self.track_length, activation='sigmoid')(dense_2)
         state_detection_keras_model = Model(inputs=inputs, outputs=output_network)
-        optimizer = Adam(lr=1e-4)
+        optimizer = Adam(lr=self.net_params['lr'],
+                         epsilon=self.net_params['epsilon'],
+                         amsgrad=self.net_params['amsgrad'])
         state_detection_keras_model.compile(optimizer=optimizer, loss='mse', metrics=['mse'])
         return state_detection_keras_model
 

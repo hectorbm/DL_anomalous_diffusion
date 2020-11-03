@@ -6,7 +6,7 @@ from networks.diffusion_coeff_network_model import DiffusionCoefficientNetworkMo
 from tools.db_connection import connect_to_db, disconnect_to_db
 import matplotlib.pyplot as plt
 import numpy as np
-
+from keras import backend as K
 
 fbm_type_net = 'Subdiffusive'
 
@@ -55,6 +55,7 @@ def scan_params(net_name, analysis_params):
         # Run the analysis
         while not analysis_ended:
             if tos == (len(stack) - 1) and stack[tos] < len(analysis_params[stack_names[tos]]):
+                K.clear_session()
                 network = create_model(net_name)
                 for i in range(len(stack_names)):
                     network.net_params[stack_names[i]] = analysis_params[stack_names[i]][stack[i]]
@@ -147,6 +148,6 @@ if __name__ == '__main__':
 
     connect_to_db()
     analysis_params = get_params(net)
-    # scan_params(net, analysis_params)
+    scan_params(net, analysis_params)
     plot_analysis()
     disconnect_to_db()

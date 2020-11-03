@@ -1,6 +1,8 @@
+import math
+
 from mongoengine import StringField
 import numpy as np
-from networks.generators import generator_hurst_exp_network
+from networks.generators import generator_hurst_exp_network, generator_hurst_exp_network_validation
 from networks.network_model import NetworkModel
 from keras.layers import Dense, Input, LSTM
 from keras.models import Model
@@ -12,36 +14,50 @@ from tracks.simulated_tracks import SimulatedTrack
 
 
 class HurstExponentNetworkModel(NetworkModel):
-    fbm_type = StringField(choices=["Subdiffusive", "Brownian" , "Superdiffusive"], required=True)
+    fbm_type = StringField(choices=["Subdiffusive", "Brownian", "Superdiffusive"], required=True)
     model_name = "Hurst Exponent Network"
+
+    net_params = {
+        'lr': 1e-4,
+        'batch_size': 64,
+        'amsgrad': False,
+        'epsilon': 1e-7
+    }
+    # For analysis of hyper-params
+    analysis_params = {
+        'lr': [1e-2, 1e-3, 1e-4, 1e-5],
+        'amsgrad': [False, True],
+        'batch_size': [8, 16, 32],
+        'epsilon': [1e-6, 1e-7, 1e-8]
+    }
 
     def train_network(self, batch_size):
         hurst_exp_keras_model = self.build_model()
         hurst_exp_keras_model.summary()
 
-        callbacks = [EarlyStopping(monitor='val_loss',
-                                   patience=10,
-                                   verbose=1,
-                                   min_delta=1e-4),
-                     ReduceLROnPlateau(monitor='val_loss',
-                                       factor=0.1,
-                                       patience=4,
-                                       verbose=1,
-                                       min_lr=1e-10),
-                     ModelCheckpoint(filepath="models/{}.h5".format(self.id),
-                                     monitor='val_loss',
-                                     verbose=1,
-                                     save_best_only=True)]
-
+        callbacks = [
+            ModelCheckpoint(filepath="models/{}.h5".format(self.id),
+                            monitor='val_loss',
+                            verbose=1,
+                            save_best_only=True)]
+        if self.hiperparams_opt:
+            validation_generator = generator_hurst_exp_network_validation(batch_size=batch_size,
+                                                                          track_length=self.track_length,
+                                                                          track_time=self.track_time,
+                                                                          fbm_type=self.fbm_type)
+        else:
+            validation_generator = generator_hurst_exp_network(batch_size=batch_size,
+                                                               track_length=self.track_length,
+                                                               track_time=self.track_time,
+                                                               fbm_type=self.fbm_type)
         history_training = hurst_exp_keras_model.fit(
             x=generator_hurst_exp_network(batch_size=batch_size, track_length=self.track_length,
-                                                 track_time=self.track_time, fbm_type=self.fbm_type),
-            steps_per_epoch=500,
+                                          track_time=self.track_time, fbm_type=self.fbm_type),
+            steps_per_epoch=math.ceil(32000 / self.net_params['batch_size']),
             epochs=20,
             callbacks=callbacks,
-            validation_data=generator_hurst_exp_network(batch_size=batch_size, track_length=self.track_length,
-                                                               track_time=self.track_time, fbm_type=self.fbm_type),
-            validation_steps=50)
+            validation_data=validation_generator,
+            validation_steps=math.ceil(8000 / self.net_params['batch_size']))
 
         self.convert_history_to_db_format(history_training)
         self.keras_model = hurst_exp_keras_model
@@ -55,7 +71,8 @@ class HurstExponentNetworkModel(NetworkModel):
         x = Dense(units=128, activation='selu')(x)
         output_network = Dense(units=1, activation='sigmoid')(x)
         hurst_exp_keras_model = Model(inputs=inputs, outputs=output_network)
-        optimizer = Adam(lr=1e-4)
+        optimizer = Adam(lr=self.net_params['lr'], epsilon=self.net_params['epsilon'],
+                         amsgrad=self.net_params['amsgrad'])
         hurst_exp_keras_model.compile(optimizer=optimizer, loss='mse', metrics=['mae'])
         return hurst_exp_keras_model
 

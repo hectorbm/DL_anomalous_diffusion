@@ -1,3 +1,5 @@
+import math
+
 from sklearn.metrics import mean_squared_error
 
 from physical_models.models_brownian import Brownian
@@ -7,7 +9,8 @@ from keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPooling1D
 from keras.models import Model
 from keras.optimizers import Adam
-from networks.generators import generator_diffusion_coefficient_network
+from networks.generators import generator_diffusion_coefficient_network, \
+    generator_diffusion_coefficient_network_validation
 from physical_models.models_two_state_obstructed_diffusion import TwoStateObstructedDiffusion
 from mongoengine import StringField
 import numpy as np
@@ -16,37 +19,50 @@ import numpy as np
 class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
     diffusion_model_range = StringField(choices=["2-State-OD", "Brownian"])
 
+    net_params = {
+        'lr': 1e-3,
+        'batch_size': 8,
+        'amsgrad': False,
+        'epsilon': 1e-7
+    }
+    # For analysis of hyper-params
+    analysis_params = {
+        'lr': [1e-2, 1e-3, 1e-4, 1e-5],
+        'amsgrad': [False, True],
+        'batch_size': [8, 16, 32],
+        'epsilon': [1e-6, 1e-7, 1e-8]
+    }
+
     def train_network(self, batch_size):
         diffusion_coefficient_keras_model = self.build_model()
         diffusion_coefficient_keras_model.summary()
 
-        callbacks = [EarlyStopping(monitor='val_loss',
-                                   patience=30,
-                                   verbose=1,
-                                   min_delta=1e-4),
-                     # ReduceLROnPlateau(monitor='val_loss',
-                     #                   factor=0.1,
-                     #                   patience=4,
-                     #                   verbose=1,
-                     #                   min_lr=1e-12),
-                     ModelCheckpoint(filepath="models/{}.h5".format(self.id),
-                                     monitor='val_loss',
-                                     save_best_only=True,
-                                     verbose=1)]
+        callbacks = [
+            ModelCheckpoint(filepath="models/{}.h5".format(self.id),
+                            monitor='val_loss',
+                            save_best_only=True,
+                            verbose=1)]
 
+        if self.hiperparams_opt:
+            validation_generator = generator_diffusion_coefficient_network_validation(batch_size,
+                                                                                      self.track_length,
+                                                                                      self.track_time,
+                                                                                      self.diffusion_model_range)
+        else:
+            validation_generator = generator_diffusion_coefficient_network(batch_size,
+                                                                           self.track_length,
+                                                                           self.track_time,
+                                                                           self.diffusion_model_range)
         history_training = diffusion_coefficient_keras_model.fit(
             x=generator_diffusion_coefficient_network(batch_size,
                                                       self.track_length,
                                                       self.track_time,
                                                       self.diffusion_model_range),
-            steps_per_epoch=2400,
-            epochs=10,
+            steps_per_epoch=math.ceil(19200 / self.net_params['batch_size']),
+            epochs=15,
             callbacks=callbacks,
-            validation_data=generator_diffusion_coefficient_network(batch_size,
-                                                                    self.track_length,
-                                                                    self.track_time,
-                                                                    self.diffusion_model_range),
-            validation_steps=200)
+            validation_data=validation_generator,
+            validation_steps=math.ceil(4800 / self.net_params['batch_size']))
         self.convert_history_to_db_format(history_training)
         self.keras_model = diffusion_coefficient_keras_model
         if self.hiperparams_opt:
@@ -65,7 +81,11 @@ class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
         dense_2 = Dense(units=256, activation='relu')(dense_1)
         output_network = Dense(units=1, activation='sigmoid')(dense_2)
         diffusion_coefficient_keras_model = Model(inputs=inputs, outputs=output_network)
-        optimizer = Adam(lr=1e-3)
+
+        optimizer = Adam(lr=self.net_params['lr'],
+                         epsilon=self.net_params['epsilon'],
+                         amsgrad=self.net_params['amsgrad'])
+
         diffusion_coefficient_keras_model.compile(optimizer=optimizer, loss='mse', metrics=['mse'])
         return diffusion_coefficient_keras_model
 
