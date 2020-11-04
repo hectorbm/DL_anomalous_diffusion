@@ -6,7 +6,7 @@ from tracks.simulated_tracks import SimulatedTrack
 from . import network_model
 from keras.models import Model
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPooling1D, concatenate
-from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping
 from keras.optimizers import Adam
 from networks.generators import generator_second_layer, axis_adaptation_to_net, generator_second_layer_validation, \
     generate_batch_l2_net
@@ -20,8 +20,8 @@ class L2NetworkModel(network_model.NetworkModel):
 
     net_params = {
         'lr': 1e-5,
-        'training_set_size':50000,
-        'validation_set_size':12500,
+        'training_set_size': 50000,
+        'validation_set_size': 12500,
         'batch_size': 8,
         'amsgrad': False,
         'epsilon': 1e-7
@@ -42,7 +42,11 @@ class L2NetworkModel(network_model.NetworkModel):
         l2_keras_model.summary()
 
         callbacks = [
-            ]
+            EarlyStopping(monitor="val_loss",
+                          min_delta=1e-3,
+                          patience=5,
+                          verbose=1,
+                          mode="min")]
         if self.hiperparams_opt:
             validation_generator = generator_second_layer_validation(batch_size=batch_size,
                                                                      track_length=self.track_length,
@@ -58,13 +62,14 @@ class L2NetworkModel(network_model.NetworkModel):
             batch_size=self.net_params['batch_size'],
             callbacks=callbacks,
             validation_data=validation_generator,
-            validation_steps=math.ceil(self.net_params['validation_set_size']/self.net_params['batch_size']),
+            validation_steps=math.ceil(self.net_params['validation_set_size'] / self.net_params['batch_size']),
             shuffle=True)
 
         self.keras_model = l2_keras_model
         self.convert_history_to_db_format(history_training)
         self.keras_model.save(filepath="models/{}".format(self.id))
 
+        self.validate_test_data_accuracy(n_axes=2)  # TODO: Remove this test loc
         if self.hiperparams_opt:
             self.params_training = self.net_params
 
