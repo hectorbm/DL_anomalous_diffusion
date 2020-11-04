@@ -1,6 +1,5 @@
 import numpy as np
-from keras.callbacks import ReduceLROnPlateau
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping
 
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPooling1D, concatenate
 from keras.models import Model
@@ -24,6 +23,7 @@ class L1NetworkModel(network_model.NetworkModel):
 
     net_params = {
         'training_set_size': 50000,
+        'validation_set_size': 12500,
         'lr': 1e-4,
         'batch_size': 8,
         'amsgrad': False,
@@ -41,17 +41,15 @@ class L1NetworkModel(network_model.NetworkModel):
         x_data, y_data = generate_batch_l1_net(self.net_params['training_set_size'],
                                                self.track_length,
                                                self.track_time)
+
         l1_keras_model = self.build_model()
         l1_keras_model.summary()
-        callbacks = [
-            EarlyStopping(
-                            monitor="val_loss",
-                            min_delta=1e-3,
-                            patience=50,
-                            verbose=1,
-                            mode="min",
-                            restore_best_weights=True)
-        ]
+        callbacks = [EarlyStopping(monitor="val_loss",
+                                   min_delta=1e-3,
+                                   patience=5,
+                                   verbose=1,
+                                   mode="min")]
+
         if self.hiperparams_opt:
             validation_generator = generator_first_layer_validation(batch_size=batch_size,
                                                                     track_length=self.track_length,
@@ -66,15 +64,21 @@ class L1NetworkModel(network_model.NetworkModel):
                                               batch_size=batch_size,
                                               callbacks=callbacks,
                                               validation_data=validation_generator,
-                                              validation_steps=1500,
+                                              validation_steps=math.ceil(
+                                                  self.net_params['validation_set_size']/self.net_params['batch_size']),
                                               shuffle=True)
 
         self.convert_history_to_db_format(history_training)
         self.keras_model = l1_keras_model
+        self.keras_model.save(filepath="models/{}.h5".format(self.id))
+        # Only for testing!
+        self.validate_test_data_accuracy(n_axes=2)
+
         if self.hiperparams_opt:
             self.params_training = self.net_params
 
     def build_model(self):
+        # Net filters and kernels
         initializer = 'he_normal'
         filters = 32
         x1_kernel = 4
@@ -82,6 +86,7 @@ class L1NetworkModel(network_model.NetworkModel):
         x3_kernel = 3
         x4_kernel = 10
         x5_kernel = 20
+
         inputs = Input(shape=(self.track_length - 1, 1))
         x1 = Conv1D(filters=filters, kernel_size=x1_kernel, padding='causal', activation='relu',
                     kernel_initializer=initializer)(inputs)
@@ -139,8 +144,13 @@ class L1NetworkModel(network_model.NetworkModel):
         dense_1 = Dense(units=512, activation='relu')(x_concat)
         dense_2 = Dense(units=128, activation='relu')(dense_1)
         output_network = Dense(units=self.output_categories, activation='softmax')(dense_2)
+
         l1_keras_model = Model(inputs=inputs, outputs=output_network)
-        optimizer = Adam(lr=self.net_params['lr'], amsgrad=self.net_params['amsgrad'], epsilon=self.net_params['epsilon'])
+
+        optimizer = Adam(lr=self.net_params['lr'],
+                         amsgrad=self.net_params['amsgrad'],
+                         epsilon=self.net_params['epsilon'])
+
         l1_keras_model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['categorical_accuracy'])
 
         return l1_keras_model
