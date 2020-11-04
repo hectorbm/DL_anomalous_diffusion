@@ -3,21 +3,25 @@ import math
 import numpy as np
 from keras.models import Model
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalAveragePooling1D, concatenate
-from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping
 from keras.optimizers import Adam
-from networks.generators import generator_state_net, generator_state_net_validation
+from networks.generators import generator_state_net, generator_state_net_validation, generate_batch_states_net
 from physical_models.models_two_state_obstructed_diffusion import TwoStateObstructedDiffusion
 from tools.analysis_tools import plot_confusion_matrix_for_layer
 from tracks.simulated_tracks import SimulatedTrack
 from . import network_model
 
+# TODO: Compare MSE vs bin_crossentropy loss function
+
 
 class StateDetectionNetworkModel(network_model.NetworkModel):
     output_categories_labels = ["State-0", "State-1"]
-    model_name = 'State Detection Network'
+    model_name = 'States Detection Network'
 
     net_params = {
         'lr': 1e-4,
+        'training_set_size': 50000,
+        'validation_set_size': 12500,
         'batch_size': 8,
         'amsgrad': False,
         'epsilon': 1e-7
@@ -31,14 +35,21 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
     }
 
     def train_network(self, batch_size):
+        # Generate training set
+        x_data, y_data = generate_batch_states_net(self.net_params['batch_size'],
+                                                   self.track_length,
+                                                   self.track_time)
+
         state_detection_keras_model = self.build_model()
         state_detection_keras_model.summary()
 
         callbacks = [
-            ModelCheckpoint(filepath="models/{}.h5".format(self.id),
-                            monitor='val_loss',
-                            verbose=1,
-                            save_best_only=True)]
+            EarlyStopping(monitor="val_loss",
+                          min_delta=1e-3,
+                          patience=5,
+                          verbose=1,
+                          mode="min")
+        ]
         if self.hiperparams_opt:
             validation_generator = generator_state_net_validation(batch_size=batch_size,
                                                                   track_length=self.track_length,
@@ -49,19 +60,27 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
                                                        track_time=self.track_time)
 
         history_training = state_detection_keras_model.fit(
-            x=generator_state_net(batch_size=batch_size, track_length=self.track_length, track_time=self.track_time),
-            steps_per_epoch=math.ceil(19200 / self.net_params['batch_size']),
+            x=x_data,
+            y=y_data,
             epochs=50,
+            batch_size=self.net_params['batch_size'],
             callbacks=callbacks,
             validation_data=validation_generator,
-            validation_steps=math.ceil(4800 / self.net_params['batch_size']))
+            validation_steps=math.ceil(self.net_params['validation_set_size'] / self.net_params['batch_size']),
+            shuffle=True)
 
         self.convert_history_to_db_format(history_training)
         self.keras_model = state_detection_keras_model
+        self.keras_model.save(filepath="models/{}".format(self.id))
+
+        # TODO: Remove after testing
+        self.validate_test_data_accuracy(n_axes=2)
+
         if self.hiperparams_opt:
             self.params_training = self.net_params
 
     def build_model(self):
+        # Networks filters and kernels
         initializer = 'he_normal'
         filters_size = 32
         x1_kernel_size = 4
@@ -126,11 +145,15 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
         dense_1 = Dense(units=(self.track_length * 2), activation='relu')(x_concat)
         dense_2 = Dense(units=self.track_length, activation='relu')(dense_1)
         output_network = Dense(units=self.track_length, activation='sigmoid')(dense_2)
+
         state_detection_keras_model = Model(inputs=inputs, outputs=output_network)
+
         optimizer = Adam(lr=self.net_params['lr'],
                          epsilon=self.net_params['epsilon'],
                          amsgrad=self.net_params['amsgrad'])
+
         state_detection_keras_model.compile(optimizer=optimizer, loss='mse', metrics=['mse'])
+
         return state_detection_keras_model
 
     def evaluate_track_input(self, track):
@@ -158,7 +181,7 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
         return mean_prediction
 
     def validate_test_data_accuracy(self, n_axes, normalized=True):
-        test_batch_size = 10
+        test_batch_size = 100
         ground_truth = np.zeros(shape=(test_batch_size, self.track_length))
         predicted_value = np.zeros(shape=(test_batch_size, self.track_length))
         for i in range(test_batch_size):
