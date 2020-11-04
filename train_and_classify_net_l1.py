@@ -28,7 +28,7 @@ def train(range_track_length):
             if net.is_valid_network_track_time(track.track_time):
                 net_available = True
 
-        if True:# not net_available:
+        if not net_available:
             if worker_id == (count % num_workers):
                 print("Training network for track_length:{} and track_time:{}".format(track.track_length,
                                                                                       track.track_time))

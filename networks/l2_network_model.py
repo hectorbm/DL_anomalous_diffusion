@@ -8,7 +8,8 @@ from keras.models import Model
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPooling1D, concatenate
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
 from keras.optimizers import Adam
-from networks.generators import generator_second_layer, axis_adaptation_to_net, generator_second_layer_validation
+from networks.generators import generator_second_layer, axis_adaptation_to_net, generator_second_layer_validation, \
+    generate_batch_l2_net
 import numpy as np
 
 
@@ -19,6 +20,8 @@ class L2NetworkModel(network_model.NetworkModel):
 
     net_params = {
         'lr': 1e-5,
+        'training_set_size':50000,
+        'validation_set_size':12500,
         'batch_size': 8,
         'amsgrad': False,
         'epsilon': 1e-7
@@ -32,14 +35,14 @@ class L2NetworkModel(network_model.NetworkModel):
     }
 
     def train_network(self, batch_size):
+        # Generate training set
+        x_data, y_data = generate_batch_l2_net(self.net_params['training_set_size'], self.track_length, self.track_time)
+
         l2_keras_model = self.build_model()
         l2_keras_model.summary()
 
         callbacks = [
-            ModelCheckpoint(filepath="models/{}.h5".format(self.id),
-                            monitor='val_loss',
-                            verbose=1,
-                            save_best_only=True)]
+            ]
         if self.hiperparams_opt:
             validation_generator = generator_second_layer_validation(batch_size=batch_size,
                                                                      track_length=self.track_length,
@@ -49,18 +52,24 @@ class L2NetworkModel(network_model.NetworkModel):
                                                           track_length=self.track_length,
                                                           track_time=self.track_time)
         history_training = l2_keras_model.fit(
-            x=generator_second_layer(batch_size=batch_size, track_length=self.track_length, track_time=self.track_time),
-            steps_per_epoch=math.ceil(19200/self.net_params['batch_size']),
+            x=x_data,
+            y=y_data,
             epochs=50,
+            batch_size=self.net_params['batch_size'],
             callbacks=callbacks,
             validation_data=validation_generator,
-            validation_steps=math.ceil(4800/self.net_params['batch_size']))
+            validation_steps=math.ceil(self.net_params['validation_set_size']/self.net_params['batch_size']),
+            shuffle=True)
+
         self.keras_model = l2_keras_model
         self.convert_history_to_db_format(history_training)
+        self.keras_model.save(filepath="models/{}".format(self.id))
+
         if self.hiperparams_opt:
             self.params_training = self.net_params
 
     def build_model(self):
+        # Network filters and kernels
         initializer = 'he_normal'
         filters_size = 32
         x1_kernel_size = 4
@@ -69,6 +78,7 @@ class L2NetworkModel(network_model.NetworkModel):
         x4_kernel_size = 10
         x5_kernel_size = 6
         x6_kernel_size = 20
+
         inputs = Input(shape=(self.track_length - 1, 1))
         x1 = Conv1D(filters=filters_size, kernel_size=x1_kernel_size, padding='causal', activation='relu',
                     kernel_initializer=initializer)(inputs)
@@ -138,11 +148,15 @@ class L2NetworkModel(network_model.NetworkModel):
         dense_1 = Dense(units=615, activation='relu')(x_concat)
         dense_2 = Dense(units=150, activation='relu')(dense_1)
         output_network = Dense(units=self.output_categories, activation='softmax')(dense_2)
+
         l2_keras_model = Model(inputs=inputs, outputs=output_network)
+
         optimizer = Adam(lr=self.net_params['lr'],
                          epsilon=self.net_params['epsilon'],
                          amsgrad=self.net_params['amsgrad'])
+
         l2_keras_model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['categorical_accuracy'])
+
         return l2_keras_model
 
     def evaluate_track_input(self, track):

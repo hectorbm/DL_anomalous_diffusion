@@ -70,7 +70,7 @@ class L1NetworkModel(network_model.NetworkModel):
 
         self.convert_history_to_db_format(history_training)
         self.keras_model = l1_keras_model
-        self.keras_model.save(filepath="models/{}.h5".format(self.id))
+        self.keras_model.save(filepath="models/{}".format(self.id))
         # Only for testing!
         self.validate_test_data_accuracy(n_axes=2)
 
