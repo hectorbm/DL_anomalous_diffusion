@@ -1,5 +1,7 @@
 import numpy as np
-from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
+from keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPooling1D, concatenate
 from keras.models import Model
 from keras.optimizers import Adam
@@ -21,7 +23,7 @@ class L1NetworkModel(network_model.NetworkModel):
     model_name = 'L1 Network'
 
     net_params = {
-        'training_set_size': 19200,
+        'training_set_size': 50000,
         'lr': 1e-4,
         'batch_size': 8,
         'amsgrad': False,
@@ -37,14 +39,19 @@ class L1NetworkModel(network_model.NetworkModel):
 
     def train_network(self, batch_size):
         x_data, y_data = generate_batch_l1_net(self.net_params['training_set_size'],
-                                               self.net_params['track_length'],
-                                               self.net_params['track_time'])
+                                               self.track_length,
+                                               self.track_time)
         l1_keras_model = self.build_model()
         l1_keras_model.summary()
-        callbacks = [ModelCheckpoint(filepath="models/{}.h5".format(self.id),
-                                     monitor='val_categorical_accuracy',
-                                     verbose=1,
-                                     save_best_only=True)]
+        callbacks = [
+            EarlyStopping(
+                            monitor="val_loss",
+                            min_delta=1e-3,
+                            patience=50,
+                            verbose=1,
+                            mode="min",
+                            restore_best_weights=True)
+        ]
         if self.hiperparams_opt:
             validation_generator = generator_first_layer_validation(batch_size=batch_size,
                                                                     track_length=self.track_length,
@@ -55,11 +62,11 @@ class L1NetworkModel(network_model.NetworkModel):
                                                          track_time=self.track_time)
         history_training = l1_keras_model.fit(x=x_data,
                                               y=y_data,
-                                              batch_size=self.net_params['batch_size'],
                                               epochs=50,
+                                              batch_size=batch_size,
                                               callbacks=callbacks,
                                               validation_data=validation_generator,
-                                              validation_steps=math.ceil(4800/self.net_params['batch_size']),
+                                              validation_steps=1500,
                                               shuffle=True)
 
         self.convert_history_to_db_format(history_training)
