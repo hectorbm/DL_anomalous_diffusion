@@ -4,7 +4,8 @@ from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPool
 from keras.models import Model
 from keras.optimizers import Adam
 
-from networks.generators import generator_first_layer, axis_adaptation_to_net, generator_first_layer_validation
+from networks.generators import generator_first_layer, axis_adaptation_to_net, generator_first_layer_validation, \
+    generate_batch_l1_net
 from physical_models.models_ctrw import CTRW
 from physical_models.models_fbm import FBM
 from physical_models.models_two_state_obstructed_diffusion import TwoStateObstructedDiffusion
@@ -20,6 +21,7 @@ class L1NetworkModel(network_model.NetworkModel):
     model_name = 'L1 Network'
 
     net_params = {
+        'training_set_size': 19200,
         'lr': 1e-4,
         'batch_size': 8,
         'amsgrad': False,
@@ -34,6 +36,9 @@ class L1NetworkModel(network_model.NetworkModel):
     }
 
     def train_network(self, batch_size):
+        x_data, y_data = generate_batch_l1_net(self.net_params['training_set_size'],
+                                               self.net_params['track_length'],
+                                               self.net_params['track_time'])
         l1_keras_model = self.build_model()
         l1_keras_model.summary()
         callbacks = [ModelCheckpoint(filepath="models/{}.h5".format(self.id),
@@ -48,14 +53,14 @@ class L1NetworkModel(network_model.NetworkModel):
             validation_generator = generator_first_layer(batch_size=batch_size,
                                                          track_length=self.track_length,
                                                          track_time=self.track_time)
-        history_training = l1_keras_model.fit(x=generator_first_layer(batch_size=batch_size,
-                                                                      track_length=self.track_length,
-                                                                      track_time=self.track_time),
-                                              steps_per_epoch=math.ceil(19200/self.net_params['batch_size']),
+        history_training = l1_keras_model.fit(x=x_data,
+                                              y=y_data,
+                                              batch_size=self.net_params['batch_size'],
                                               epochs=50,
                                               callbacks=callbacks,
                                               validation_data=validation_generator,
-                                              validation_steps=math.ceil(4800/self.net_params['batch_size']))
+                                              validation_steps=math.ceil(4800/self.net_params['batch_size']),
+                                              shuffle=True)
 
         self.convert_history_to_db_format(history_training)
         self.keras_model = l1_keras_model

@@ -19,10 +19,11 @@ def axis_adaptation_to_net(axis_data, track_length):
 def generate_batch_of_samples_l1(batch_size, track_length, track_time):
     out = np.zeros(shape=[batch_size, track_length - 1, 2])
     label = np.zeros(shape=[batch_size, 1])
-    t_sample = np.random.choice(np.linspace(track_time * 0.85, track_time * 1.15, 50))
-    track_length_sample = int(np.random.choice(np.arange(track_length, np.ceil(track_length * 1.05), 1)))
 
     for i in range(batch_size):
+        t_sample = np.random.choice(np.linspace(track_time * 0.85, track_time * 1.15, 50))
+        track_length_sample = int(np.random.choice(np.arange(track_length, np.ceil(track_length * 1.05), 1)))
+
         physical_model_type = np.random.choice(["fbm", "ctrw", "two-state"])
         if physical_model_type == "fbm":
             physical_model = FBM.create_random()
@@ -79,16 +80,20 @@ def generate_batch_of_samples_l2(batch_size, track_length, track_time):
 
 def generator_first_layer(batch_size, track_length, track_time):
     while True:
-        out, label = generate_batch_of_samples_l1(batch_size=batch_size,
-                                                  track_length=track_length,
-                                                  track_time=track_time)
-        label = to_categorical(y=label, num_classes=3)
-        input_net = np.zeros(shape=[batch_size, track_length - 1, 1])
-
-        for i in range(batch_size):
-            input_net[i, :, 0] = out[i, :, 0]
+        input_net, label = generate_batch_l1_net(batch_size, track_length, track_time)
 
         yield input_net, label
+
+
+def generate_batch_l1_net(batch_size, track_length, track_time):
+    out, label = generate_batch_of_samples_l1(batch_size=batch_size,
+                                              track_length=track_length,
+                                              track_time=track_time)
+    label = to_categorical(y=label, num_classes=3)
+    input_net = np.zeros(shape=[batch_size, track_length - 1, 1])
+    for i in range(batch_size):
+        input_net[i, :, 0] = out[i, :, 0]
+    return input_net, label
 
 
 # Generator for classification net optimization
