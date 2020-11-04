@@ -69,7 +69,6 @@ class L2NetworkModel(network_model.NetworkModel):
         self.convert_history_to_db_format(history_training)
         self.keras_model.save(filepath="models/{}".format(self.id))
 
-        self.validate_test_data_accuracy(n_axes=2)  # TODO: Remove this test loc
         if self.hiperparams_opt:
             self.params_training = self.net_params
 

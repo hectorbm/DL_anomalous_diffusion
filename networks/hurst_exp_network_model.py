@@ -14,6 +14,8 @@ from physical_models.models_fbm import FBM
 from tracks.simulated_tracks import SimulatedTrack
 
 
+# TODO: Check Brownian type!
+
 class HurstExponentNetworkModel(NetworkModel):
     fbm_type = StringField(choices=["Subdiffusive", "Brownian", "Superdiffusive"], required=True)
     model_name = "Hurst Exponent Network"
@@ -35,7 +37,7 @@ class HurstExponentNetworkModel(NetworkModel):
     }
 
     def train_network(self, batch_size):
-        y_data, x_data = generate_batch_hurst_net(self.net_params['batch_size'],
+        y_data, x_data = generate_batch_hurst_net(self.net_params['training_set_size'],
                                                   self.fbm_type,
                                                   self.track_length,
                                                   self.track_time)
@@ -44,7 +46,7 @@ class HurstExponentNetworkModel(NetworkModel):
         hurst_exp_keras_model.summary()
 
         callbacks = [EarlyStopping(monitor="val_loss",
-                                   min_delta=1e-3,
+                                   min_delta=1e-4,
                                    patience=5,
                                    verbose=1,
                                    mode="min")]
@@ -72,9 +74,6 @@ class HurstExponentNetworkModel(NetworkModel):
         self.convert_history_to_db_format(history_training)
         self.keras_model = hurst_exp_keras_model
         self.keras_model.save(filepath="models/{}".format(self.id))
-
-        # TODO: Only for testing!
-        self.plot_loss_model()
 
         if self.hiperparams_opt:
             self.params_training = self.net_params
