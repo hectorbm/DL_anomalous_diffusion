@@ -333,8 +333,10 @@ def generator_hurst_exp_network(batch_size, track_length, track_time, fbm_type):
 def generate_batch_hurst_net(batch_size, fbm_type, track_length, track_time):
     out = np.zeros(shape=(batch_size, 2, track_length))
     label = np.zeros(shape=(batch_size, 1))
-    t_sample = np.random.choice(np.linspace(track_time * 0.85, track_time * 1.15, 50))
+
     for i in range(batch_size):
+        t_sample = np.random.choice(np.linspace(track_time * 0.85, track_time * 1.15, 50))
+        track_length_sample = int(np.random.choice(np.arange(track_length, np.ceil(track_length * 1.05), 1)))
         if fbm_type == 'Subdiffusive':
             model_sample = FBM.create_random_subdiffusive()
         elif fbm_type == 'Brownian':
@@ -342,13 +344,14 @@ def generate_batch_hurst_net(batch_size, fbm_type, track_length, track_time):
         else:
             model_sample = FBM.create_random_superdiffusive()
 
-        x_noisy, y_nosy, x, y, t = model_sample.simulate_track(track_length=track_length, track_time=t_sample)
+        x_noisy, y_nosy, x, y, t = model_sample.simulate_track(track_length=track_length_sample, track_time=t_sample)
         label[i, 0] = model_sample.hurst_exp
 
-        zero_mean_x = x_noisy - np.mean(x_noisy)
+        zero_mean_x = x_noisy[:track_length] - np.mean(x_noisy[:track_length])
         zero_mean_x = zero_mean_x / np.std(zero_mean_x)
         out[i, 0, :] = zero_mean_x
         out[i, 1, :] = np.linspace(0, 1, track_length)
+
     return label, out
 
 

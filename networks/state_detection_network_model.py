@@ -36,7 +36,7 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
 
     def train_network(self, batch_size):
         # Generate training set
-        x_data, y_data = generate_batch_states_net(self.net_params['batch_size'],
+        x_data, y_data = generate_batch_states_net(self.net_params['training_set_size'],
                                                    self.track_length,
                                                    self.track_time)
 
@@ -72,9 +72,6 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
         self.convert_history_to_db_format(history_training)
         self.keras_model = state_detection_keras_model
         self.keras_model.save(filepath="models/{}".format(self.id))
-
-        # TODO: Remove after testing
-        self.validate_test_data_accuracy(n_axes=2)
 
         if self.hiperparams_opt:
             self.params_training = self.net_params
