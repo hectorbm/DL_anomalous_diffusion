@@ -9,9 +9,6 @@ from Networks.fbm_network import L2NetworkModel
 from Networks.states_detection_network import StateDetectionNetworkModel
 
 
-# TODO: UPDATE TO NEW DATASET SIZE, CHECK FOR ERRORS!
-
-
 def classification_net_val_data():
     x_val = []
     y_val = []

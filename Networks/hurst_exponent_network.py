@@ -32,7 +32,7 @@ class HurstExponentNetworkModel(NetworkModel):
     analysis_params = {
         'lr': [1e-2, 1e-3, 1e-4, 1e-5],
         'amsgrad': [False, True],
-        'batch_size': [8, 16, 32],
+        'batch_size': [16, 32, 64],
         'epsilon': [1e-6, 1e-7, 1e-8]
     }
 
