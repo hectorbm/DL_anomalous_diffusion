@@ -1,5 +1,5 @@
-from tools.db_connection import connect_to_db, disconnect_to_db
-from tracks.file import get_files_in_path, File
+from Tools.db_connection import connect_to_db, disconnect_to_db
+from Tracks.file import get_files_in_path, File
 
 
 def load_files_and_tracks(path_name):

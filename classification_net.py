@@ -1,6 +1,6 @@
-from tracks.experimental_tracks import ExperimentalTracks
-from networks.l1_network_model import L1NetworkModel
-from tools.db_connection import connect_to_db, disconnect_to_db
+from Tracks.experimental_tracks import ExperimentalTracks
+from Networks.classification_network import L1NetworkModel
+from Tools.db_connection import connect_to_db, disconnect_to_db
 from keras import backend as K
 
 # For workers

@@ -1,9 +1,9 @@
 .vscode/*
 .idea/*
 __pycache__/*
-physical_models/__pycache__/*
-tracks/__pycache__/*
-tools/__pycache__/*
+PhysicalModels/__pycache__/*
+Tracks/__pycache__/*
+Tools/__pycache__/*
 __pychache__
-experimental_data/*
-models/*
+ExperimentalData/*
+Models/*

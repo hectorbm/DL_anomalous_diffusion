@@ -5,16 +5,20 @@ from keras.models import Model
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalAveragePooling1D, concatenate
 from tensorflow.keras.callbacks import EarlyStopping
 from keras.optimizers import Adam
-from networks.generators import generator_state_net, generator_state_net_validation, generate_batch_states_net
-from physical_models.models_two_state_obstructed_diffusion import TwoStateObstructedDiffusion
-from tools.analysis_tools import plot_confusion_matrix_for_layer
-from tracks.simulated_tracks import SimulatedTrack
-from . import network_model
+from Networks.generators import generator_state_net, generator_state_net_validation, generate_batch_states_net
+from PhysicalModels.two_states_obstructed_diffusion import TwoStateObstructedDiffusion
+from Tools.analysis_tools import plot_confusion_matrix_for_layer
+from Tracks.simulated_tracks import SimulatedTrack
+from . import network
 
 # TODO: Compare MSE vs bin_crossentropy loss function
 
 
-class StateDetectionNetworkModel(network_model.NetworkModel):
+def convert_output_to_db(states_net_output):
+    return states_net_output.tolist()
+
+
+class StateDetectionNetworkModel(network.NetworkModel):
     output_categories_labels = ["State-0", "State-1"]
     model_name = 'States Detection Network'
 
@@ -72,7 +76,7 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
 
         self.convert_history_to_db_format(history_training)
         self.keras_model = state_detection_keras_model
-        self.keras_model.save(filepath="models/{}".format(self.id))
+        self.keras_model.save(filepath="Models/{}".format(self.id))
 
         if self.hiperparams_opt:
             self.params_training = self.net_params
@@ -204,6 +208,3 @@ class StateDetectionNetworkModel(network_model.NetworkModel):
                                         predicted_value=predicted_value,
                                         labels=self.output_categories_labels,
                                         normalized=normalized)
-
-    def convert_output_to_db(self, states_net_output):
-        return states_net_output.tolist()

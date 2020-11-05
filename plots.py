@@ -1,5 +1,5 @@
-from tools.db_connection import connect_to_db, disconnect_to_db
-from tracks.experimental_tracks import ExperimentalTracks, L1_output_categories_labels, EXPERIMENTAL_CONDITIONS, \
+from Tools.db_connection import connect_to_db, disconnect_to_db
+from Tracks.experimental_tracks import ExperimentalTracks, L1_output_categories_labels, EXPERIMENTAL_CONDITIONS, \
     L2_output_categories_labels
 import matplotlib.pyplot as plt
 import numpy as np

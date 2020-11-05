@@ -2,22 +2,22 @@ import math
 
 from sklearn.metrics import mean_squared_error
 
-from physical_models.models_brownian import Brownian
-from tracks.simulated_tracks import SimulatedTrack
-from . import network_model
+from PhysicalModels.brownian import Brownian
+from Tracks.simulated_tracks import SimulatedTrack
+from . import network
 
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPooling1D
 from keras.models import Model
 from keras.optimizers import Adam
-from networks.generators import generator_diffusion_coefficient_network, \
+from Networks.generators import generator_diffusion_coefficient_network, \
     generator_diffusion_coefficient_network_validation, generate_batch_diffusion_coefficient_net, \
     convert_to_diffusion_net_input
-from physical_models.models_two_state_obstructed_diffusion import TwoStateObstructedDiffusion
+from PhysicalModels.two_states_obstructed_diffusion import TwoStateObstructedDiffusion
 from mongoengine import StringField
 import numpy as np
 
 
-class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
+class DiffusionCoefficientNetworkModel(network.NetworkModel):
     diffusion_model_range = StringField(choices=["2-State-OD", "Brownian"])
 
     net_params = {
@@ -67,7 +67,7 @@ class DiffusionCoefficientNetworkModel(network_model.NetworkModel):
 
         self.convert_history_to_db_format(history_training)
         self.keras_model = diffusion_coefficient_keras_model
-        self.keras_model.save('models/{}'.format(self.id))
+        self.keras_model.save('Models/{}'.format(self.id))
 
         if self.hiperparams_opt:
             self.params_training = self.net_params

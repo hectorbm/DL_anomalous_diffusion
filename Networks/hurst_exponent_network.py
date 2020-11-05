@@ -3,15 +3,15 @@ import math
 from tensorflow.keras.callbacks import EarlyStopping
 from mongoengine import StringField
 import numpy as np
-from networks.generators import generator_hurst_exp_network, generator_hurst_exp_network_validation, \
+from Networks.generators import generator_hurst_exp_network, generator_hurst_exp_network_validation, \
     generate_batch_hurst_net
-from networks.network_model import NetworkModel
+from Networks.network import NetworkModel
 from keras.layers import Dense, Input, LSTM
 from keras.models import Model
 from keras.optimizers import Adam
 from sklearn.metrics import mean_squared_error
-from physical_models.models_fbm import FBM
-from tracks.simulated_tracks import SimulatedTrack
+from PhysicalModels.fbm import FBM
+from Tracks.simulated_tracks import SimulatedTrack
 
 
 # TODO: Check Brownian type!
@@ -74,7 +74,7 @@ class HurstExponentNetworkModel(NetworkModel):
 
         self.convert_history_to_db_format(history_training)
         self.keras_model = hurst_exp_keras_model
-        self.keras_model.save(filepath="models/{}".format(self.id))
+        self.keras_model.save(filepath="Models/{}".format(self.id))
 
         if self.hiperparams_opt:
             self.params_training = self.net_params

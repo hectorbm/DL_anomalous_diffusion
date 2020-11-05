@@ -54,7 +54,7 @@ class ExperimentalTracks(tracks.Tracks):
                 (self.frames[self.seq_final_frame[i]] - self.frames[self.seq_initial_frame[i]]) * (1 / FILE_fps))
 
     def compute_sequences_length(self):
-        # Compute sequences initial and final frame, instantiate conf regions ans diff coef
+        # Compute sequences initial and final frame, instantiate confinement regions ans diffusion coefficient
         assert self.l1_classified_as == "2-State-OD" and self.track_length > 0
         self.seq_initial_frame = []
         self.seq_final_frame = []

@@ -1,6 +1,11 @@
 import numpy as np
 from . import models
-from . import models_noise
+from . import localization_error
+
+
+def simulate_track_time(track_length, track_time):
+    t = np.linspace(0, track_time, track_length)
+    return t
 
 
 class TwoStateObstructedDiffusion(models.Models):
@@ -14,6 +19,9 @@ class TwoStateObstructedDiffusion(models.Models):
     k0_high = 0.08
     k1_low = 0.007
     k1_high = 0.2
+
+    min_len_confinement_area = 20
+    max_len_confinement_area = 40
 
     def __init__(self, k_state0, k_state1, d_state0):
         self.k_state0 = k_state0
@@ -113,9 +121,9 @@ class TwoStateObstructedDiffusion(models.Models):
                 if i >= track_length:
                     break
 
-        x, x_noisy, y, y_noisy = models_noise.add_noise_and_offset(track_length, x, y)
+        x, x_noisy, y, y_noisy = localization_error.add_noise_and_offset(track_length, x, y)
 
-        t = self.simulate_track_time(track_length, track_time)
+        t = simulate_track_time(track_length, track_time)
 
         return x_noisy, y_noisy, x, y, t, state, switching
 
@@ -130,9 +138,9 @@ class TwoStateObstructedDiffusion(models.Models):
         x = np.cumsum(x)
         y = np.cumsum(y)
 
-        x, x_noisy, y, y_noisy = models_noise.add_noise_and_offset(track_length, x, y)
+        x, x_noisy, y, y_noisy = localization_error.add_noise_and_offset(track_length, x, y)
 
-        t = self.simulate_track_time(track_length, track_time)
+        t = simulate_track_time(track_length, track_time)
 
         return x_noisy, y_noisy, x, y, t
 
@@ -176,18 +184,15 @@ class TwoStateObstructedDiffusion(models.Models):
                 else:
                     y[i] = y[i - 1] + jumps_y[i]
 
-        x, x_noisy, y, y_noisy = models_noise.add_noise_and_offset(track_length, x, y)
+        x, x_noisy, y, y_noisy = localization_error.add_noise_and_offset(track_length, x, y)
 
-        t = self.simulate_track_time(track_length, track_time)
+        t = simulate_track_time(track_length, track_time)
 
         return x_noisy, y_noisy, x, y, t
 
-    def simulate_track_time(self, track_length, track_time):
-        t = np.linspace(0, track_time, track_length)
-        return t
-
     def simulate_confinement_region(self, initial_pos):
-        confinement_region_size = np.random.uniform(low=20, high=40)
+        confinement_region_size = np.random.uniform(low=self.min_len_confinement_area,
+                                                    high=self.max_len_confinement_area)
         offset_region = initial_pos + np.random.uniform(low=(-confinement_region_size / 2),
                                                         high=(confinement_region_size / 2))
 

@@ -1,6 +1,6 @@
-from networks.state_detection_network_model import StateDetectionNetworkModel
-from tracks.experimental_tracks import ExperimentalTracks
-from tools.db_connection import connect_to_db, disconnect_to_db
+from Networks.hurst_exponent_network import HurstExponentNetworkModel
+from Tracks.experimental_tracks import ExperimentalTracks
+from Tools.db_connection import connect_to_db, disconnect_to_db
 from keras import backend as K
 
 # For workers
@@ -11,19 +11,22 @@ worker_mode = False
 
 def train_net(track):
     K.clear_session()
-    model_states_net = StateDetectionNetworkModel(track_length=track.track_length, track_time=track.track_time)
-    model_states_net.train_network(batch_size=8)
-    model_states_net.load_model_from_file()
-    model_states_net.save_model_file_to_db()
-    model_states_net.save()
+    model_hurst_net = HurstExponentNetworkModel(track_length=track.track_length,
+                                                track_time=track.track_time,
+                                                fbm_type=track.l2_classified_as)
+    model_hurst_net.train_network(batch_size=64)
+    model_hurst_net.load_model_from_file()
+    model_hurst_net.save_model_file_to_db()
+    model_hurst_net.save()
 
 
 def train(range_track_length):
-    tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='2-State-OD')
+    tracks = ExperimentalTracks.objects(track_length__in=range_track_length,
+                                        l1_classified_as='fBm')
     count = 1
     for track in tracks:
-
-        networks = StateDetectionNetworkModel.objects(track_length=track.track_length)
+        networks = HurstExponentNetworkModel.objects(track_length=track.track_length,
+                                                     fbm_type=track.l2_classified_as)
         net_available = False
         for net in networks:
             if net.is_valid_network_track_time(track.track_time):
@@ -31,30 +34,23 @@ def train(range_track_length):
 
         if not net_available:
             if worker_id == (count % num_workers):
-                print("Training network for track_length:{} and track_time:{}".format(track.track_length,
-                                                                                      track.track_time))
+                print("Training network for track_length:{}, fbm type:{} and track_time:{}".format(track.track_length,
+                                                                                                   track.l2_classified_as,
+                                                                                                   track.track_time))
                 train_net(track)
         count += 1
 
 
 def classify(range_track_length):
-    print('Classifying tracks')
-    networks = StateDetectionNetworkModel.objects(track_length__in=range_track_length)
-    tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='2-State-OD')
+    networks = HurstExponentNetworkModel.objects(track_length__in=range_track_length)
+    tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='fBm')
     for net in networks:
         if net.load_model_from_file(only_local_files=worker_mode):
-            for track in tracks:
+            for track in tracks.filter(l2_classified_as=net.fbm_type):
                 if net.is_valid_network_track_time(track.track_time) and track.track_length == net.track_length:
                     output = net.evaluate_track_input(track)
-                    output = net.convert_output_to_db(output)
-                    track.set_track_states(output)
+                    track.set_hurst_exponent(output)
                     track.save()
-
-    for track in tracks:
-        track.compute_sequences_length()
-        track.compute_sequences_res_time()
-        track.compute_confinement_regions()
-        track.save()
 
 
 if __name__ == '__main__':

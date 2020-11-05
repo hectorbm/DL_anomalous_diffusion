@@ -4,10 +4,10 @@ import pickle
 import numpy as np
 from keras.utils import to_categorical
 
-from physical_models.models_brownian import Brownian
-from physical_models.models_ctrw import CTRW
-from physical_models.models_fbm import FBM
-from physical_models.models_two_state_obstructed_diffusion import TwoStateObstructedDiffusion
+from PhysicalModels.brownian import Brownian
+from PhysicalModels.ctrw import CTRW
+from PhysicalModels.fbm import FBM
+from PhysicalModels.two_states_obstructed_diffusion import TwoStateObstructedDiffusion
 
 
 def axis_adaptation_to_net(axis_data, track_length):
@@ -98,11 +98,11 @@ def generate_batch_l1_net(batch_size, track_length, track_time):
 
 # Generator for classification net optimization
 def generator_first_layer_validation(batch_size, track_length, track_time, validation_set_size):
-    with open('networks/val_data/classification_net/x_val_len_{}_time_{}.pkl'.format(track_length,
+    with open('Networks/val_data/classification_net/x_val_len_{}_time_{}.pkl'.format(track_length,
                                                                                      track_time),
               'rb') as x_val_data:
         x_val = pickle.load(x_val_data)[0]
-    with open('networks/val_data/classification_net/y_val_len_{}_time_{}.pkl'.format(track_length,
+    with open('Networks/val_data/classification_net/y_val_len_{}_time_{}.pkl'.format(track_length,
                                                                                      track_time),
               'rb') as y_val_data:
         y_val = pickle.load(y_val_data)[0]
@@ -143,11 +143,11 @@ def generate_batch_l2_net(batch_size, track_length, track_time):
 
 # Generator fbm net for analysis
 def generator_second_layer_validation(batch_size, track_length, track_time, validation_set_size):
-    with open('networks/val_data/fbm_net/x_val_len_{}_time_{}.pkl'.format(track_length,
+    with open('Networks/val_data/fbm_net/x_val_len_{}_time_{}.pkl'.format(track_length,
                                                                           track_time),
               'rb') as x_val_data:
         x_val = pickle.load(x_val_data)[0]
-    with open('networks/val_data/fbm_net/y_val_len_{}_time_{}.pkl'.format(track_length,
+    with open('Networks/val_data/fbm_net/y_val_len_{}_time_{}.pkl'.format(track_length,
                                                                           track_time),
               'rb') as y_val_data:
         y_val = pickle.load(y_val_data)[0]
@@ -211,11 +211,11 @@ def generate_batch_states_net(batch_size, track_length, track_time):
 
 # Generator for states net analysis
 def generator_state_net_validation(batch_size, track_length, track_time, validation_set_size):
-    with open('networks/val_data/states_net/x_val_len_{}_time_{}.pkl'.format(track_length,
+    with open('Networks/val_data/states_net/x_val_len_{}_time_{}.pkl'.format(track_length,
                                                                              track_time),
               'rb') as x_val_data:
         x_val = pickle.load(x_val_data)[0]
-    with open('networks/val_data/states_net/y_val_len_{}_time_{}.pkl'.format(track_length,
+    with open('Networks/val_data/states_net/y_val_len_{}_time_{}.pkl'.format(track_length,
                                                                              track_time),
               'rb') as y_val_data:
         y_val = pickle.load(y_val_data)[0]
@@ -278,12 +278,12 @@ def generate_batch_diffusion_coefficient_net(track_length, diffusion_model_range
 
 # For diffusion coefficient network analysis
 def generator_diffusion_coefficient_network_validation(batch_size, track_length, track_time, diffusion_model_range):
-    with open('networks/val_data/diffusion_net/x_val_len_{}_time_{}_range_{}.pkl'.format(track_length,
+    with open('Networks/val_data/diffusion_net/x_val_len_{}_time_{}_range_{}.pkl'.format(track_length,
                                                                                          track_time,
                                                                                          diffusion_model_range),
               'rb') as x_val_data:
         x_val = pickle.load(x_val_data)
-    with open('networks/val_data/diffusion_net/y_val_len_{}_time_{}_range_{}.pkl'.format(track_length,
+    with open('Networks/val_data/diffusion_net/y_val_len_{}_time_{}_range_{}.pkl'.format(track_length,
                                                                                          track_time,
                                                                                          diffusion_model_range),
               'rb') as y_val_data:
@@ -333,12 +333,12 @@ def generate_batch_hurst_net(batch_size, fbm_type, track_length, track_time):
 
 
 def generator_hurst_exp_network_validation(batch_size, track_length, track_time, fbm_type, validation_set_size):
-    with open('networks/val_data/hurst_net/x_val_len_{}_time_{}_fbm_type_{}.pkl'.format(track_length,
+    with open('Networks/val_data/hurst_net/x_val_len_{}_time_{}_fbm_type_{}.pkl'.format(track_length,
                                                                                         track_time,
                                                                                         fbm_type),
               'rb') as x_val_data:
         x_val = pickle.load(x_val_data)[0]
-    with open('networks/val_data/hurst_net/y_val_len_{}_time_{}_fbm_type_{}.pkl'.format(track_length,
+    with open('Networks/val_data/hurst_net/y_val_len_{}_time_{}_fbm_type_{}.pkl'.format(track_length,
                                                                                         track_time,
                                                                                         fbm_type),
               'rb') as y_val_data:

@@ -1,4 +1,4 @@
-from physical_models import models, models_noise
+from PhysicalModels import models, localization_error
 import numpy as np
 
 
@@ -11,7 +11,7 @@ class Brownian(models.Models):
     d_low = 0.05
 
     def __init__(self, diffusion_coefficient):
-        self.d_coef = diffusion_coefficient
+        self.diffusion_coefficient = diffusion_coefficient
 
     @classmethod
     def create_random(cls):
@@ -23,13 +23,13 @@ class Brownian(models.Models):
         y = np.random.normal(loc=0, scale=1, size=track_length)
 
         for i in range(track_length):
-            x[i] = x[i] * np.sqrt(2 * self.d_coef * (track_time / track_length))
-            y[i] = y[i] * np.sqrt(2 * self.d_coef * (track_time / track_length))
+            x[i] = x[i] * np.sqrt(2 * self.diffusion_coefficient * (track_time / track_length))
+            y[i] = y[i] * np.sqrt(2 * self.diffusion_coefficient * (track_time / track_length))
 
         x = np.cumsum(x)
         y = np.cumsum(y)
 
-        x, x_noisy, y, y_noisy = models_noise.add_noise_and_offset(track_length, x, y)
+        x, x_noisy, y, y_noisy = localization_error.add_noise_and_offset(track_length, x, y)
 
         t = np.linspace(0, track_time, track_length)
 
@@ -37,7 +37,7 @@ class Brownian(models.Models):
 
     def normalize_d_coefficient_to_net(self):
         delta_d = self.d_high - self.d_low
-        return (1 / delta_d) * (self.d_coef - self.d_low)
+        return (1 / delta_d) * (self.diffusion_coefficient - self.d_low)
 
     @classmethod
     def denormalize_d_coefficient_to_net(cls, output_coefficient_net):
@@ -45,4 +45,4 @@ class Brownian(models.Models):
         return output_coefficient_net * delta_d + cls.d_low
 
     def get_d_coefficient(self):
-        return self.d_coef
+        return self.diffusion_coefficient

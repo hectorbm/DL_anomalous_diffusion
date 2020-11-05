@@ -5,18 +5,18 @@ from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPool
 from keras.models import Model
 from keras.optimizers import Adam
 
-from networks.generators import generator_first_layer, axis_adaptation_to_net, generator_first_layer_validation, \
+from Networks.generators import generator_first_layer, axis_adaptation_to_net, generator_first_layer_validation, \
     generate_batch_l1_net
-from physical_models.models_ctrw import CTRW
-from physical_models.models_fbm import FBM
-from physical_models.models_two_state_obstructed_diffusion import TwoStateObstructedDiffusion
-from tools.analysis_tools import plot_confusion_matrix_for_layer
-from tracks.simulated_tracks import SimulatedTrack
-from . import network_model
+from PhysicalModels.ctrw import CTRW
+from PhysicalModels.fbm import FBM
+from PhysicalModels.two_states_obstructed_diffusion import TwoStateObstructedDiffusion
+from Tools.analysis_tools import plot_confusion_matrix_for_layer
+from Tracks.simulated_tracks import SimulatedTrack
+from . import network
 import math
 
 
-class L1NetworkModel(network_model.NetworkModel):
+class L1NetworkModel(network.NetworkModel):
     output_categories = 3
     output_categories_labels = ["fBm", "CTRW", "2-State-OD"]
     model_name = 'L1 Network'
@@ -71,7 +71,7 @@ class L1NetworkModel(network_model.NetworkModel):
 
         self.convert_history_to_db_format(history_training)
         self.keras_model = l1_keras_model
-        self.keras_model.save(filepath="models/{}".format(self.id))
+        self.keras_model.save(filepath="Models/{}".format(self.id))
 
         if self.hiperparams_opt:
             self.params_training = self.net_params

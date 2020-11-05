@@ -1,19 +1,19 @@
 import math
 
-from physical_models.models_fbm import FBM
-from tools.analysis_tools import plot_confusion_matrix_for_layer
-from tracks.simulated_tracks import SimulatedTrack
-from . import network_model
+from PhysicalModels.fbm import FBM
+from Tools.analysis_tools import plot_confusion_matrix_for_layer
+from Tracks.simulated_tracks import SimulatedTrack
+from . import network
 from keras.models import Model
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPooling1D, concatenate
 from tensorflow.keras.callbacks import EarlyStopping
 from keras.optimizers import Adam
-from networks.generators import generator_second_layer, axis_adaptation_to_net, generator_second_layer_validation, \
+from Networks.generators import generator_second_layer, axis_adaptation_to_net, generator_second_layer_validation, \
     generate_batch_l2_net
 import numpy as np
 
 
-class L2NetworkModel(network_model.NetworkModel):
+class L2NetworkModel(network.NetworkModel):
     output_categories = 3
     output_categories_labels = ["Subdiffusive", "Brownian", "Superdiffusive"]
     model_name = 'L2 Network'
@@ -68,7 +68,7 @@ class L2NetworkModel(network_model.NetworkModel):
 
         self.keras_model = l2_keras_model
         self.convert_history_to_db_format(history_training)
-        self.keras_model.save(filepath="models/{}".format(self.id))
+        self.keras_model.save(filepath="Models/{}".format(self.id))
 
         if self.hiperparams_opt:
             self.params_training = self.net_params

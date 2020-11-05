@@ -24,7 +24,7 @@ class NetworkModel(Document):
         super().__init__(*args, **values)
         if self.id is None:
             self.save()
-        self.model_filename = ''.join(['models/', str(self.id)])
+        self.model_filename = ''.join(['Models/', str(self.id)])
 
     def train_network(self, batch_size):
         pass

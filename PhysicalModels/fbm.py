@@ -1,9 +1,9 @@
 import numpy as np
 from scipy import fftpack
 from . import models
-from . import models_noise
+from . import localization_error
 
-FILE_pixel_size = 106 # nm
+FILE_pixel_size = 106  # nm
 
 
 class FBM(models.Models):
@@ -89,7 +89,7 @@ class FBM(models.Models):
         x = x * FILE_pixel_size
         y = y * FILE_pixel_size
 
-        x, x_noisy, y, y_noisy = models_noise.add_noise_and_offset(track_length, x, y)
+        x, x_noisy, y, y_noisy = localization_error.add_noise_and_offset(track_length, x, y)
 
         t = np.linspace(0, track_time, track_length)
 

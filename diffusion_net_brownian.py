@@ -1,6 +1,6 @@
-from networks.l2_network_model import L2NetworkModel
-from tracks.experimental_tracks import ExperimentalTracks
-from tools.db_connection import connect_to_db, disconnect_to_db
+from Networks.diffusion_coefficient_network import DiffusionCoefficientNetworkModel
+from Tracks.experimental_tracks import ExperimentalTracks
+from Tools.db_connection import connect_to_db, disconnect_to_db
 from keras import backend as K
 
 # For workers
@@ -12,18 +12,23 @@ worker_mode = False
 
 def train_net(track):
     K.clear_session()
-    model_l2 = L2NetworkModel(track_length=track.track_length, track_time=track.track_time)
-    model_l2.train_network(batch_size=8)
-    model_l2.load_model_from_file()
-    model_l2.save_model_file_to_db()
-    model_l2.save()
+    model_d_net = DiffusionCoefficientNetworkModel(track_length=track.track_length,
+                                                   track_time=track.track_time,
+                                                   diffusion_model_range="Brownian")
+    model_d_net.train_network(batch_size=8)
+    model_d_net.load_model_from_file()
+    model_d_net.save_model_file_to_db()
+    model_d_net.save()
 
 
 def train(range_track_length):
-    tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='fBm')
+    tracks = ExperimentalTracks.objects(track_length__in=range_track_length,
+                                        l1_classified_as='fBm',
+                                        l2_classified_as__in=["Brownian"])
     count = 1
     for track in tracks:
-        networks = L2NetworkModel.objects(track_length=track.track_length)
+        networks = DiffusionCoefficientNetworkModel.objects(track_length=track.track_length,
+                                                            diffusion_model_range=track.l2_classified_as)
         net_available = False
         for net in networks:
             if net.is_valid_network_track_time(track.track_time):
@@ -31,27 +36,25 @@ def train(range_track_length):
 
         if not net_available:
             if worker_id == (count % num_workers):
-                print("Training network for track_length:{} and track_time:{}".format(track.track_length,
-                                                                                      track.track_time))
+                print("Training network for track_length:{}, fbm type{} and track_time:{}".format(track.track_length,
+                                                                                                  track.l2_classified_as,
+                                                                                                  track.track_time))
                 train_net(track)
         count += 1
 
 
 def classify(range_track_length):
     print('Classifying tracks')
-    networks = L2NetworkModel.objects(track_length__in=range_track_length)
-    tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='fBm')
-
+    networks = DiffusionCoefficientNetworkModel.objects(track_length__in=range_track_length)
+    tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='fBm',
+                                        l2_classified_as='Brownian')
     for net in networks:
-        # In worker mode only check for local files
         if net.load_model_from_file(only_local_files=worker_mode):
             for track in tracks:
                 if net.is_valid_network_track_time(track.track_time) and track.track_length == net.track_length:
-                    output = net.output_net_to_labels(net.evaluate_track_input(track))
-                    track.set_l2_classified(output)
-
-    for track in tracks:
-        track.save()
+                    output = net.evaluate_track_input(track)
+                    track.set_d_coefficient(output)
+                    track.save()
 
 
 if __name__ == '__main__':

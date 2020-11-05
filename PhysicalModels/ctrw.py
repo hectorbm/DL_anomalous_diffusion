@@ -1,6 +1,6 @@
 import numpy as np
 from . import models
-from . import models_noise
+from . import localization_error
 
 FILE_pixel_size = 106  # nm
 
@@ -91,6 +91,6 @@ class CTRW(models.Models):
         x = x * FILE_pixel_size / 10
         y = y * FILE_pixel_size / 10
 
-        x, x_noisy, y, y_noisy = models_noise.add_noise_and_offset(track_length, x, y)
+        x, x_noisy, y, y_noisy = localization_error.add_noise_and_offset(track_length, x, y)
 
         return x_noisy, y_noisy, x, y, t

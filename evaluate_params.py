@@ -1,9 +1,9 @@
-from networks.l1_network_model import L1NetworkModel
-from networks.l2_network_model import L2NetworkModel
-from networks.state_detection_network_model import StateDetectionNetworkModel
-from networks.hurst_exp_network_model import HurstExponentNetworkModel
-from networks.diffusion_coeff_network_model import DiffusionCoefficientNetworkModel
-from tools.db_connection import connect_to_db, disconnect_to_db
+from Networks.classification_network import L1NetworkModel
+from Networks.fbm_network import L2NetworkModel
+from Networks.states_detection_network import StateDetectionNetworkModel
+from Networks.hurst_exponent_network import HurstExponentNetworkModel
+from Networks.diffusion_coefficient_network import DiffusionCoefficientNetworkModel
+from Tools.db_connection import connect_to_db, disconnect_to_db
 import matplotlib.pyplot as plt
 import numpy as np
 from keras import backend as K

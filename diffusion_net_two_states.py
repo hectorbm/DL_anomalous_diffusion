@@ -1,6 +1,6 @@
-from networks.diffusion_coeff_network_model import DiffusionCoefficientNetworkModel
-from tracks.experimental_tracks import ExperimentalTracks
-from tools.db_connection import connect_to_db, disconnect_to_db
+from Networks.diffusion_coefficient_network import DiffusionCoefficientNetworkModel
+from Tracks.experimental_tracks import ExperimentalTracks
+from Tools.db_connection import connect_to_db, disconnect_to_db
 from keras import backend as K
 import numpy as np
 
@@ -76,8 +76,8 @@ def classify(range_track_length):
                                 experimental_condition=track.experimental_condition,
                                 origin_file=track.origin_file)
                             axes_data = np.zeros(shape=(seq_track.n_axes, seq_track.track_length))
-                            axes_data[0] = track.axes_data[str(0)][track.seq_initial_frame[i]:track.seq_final_frame[i] + 1]
-                            axes_data[1] = track.axes_data[str(1)][track.seq_initial_frame[i]:track.seq_final_frame[i] + 1]
+                            axes_data[0] = track.axes_data[str(0)][track.seq_initial_frame[i]:track.seq_final_frame[i]+1]
+                            axes_data[1] = track.axes_data[str(1)][track.seq_initial_frame[i]:track.seq_final_frame[i]+1]
                             seq_track.set_axes_data(axes_data)
                             seq_track.set_time_axis(
                                 np.array(track.time_axis[track.seq_initial_frame[i]:track.seq_final_frame[i] + 1]))
