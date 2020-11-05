@@ -1,5 +1,3 @@
-import pickle
-
 import numpy as np
 from tensorflow.keras.callbacks import EarlyStopping
 

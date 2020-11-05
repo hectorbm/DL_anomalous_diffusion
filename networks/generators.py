@@ -239,59 +239,60 @@ def generator_state_net_validation(batch_size, track_length, track_time, validat
 
 def generator_diffusion_coefficient_network(batch_size, track_length, track_time, diffusion_model_range):
     while True:
-        label, out = generate_batch_diffusion_coefficient_net(batch_size, diffusion_model_range, track_length,
+        out, label = generate_batch_diffusion_coefficient_net(batch_size, diffusion_model_range, track_length,
                                                               track_time)
 
         yield out, label
 
 
-def generate_batch_diffusion_coefficient_net(batch_size, diffusion_model_range, track_length, track_time):
-    t_sample = np.random.choice(np.linspace(track_time * 0.85, track_time * 1.15, 50))
-    out = np.zeros(shape=[batch_size, 2, 1])
-    label = np.zeros(shape=[batch_size, 1])
-    noisy_out = np.zeros(shape=[batch_size, track_length])
-    m_noisy_out = np.zeros(shape=batch_size)
-    for i in range(batch_size):
+def convert_to_diffusion_net_input(x, y):
+    r = np.sqrt(x**2 + y**2)
+    diff = np.diff(r)
+    diff_sq = diff**2
+    mean_diff_sq = np.mean(diff_sq)
+    diff_sq_norm = diff_sq - mean_diff_sq
+    return diff_sq_norm
 
-        if diffusion_model_range == "2-State-OD":
-            model = TwoStateObstructedDiffusion.create_random()
-            x_noisy, y_noisy, x, y, t = model.simulate_track_only_state0(track_length=track_length,
-                                                                         track_time=t_sample)
-            label[i, 0] = model.normalize_d_coefficient_to_net(state_number=0)
-        else:
+
+def generate_batch_diffusion_coefficient_net(track_length, diffusion_model_range, track_time, training_set_size):
+    out = np.zeros(shape=[training_set_size, track_length - 1, 1])
+    label = np.zeros(shape=[training_set_size, 1])
+
+    for i in range(training_set_size):
+        t_sample = np.random.choice(np.linspace(track_time * 0.85, track_time * 1.15, 50))
+        track_length_sample = int(np.random.choice(np.arange(track_length, np.ceil(track_length * 1.05), 1)))
+
+        if diffusion_model_range == 'Brownian':
             model = Brownian.create_random()
-            x_noisy, y_noisy, x, y, t = model.simulate_track(track_length=track_length, track_time=track_time)
-            label[i, 0] = model.normalize_d_coefficient_to_net()
+            x_n, y_n, x, y, t = model.simulate_track(track_length_sample, t_sample)
+            label[i, 0] = model.get_d_coefficient()
+        else:
+            model = TwoStateObstructedDiffusion.create_random()
+            x_n, y_n, x, y, t = model.simulate_track_only_state0(track_length_sample, t_sample)
+            label[i, 0] = model.get_d_state0()
 
-        m_noisy_out[i] = np.mean(x_noisy)
-        noisy_out[i, :] = x_noisy - m_noisy_out[i]
-    noise_reduced_x = noisy_out
-    dx = np.diff(noise_reduced_x, axis=1)
-    m = np.mean(np.abs(dx), axis=1)
-    s = np.std(dx, axis=1)
-    for i in range(batch_size):
-        out[i, :, 0] = [m[i], s[i]]
-    return label, out
+        out[i, :, 0] = convert_to_diffusion_net_input(x_n[:track_length], y_n[:track_length])
+
+    return out, label
 
 
 # For diffusion coefficient network analysis
 def generator_diffusion_coefficient_network_validation(batch_size, track_length, track_time, diffusion_model_range):
-    with open('networks/val_data/diffusion_net/x_val_len_{}_time_{}_batch_{}_range_{}.pkl'.format(track_length,
-                                                                                                  track_time,
-                                                                                                  batch_size,
-                                                                                                  diffusion_model_range),
+    with open('networks/val_data/diffusion_net/x_val_len_{}_time_{}_range_{}.pkl'.format(track_length,
+                                                                                         track_time,
+                                                                                         diffusion_model_range),
               'rb') as x_val_data:
         x_val = pickle.load(x_val_data)
-    with open('networks/val_data/diffusion_net/y_val_len_{}_time_{}_batch_{}_range_{}.pkl'.format(track_length,
-                                                                                                  track_time,
-                                                                                                  batch_size,
-                                                                                                  diffusion_model_range),
+    with open('networks/val_data/diffusion_net/y_val_len_{}_time_{}_range_{}.pkl'.format(track_length,
+                                                                                         track_time,
+                                                                                         diffusion_model_range),
               'rb') as y_val_data:
         y_val = pickle.load(y_val_data)
     i = 0
+
     while True:
         if i % 2 == 0:
-            label, out = generate_batch_diffusion_coefficient_net(batch_size, diffusion_model_range, track_length,
+            out, label = generate_batch_diffusion_coefficient_net(batch_size, diffusion_model_range, track_length,
                                                                   track_time)
         else:
             out = x_val[i]
