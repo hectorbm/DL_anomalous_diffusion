@@ -50,7 +50,8 @@ class L2NetworkModel(network_model.NetworkModel):
         if self.hiperparams_opt:
             validation_generator = generator_second_layer_validation(batch_size=batch_size,
                                                                      track_length=self.track_length,
-                                                                     track_time=self.track_time)
+                                                                     track_time=self.track_time,
+                                                                     validation_set_size=self.net_params['validation_set_size'])
         else:
             validation_generator = generator_second_layer(batch_size=batch_size,
                                                           track_length=self.track_length,
@@ -62,7 +63,7 @@ class L2NetworkModel(network_model.NetworkModel):
             batch_size=self.net_params['batch_size'],
             callbacks=callbacks,
             validation_data=validation_generator,
-            validation_steps=math.ceil(self.net_params['validation_set_size'] / self.net_params['batch_size']),
+            validation_steps=math.floor(self.net_params['validation_set_size'] / self.net_params['batch_size']),
             shuffle=True)
 
         self.keras_model = l2_keras_model

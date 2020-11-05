@@ -1,3 +1,4 @@
+import math
 import pickle
 
 import numpy as np
@@ -96,38 +97,30 @@ def generate_batch_l1_net(batch_size, track_length, track_time):
 
 
 # Generator for classification net optimization
-def generator_first_layer_validation(batch_size, track_length, track_time):
-    with open('networks/val_data/classification_net/x_val_len_{}_time_{}_batch_{}.pkl'.format(track_length,
-                                                                                              track_time,
-                                                                                              batch_size),
+def generator_first_layer_validation(batch_size, track_length, track_time, validation_set_size):
+    with open('networks/val_data/classification_net/x_val_len_{}_time_{}.pkl'.format(track_length,
+                                                                                     track_time),
               'rb') as x_val_data:
-        x_val = pickle.load(x_val_data)
-    with open('networks/val_data/classification_net/y_val_len_{}_time_{}_batch_{}.pkl'.format(track_length,
-                                                                                              track_time,
-                                                                                              batch_size),
+        x_val = pickle.load(x_val_data)[0]
+    with open('networks/val_data/classification_net/y_val_len_{}_time_{}.pkl'.format(track_length,
+                                                                                     track_time),
               'rb') as y_val_data:
-        y_val = pickle.load(y_val_data)
+        y_val = pickle.load(y_val_data)[0]
     i = 0
+    ini = 0
     while True:
         # Generate random data
         if i % 2 == 0:
-            out, label = generate_batch_of_samples_l1(batch_size=batch_size,
-                                                      track_length=track_length,
-                                                      track_time=track_time)
-            label = to_categorical(y=label, num_classes=3)
-            input_net = np.zeros(shape=[batch_size, track_length - 1, 1])
-            for i in range(batch_size):
-                input_net[i, :, 0] = out[i, :, 0]
+            input_net, label = generate_batch_l1_net(batch_size, track_length, track_time)
         # Pre-generated dataset
         else:
-            out = x_val[i]
-            label = y_val[i]
-            label = to_categorical(y=label, num_classes=3)
-            input_net = np.zeros(shape=[batch_size, track_length - 1, 1])
-            for i in range(batch_size):
-                input_net[i, :, 0] = out[i, :, 0]
-
+            input_net = x_val[ini:batch_size]
+            label = y_val[ini:batch_size]
         i += 1
+        ini += batch_size
+        if i >= math.floor(validation_set_size / batch_size):
+            i = 0
+            ini = 0
         yield input_net, label
 
 
@@ -149,38 +142,30 @@ def generate_batch_l2_net(batch_size, track_length, track_time):
 
 
 # Generator fbm net for analysis
-def generator_second_layer_validation(batch_size, track_length, track_time):
-    with open('networks/val_data/fbm_net/x_val_len_{}_time_{}_batch_{}.pkl'.format(track_length,
-                                                                                   track_time,
-                                                                                   batch_size),
+def generator_second_layer_validation(batch_size, track_length, track_time, validation_set_size):
+    with open('networks/val_data/fbm_net/x_val_len_{}_time_{}.pkl'.format(track_length,
+                                                                          track_time),
               'rb') as x_val_data:
-        x_val = pickle.load(x_val_data)
-    with open('networks/val_data/fbm_net/y_val_len_{}_time_{}_batch_{}.pkl'.format(track_length,
-                                                                                   track_time,
-                                                                                   batch_size),
+        x_val = pickle.load(x_val_data)[0]
+    with open('networks/val_data/fbm_net/y_val_len_{}_time_{}.pkl'.format(track_length,
+                                                                          track_time),
               'rb') as y_val_data:
-        y_val = pickle.load(y_val_data)
+        y_val = pickle.load(y_val_data)[0]
     i = 0
+    ini = 0
     while True:
         # Generate random data
         if i % 2 == 0:
-            out, label = generate_batch_of_samples_l2(batch_size=batch_size,
-                                                      track_length=track_length,
-                                                      track_time=track_time)
-            label = to_categorical(y=label, num_classes=3)
-            input_net = np.zeros(shape=[batch_size, track_length - 1, 1])
-            for i in range(batch_size):
-                input_net[i, :, 0] = out[i, :, 0]
+            input_net, label = generate_batch_l2_net(batch_size, track_length, track_time)
         # Pre-generated dataset
         else:
-            out = x_val[i]
-            label = y_val[i]
-            label = to_categorical(y=label, num_classes=3)
-            input_net = np.zeros(shape=[batch_size, track_length - 1, 1])
-            for i in range(batch_size):
-                input_net[i, :, 0] = out[i, :, 0]
-
+            input_net = x_val[ini:batch_size]
+            label = y_val[ini:batch_size]
         i += 1
+        ini += batch_size
+        if i >= math.floor(validation_set_size / batch_size):
+            i = 0
+            ini = 0
         yield input_net, label
 
 
@@ -225,39 +210,30 @@ def generate_batch_states_net(batch_size, track_length, track_time):
 
 
 # Generator for states net analysis
-def generator_state_net_validation(batch_size, track_length, track_time):
-    with open('networks/val_data/states_net/x_val_len_{}_time_{}_batch_{}.pkl'.format(track_length,
-                                                                                      track_time,
-                                                                                      batch_size),
+def generator_state_net_validation(batch_size, track_length, track_time, validation_set_size):
+    with open('networks/val_data/states_net/x_val_len_{}_time_{}.pkl'.format(track_length,
+                                                                             track_time),
               'rb') as x_val_data:
-        x_val = pickle.load(x_val_data)
-    with open('networks/val_data/states_net/y_val_len_{}_time_{}_batch_{}.pkl'.format(track_length,
-                                                                                      track_time,
-                                                                                      batch_size),
+        x_val = pickle.load(x_val_data)[0]
+    with open('networks/val_data/states_net/y_val_len_{}_time_{}.pkl'.format(track_length,
+                                                                             track_time),
               'rb') as y_val_data:
-        y_val = pickle.load(y_val_data)
+        y_val = pickle.load(y_val_data)[0]
     i = 0
+    ini = 0
     while True:
         # Generate random data
         if i % 2 == 0:
-            out, label = generate_batch_of_samples_state_net(batch_size=batch_size,
-                                                             track_length=track_length,
-                                                             track_time=track_time)
-
-            input_net = np.zeros(shape=[batch_size, track_length, 1])
-            for i in range(batch_size):
-                input_net[i, :, 0] = out[i, :, 0]
-
+            input_net, label = generate_batch_states_net(batch_size, track_length, track_time)
         # Pre-generated dataset
         else:
-            out = x_val[i]
-            label = y_val[i]
-
-            input_net = np.zeros(shape=[batch_size, track_length, 1])
-            for i in range(batch_size):
-                input_net[i, :, 0] = out[i, :, 0]
-
+            input_net = x_val[ini:batch_size]
+            label = y_val[ini:batch_size]
         i += 1
+        ini += batch_size
+        if i >= math.floor(validation_set_size / batch_size):
+            i = 0
+            ini = 0
         yield input_net, label
 
 
@@ -355,25 +331,30 @@ def generate_batch_hurst_net(batch_size, fbm_type, track_length, track_time):
     return label, out
 
 
-def generator_hurst_exp_network_validation(batch_size, track_length, track_time, fbm_type):
-    with open('networks/val_data/hurst_net/x_val_len_{}_time_{}_batch_{}_fbm_type_{}.pkl'.format(track_length,
-                                                                                                 track_time,
-                                                                                                 batch_size,
-                                                                                                 fbm_type),
+def generator_hurst_exp_network_validation(batch_size, track_length, track_time, fbm_type, validation_set_size):
+    with open('networks/val_data/hurst_net/x_val_len_{}_time_{}_fbm_type_{}.pkl'.format(track_length,
+                                                                                        track_time,
+                                                                                        fbm_type),
               'rb') as x_val_data:
-        x_val = pickle.load(x_val_data)
-    with open('networks/val_data/hurst_net/y_val_len_{}_time_{}_batch_{}_fbm_type_{}.pkl'.format(track_length,
-                                                                                                 track_time,
-                                                                                                 batch_size,
-                                                                                                 fbm_type),
+        x_val = pickle.load(x_val_data)[0]
+    with open('networks/val_data/hurst_net/y_val_len_{}_time_{}_fbm_type_{}.pkl'.format(track_length,
+                                                                                        track_time,
+                                                                                        fbm_type),
               'rb') as y_val_data:
-        y_val = pickle.load(y_val_data)
+        y_val = pickle.load(y_val_data)[0]
     i = 0
+    ini = 0
     while True:
+        # Generate random data
         if i % 2 == 0:
-            label, out = generate_batch_hurst_net(batch_size, fbm_type, track_length, track_time)
+            input_net, label = generate_batch_states_net(batch_size, track_length, track_time)
+        # Pre-generated dataset
         else:
-            out = x_val[i]
-            label = y_val[i]
+            input_net = x_val[ini:batch_size]
+            label = y_val[ini:batch_size]
         i += 1
-        yield out, label
+        ini += batch_size
+        if i >= math.floor(validation_set_size / batch_size):
+            i = 0
+            ini = 0
+        yield input_net, label

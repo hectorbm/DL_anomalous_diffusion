@@ -55,7 +55,8 @@ class HurstExponentNetworkModel(NetworkModel):
             validation_generator = generator_hurst_exp_network_validation(batch_size=self.net_params['batch_size'],
                                                                           track_length=self.track_length,
                                                                           track_time=self.track_time,
-                                                                          fbm_type=self.fbm_type)
+                                                                          fbm_type=self.fbm_type,
+                                                                          validation_set_size=self.net_params['validation_set_size'])
         else:
             validation_generator = generator_hurst_exp_network(batch_size=self.net_params['batch_size'],
                                                                track_length=self.track_length,
@@ -68,7 +69,7 @@ class HurstExponentNetworkModel(NetworkModel):
             batch_size=self.net_params['batch_size'],
             callbacks=callbacks,
             validation_data=validation_generator,
-            validation_steps=math.ceil(self.net_params['validation_set_size'] / self.net_params['batch_size']),
+            validation_steps=math.floor(self.net_params['validation_set_size'] / self.net_params['batch_size']),
             shuffle=True)
 
         self.convert_history_to_db_format(history_training)

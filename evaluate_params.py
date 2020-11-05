@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from keras import backend as K
 
-fbm_type_net = 'Subdiffusive'
-
 
 def create_model(net_name):
     if net_name == 'L1Network':
@@ -37,7 +35,7 @@ def create_model(net_name):
     return network
 
 
-def scan_params(net_name, analysis_params):
+def scan_params(net_name):
     # Stack names and lists position
     if len(analysis_params) > 0:
         stack_names = [k for k, v in analysis_params.items()]
@@ -97,7 +95,7 @@ def get_params(net_name):
         'L1Network': L1NetworkModel.analysis_params,
         'L2Network': L2NetworkModel.analysis_params,
         'StateDetectionNetwork': StateDetectionNetworkModel.analysis_params,
-        'HurstExponentnetwork': HurstExponentNetworkModel.analysis_params,
+        'HurstExponentNetwork': HurstExponentNetworkModel.analysis_params,
         'DiffusionCoefficientNetwork': DiffusionCoefficientNetworkModel.analysis_params
     }
     params = net_params[net_name]
@@ -143,11 +141,13 @@ def plot_analysis():
 
 if __name__ == '__main__':
     track_length = 50
-    track_time = 1
+    track_time = 1.0
+    fbm_type_net = 'Subdiffusive'
+
     net = 'L1Network'
 
     connect_to_db()
     analysis_params = get_params(net)
-    scan_params(net, analysis_params)
+    scan_params(net)
     plot_analysis()
     disconnect_to_db()
