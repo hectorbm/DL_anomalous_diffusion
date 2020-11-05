@@ -8,7 +8,7 @@ from . import experimental_tracks
 from . import tracks_dict_parser
 import sys
 
-LABELING_METHODS = ['btx', 'mAb']
+LABELING_METHODS = ['BTX', 'mAb']
 EXPERIMENTAL_CONDITIONS = ['Control', 'CDx-Chol', 'CDx']
 
 

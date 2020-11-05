@@ -1,7 +1,7 @@
 from . import tracks
 from mongoengine import StringField, ObjectIdField, FloatField, DictField, ListField
 
-LABELING_METHODS = ['btx', 'mAb']
+LABELING_METHODS = ['BTX', 'mAb']
 EXPERIMENTAL_CONDITIONS = ['Control', 'CDx-Chol', 'CDx']
 L2_output_categories_labels = ["Subdiffusive", "Brownian", "Superdiffusive"]
 L1_output_categories_labels = ["fBm", "CTRW", "2-State-OD"]

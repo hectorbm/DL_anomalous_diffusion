@@ -50,7 +50,7 @@ def show_classification_results(tl_range, exp_label, net_name):
     plt.gca().axes.set_xticks([i for i in range(13)])
     plt.gca().axes.set_xticklabels(['', 'Control', '', '', '', '', 'CDx-Chol', '', '', '', '', 'CDx', ''])
     plt.ylabel('%')
-    if exp_label == 'btx':
+    if exp_label == 'BTX':
         exp_label = 'BTX'
     plt.title(exp_label)
 
@@ -86,7 +86,7 @@ def show_hurst_results(range_steps, label):
             plt.plot([aux for i in range(3)], stats_values, color='black')
             aux = aux + 3
 
-        if label == 'btx':
+        if label == 'BTX':
             plt.title('BTX - {}'.format(category))
         else:
             plt.title('{} - {}'.format(label, category))
@@ -116,9 +116,9 @@ def show_residence_time(range_steps, label):
             plt.plot([aux for i in range(3)], stats_values, color='black')
             aux = aux + 3
 
-        if label == 'btx' and state == 0:
+        if label == 'BTX' and state == 0:
             plt.title('BTX - Free diffusion state')
-        elif label == 'btx' and state == 1:
+        elif label == 'BTX' and state == 1:
             plt.title('BTX - Confined state')
         elif label == 'mAb' and state == 0:
             plt.title('mAb - Free diffusion state')
@@ -150,7 +150,7 @@ def show_confinement_area(range_steps, label):
         plt.plot([aux for i in range(3)], stats_values, color='black')
         aux = aux + 3
 
-    if label == 'btx':
+    if label == 'BTX':
         plt.title('BTX - Confined state')
     else:
         plt.title('mAb - Confined state')
@@ -164,7 +164,7 @@ if __name__ == '__main__':
     connect_to_db()
     min_steps = 25
     max_steps = 100
-    exp_labels = ['mAb', 'btx']
+    exp_labels = ['mAb', 'BTX']
     net = 'L2 Network'
 
     range_steps = list(range(min_steps, max_steps))
