@@ -95,14 +95,13 @@ def hurst_net_val_data():
 
 
 if __name__ == '__main__':
-    length = 50
-    time = 1.0
-    batch = 32
+    length = 100
+    time = 2
     model_range = '2-State-OD'
     fbm_type = 'Subdiffusive'
 
     # Remove comment to create the data
-    # classification_net_val_data()
+    classification_net_val_data()
 
     fbm_net_val_data()
 
