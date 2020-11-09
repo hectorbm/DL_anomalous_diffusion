@@ -277,27 +277,33 @@ def generate_batch_diffusion_coefficient_net(track_length, diffusion_model_range
 
 
 # For diffusion coefficient network analysis
-def generator_diffusion_coefficient_network_validation(batch_size, track_length, track_time, diffusion_model_range):
+def generator_diffusion_coefficient_network_validation(batch_size, track_length, track_time, diffusion_model_range,
+                                                       validation_set_size):
     with open('Networks/val_data/diffusion_net/x_val_len_{}_time_{}_range_{}.pkl'.format(track_length,
                                                                                          track_time,
                                                                                          diffusion_model_range),
               'rb') as x_val_data:
-        x_val = pickle.load(x_val_data)
+        x_val = pickle.load(x_val_data)[0]
     with open('Networks/val_data/diffusion_net/y_val_len_{}_time_{}_range_{}.pkl'.format(track_length,
                                                                                          track_time,
                                                                                          diffusion_model_range),
               'rb') as y_val_data:
-        y_val = pickle.load(y_val_data)
+        y_val = pickle.load(y_val_data)[0]
     i = 0
-
+    ini = 0
     while True:
         if i % 2 == 0:
-            out, label = generate_batch_diffusion_coefficient_net(batch_size, diffusion_model_range, track_length,
-                                                                  track_time)
+            out, label = generate_batch_diffusion_coefficient_net(track_length, diffusion_model_range, track_time,
+                                                                  batch_size)
         else:
-            out = x_val[i]
-            label = y_val[i]
+            out = x_val[ini:batch_size]
+            label = y_val[ini:batch_size]
         i += 1
+        ini += batch_size
+
+        if i >= math.floor(validation_set_size / batch_size):
+            i = 0
+            ini = 0
         yield out, label
 
 

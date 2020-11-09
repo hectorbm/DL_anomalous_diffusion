@@ -46,15 +46,18 @@ class DiffusionCoefficientNetworkModel(network.NetworkModel):
         diffusion_coefficient_keras_model.summary()
 
         if self.hiperparams_opt:
-            validation_generator = generator_diffusion_coefficient_network_validation(batch_size,
-                                                                                      self.track_length,
-                                                                                      self.track_time,
-                                                                                      self.diffusion_model_range)
+            validation_generator = generator_diffusion_coefficient_network_validation(batch_size=batch_size,
+                                                                                      track_length=self.track_length,
+                                                                                      track_time=self.track_time,
+                                                                                      diffusion_model_range=self.diffusion_model_range,
+                                                                                      validation_set_size=
+                                                                                      self.net_params[
+                                                                                          'validation_set_size'])
         else:
-            validation_generator = generator_diffusion_coefficient_network(batch_size,
-                                                                           self.track_length,
-                                                                           self.track_time,
-                                                                           self.diffusion_model_range)
+            validation_generator = generator_diffusion_coefficient_network(batch_size=batch_size,
+                                                                           track_length=self.track_length,
+                                                                           track_time=self.track_time,
+                                                                           diffusion_model_range=self.diffusion_model_range)
         history_training = diffusion_coefficient_keras_model.fit(
             x=x_data,
             y=y_data,
