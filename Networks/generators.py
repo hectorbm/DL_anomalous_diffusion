@@ -348,7 +348,7 @@ def generator_hurst_exp_network_validation(batch_size, track_length, track_time,
     while True:
         # Generate random data
         if i % 2 == 0:
-            input_net, label = generate_batch_states_net(batch_size, track_length, track_time)
+            label, input_net = generate_batch_hurst_net(batch_size, fbm_type, track_length, track_time)
         # Pre-generated dataset
         else:
             input_net = x_val[ini:batch_size]

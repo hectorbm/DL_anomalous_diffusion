@@ -87,7 +87,7 @@ def hurst_net_val_data():
     x_val = []
     y_val = []
     print("Simulating samples Hurst Net")
-    out, label = generate_batch_hurst_net(HurstExponentNetworkModel.net_params['validation_set_size'], fbm_type, length,
+    label, out = generate_batch_hurst_net(HurstExponentNetworkModel.net_params['validation_set_size'], fbm_type, length,
                                           time)
     x_val.append(out)
     y_val.append(label)
@@ -104,9 +104,9 @@ def hurst_net_val_data():
 
 
 if __name__ == '__main__':
-    length = 75
-    time = 1.5
-    model_range = '2-State-OD'
+    length = 50
+    time = 1.0
+    model_range = 'Brownian'
 
     # Remove comment to create the data
 
@@ -117,3 +117,5 @@ if __name__ == '__main__':
     for j in ['Subdiffusive', 'Brownian', 'Superdiffusive']:
         fbm_type = j
         hurst_net_val_data()
+
+    diffusion_coefficient_net_val_data()

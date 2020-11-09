@@ -30,6 +30,7 @@ def create_model(net_name):
     else:
         network = DiffusionCoefficientNetworkModel(track_length=track_length,
                                                    track_time=track_time,
+                                                   diffusion_model_range='Brownian',
                                                    hiperparams_opt=True)
 
     return network
@@ -106,48 +107,132 @@ def sort_results(e):
     return e[0]
 
 
-def plot_analysis():
-    networks = L1NetworkModel.objects(hiperparams_opt=True)
-    results = [[np.mean(network.history['categorical_accuracy'][40:51]),
-                np.std(network.history['categorical_accuracy'][40:51]),
-                network.id]
-               for network in networks]
-    results.sort(key=sort_results, reverse=True)
-    best_results = results[0:10]
-    print("Training")
-    for network in networks:
-        epochs = [(i + 1) for i in range(len(network.history['categorical_accuracy']))]
-        plt.plot(epochs, network.history['categorical_accuracy'])
-        [print('{}, {} ,{}'.format(network.params_training, result[0], result[1])) for result in best_results if
-         result[2] == network.id]
+def my_filter(e):
+    if e[1] > 0.2:
+        return False
+    else:
+        return True
 
+
+def plot_analysis(net_name):
+    first_reduction = 35
+    second_reduction = 10
+
+    if net_name == 'L1Network':
+        networks = L1NetworkModel.objects(hiperparams_opt=True, track_length=track_length, track_time=track_time)
+    elif net_name == 'L2Network':
+        networks = L2NetworkModel.objects(hiperparams_opt=True, track_length=track_length, track_time=track_time)
+    elif net_name == 'StateDetectionNetwork':
+        networks = StateDetectionNetworkModel.objects(track_length=track_length, track_time=track_time,
+                                                      hiperparams_opt=True)
+    elif net_name == 'HurstExponentNetwork':
+        networks = HurstExponentNetworkModel.objects(track_length=track_length,
+                                                     track_time=track_time,
+                                                     fbm_type=fbm_type_net,
+                                                     hiperparams_opt=True)
+    else:
+        networks = DiffusionCoefficientNetworkModel.objects(track_length=track_length,
+                                                            track_time=track_time,
+                                                            diffusion_model_range='Brownian',
+                                                            hiperparams_opt=True)
+
+    print("Total training results:{}".format(len(networks)))
+    for network in networks:
+        epochs = [(i + 1) for i in range(len(network.history['val_loss']))]
+        plt.plot(epochs, network.history['val_loss'])
+    plt.ylabel('Validation loss')
+    plt.xlabel('Epoch')
     plt.show()
 
-    networks = L1NetworkModel.objects(hiperparams_opt=True)
-    results = [[np.mean(network.history['val_categorical_accuracy'][40:51]),
-                np.std(network.history['val_categorical_accuracy'][40:51]),
+    # Delete outliers if needed, modify stdev limit if required
+    results = [[np.mean(network.history['val_loss']),
+                np.std(network.history['val_loss']),
                 network.id]
                for network in networks]
-    results.sort(key=sort_results, reverse=True)
-    best_results = results[0:10]
-    print("Validation")
+    results = [res for res in results if my_filter(res)]
+    print("Now using:{}".format(len(results)))
+    results = [res[2] for res in results]
+    networks = [network for network in networks if network.id in results]
+    # Show results after filter
     for network in networks:
-        epochs = [(i + 1) for i in range(len(network.history['val_categorical_accuracy']))]
-        plt.plot(epochs, network.history['val_categorical_accuracy'])
-        [print('{}, {} ,{}'.format(network.params_training, result[0], result[1])) for result in best_results if
-         result[2] == network.id]
+        epochs = [(i + 1) for i in range(len(network.history['val_loss']))]
+        plt.plot(epochs, network.history['val_loss'])
+    plt.ylabel('Validation loss')
+    plt.xlabel('Epoch')
+    plt.show()
+
+    # First reduction
+    print("Set min:", end="")
+    min_epoch = int(input())
+    print("Set max:", end="")
+    max_epoch = int(input())
+
+    # Compute mean and stdev in defined range
+    results = [[np.mean(network.history['val_loss'][min_epoch:max_epoch + 1]),
+                np.std(network.history['val_loss'][min_epoch:max_epoch + 1]),
+                network.id]
+               for network in networks]
+    # Sort all the values
+    results.sort(key=sort_results, reverse=False)
+    best_results = results[0:first_reduction]
+    results = [res[2] for res in results]
+    networks = [network for network in networks if network.id in results[0:first_reduction]]
+
+    # Show after reduction
+    for network in networks:
+        epochs = [(j + 1) for j in range(len(network.history['val_loss']))]
+        plt.plot(epochs, network.history['val_loss'])
+    plt.ylabel('Validation loss')
+    plt.xlabel('Epoch')
+    plt.show()
+    # Second reduction
+    print("Set min:", end="")
+    min_epoch = int(input())
+    print("Set max:", end="")
+    max_epoch = int(input())
+
+    # Compute mean and stdev in defined range
+    results = [[np.mean(network.history['val_loss'][min_epoch:max_epoch]),
+                np.std(network.history['val_loss'][min_epoch:max_epoch]),
+                network.id]
+               for network in networks]
+    # Sort all the values
+    results.sort(key=sort_results, reverse=False)
+
+    best_results = results[0:second_reduction]
+    results = [res[2] for res in results]
+    networks = [network for network in networks if network.id in results[0:second_reduction]]
+
+    i = 0
+    for network in networks:
+        epochs = [(j + 1) for j in range(len(network.history['val_loss']))]
+        plt.plot(epochs, network.history['val_loss'])
+        print('{}, {} ,{}'.format(network.params_training, best_results[i][0], best_results[i][1]))
+        i += 1
+    plt.ylabel('Validation loss')
+    plt.xlabel('Epoch')
+    plt.show()
+
+    print("Training loss results")
+    i = 0
+    for network in networks:
+        epochs = [(j + 1) for j in range(len(network.history['loss']))]
+        plt.plot(epochs, network.history['loss'])
+        i += 1
+    plt.ylabel('Training loss')
+    plt.xlabel('Epoch')
     plt.show()
 
 
 if __name__ == '__main__':
-    track_length = 50
-    track_time = 1.0
-    fbm_type_net = 'Subdiffusive'
+    track_length = 25
+    track_time = 0.5
+    fbm_type_net = 'Brownian'
 
-    net = 'L1Network'
+    net = 'StateDetectionNetwork'
 
     connect_to_db()
     analysis_params = get_params(net)
-    scan_params(net)
-    plot_analysis()
+    # scan_params(net)
+    plot_analysis(net)
     disconnect_to_db()
