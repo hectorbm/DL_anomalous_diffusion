@@ -61,7 +61,7 @@ class L1NetworkModel(network.NetworkModel):
                                                          track_time=self.track_time)
         history_training = l1_keras_model.fit(x=x_data,
                                               y=y_data,
-                                              epochs=50,
+                                              epochs=35,
                                               batch_size=self.net_params['batch_size'],
                                               callbacks=callbacks,
                                               validation_data=validation_generator,

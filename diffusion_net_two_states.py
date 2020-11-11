@@ -17,7 +17,8 @@ def train_net(track_length, track_time):
     K.clear_session()
     model_d_net = DiffusionCoefficientNetworkModel(track_length=track_length,
                                                    track_time=track_time,
-                                                   diffusion_model_range="2-State-OD")
+                                                   diffusion_model_range="2-State-OD",
+                                                   hiperparams_opt=False)
     model_d_net.train_network()
     model_d_net.load_model_from_file()
     model_d_net.save_model_file_to_db()
@@ -37,7 +38,8 @@ def train(range_track_length):
                     net_available = False
                     networks = DiffusionCoefficientNetworkModel.objects(
                         track_length=(track.seq_final_frame[i] - track.seq_initial_frame[i] + 1),
-                        diffusion_model_range=track.l1_classified_as)
+                        diffusion_model_range=track.l1_classified_as,
+                        hiperparams_opt=False)
                     for net in networks:
                         if net.is_valid_network_track_time(track.seq_res_time[i]):
                             net_available = True
@@ -54,7 +56,8 @@ def train(range_track_length):
 
 def classify(range_track_length):
     upper_limit = max(range_track_length)
-    networks = DiffusionCoefficientNetworkModel.objects(track_length__in=range(lowerLimitTrackLength, upper_limit))
+    networks = DiffusionCoefficientNetworkModel.objects(track_length__in=range(lowerLimitTrackLength, upper_limit),
+                                                        hiperparams_opt=False)
     tracks = ExperimentalTracks.objects(track_length__in=range_track_length,
                                         l1_classified_as='2-State-OD')
 

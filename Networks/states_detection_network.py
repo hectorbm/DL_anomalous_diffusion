@@ -50,7 +50,7 @@ class StateDetectionNetworkModel(network.NetworkModel):
         callbacks = [
             EarlyStopping(monitor="val_loss",
                           min_delta=1e-3,
-                          patience=5,
+                          patience=10,
                           verbose=1,
                           mode="min")
         ]

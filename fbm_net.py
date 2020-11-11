@@ -12,7 +12,7 @@ worker_mode = False
 
 def train_net(track):
     K.clear_session()
-    model_l2 = L2NetworkModel(track_length=track.track_length, track_time=track.track_time)
+    model_l2 = L2NetworkModel(track_length=track.track_length, track_time=track.track_time, hiperparams_opt=False)
     model_l2.train_network()
     model_l2.load_model_from_file()
     model_l2.save_model_file_to_db()
@@ -23,7 +23,7 @@ def train(range_track_length):
     tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='fBm')
     count = 1
     for track in tracks:
-        networks = L2NetworkModel.objects(track_length=track.track_length)
+        networks = L2NetworkModel.objects(track_length=track.track_length, hiperparams_opt=False)
         net_available = False
         for net in networks:
             if net.is_valid_network_track_time(track.track_time):
@@ -39,7 +39,7 @@ def train(range_track_length):
 
 def classify(range_track_length):
     print('Classifying tracks')
-    networks = L2NetworkModel.objects(track_length__in=range_track_length)
+    networks = L2NetworkModel.objects(track_length__in=range_track_length, hiperparams_opt=False)
     tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='fBm')
 
     for net in networks:
@@ -81,9 +81,12 @@ if __name__ == '__main__':
 
     connect_to_db()
     # Train, classify and show results
-    train(range_track_length=track_length_range)
+    for i in track_length_range:
+        print("Training for length:{}".format(i))
+        train(range_track_length=[i])
     K.clear_session()
     for i in track_length_range:
         K.clear_session()
+        print("Classifying length:{}".format(i))
         classify(range_track_length=[i])
     disconnect_to_db()
