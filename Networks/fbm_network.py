@@ -19,11 +19,11 @@ class L2NetworkModel(network.NetworkModel):
     model_name = 'L2 Network'
 
     net_params = {
-        'lr': 1e-5,
+        'lr': 0.01,
         'training_set_size': 50000,
         'validation_set_size': 12500,
         'batch_size': 8,
-        'amsgrad': False,
+        'amsgrad': True,
         'epsilon': 1e-7
     }
     # For analysis of hyper-params

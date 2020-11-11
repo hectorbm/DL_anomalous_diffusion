@@ -23,10 +23,10 @@ class DiffusionCoefficientNetworkModel(network.NetworkModel):
     net_params = {
         'training_set_size': 50000,
         'validation_set_size': 12500,
-        'lr': 1e-7,
+        'lr': 2e-7,
         'batch_size': 8,
         'amsgrad': False,
-        'epsilon': 1e-7
+        'epsilon': 1e-8
     }
     # For analysis of hyper-params
     analysis_params = {

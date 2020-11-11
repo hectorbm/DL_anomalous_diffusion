@@ -11,7 +11,7 @@ from Tools.analysis_tools import plot_confusion_matrix_for_layer
 from Tracks.simulated_tracks import SimulatedTrack
 from . import network
 
-# TODO: Compare MSE vs bin_crossentropy loss function
+# TODO: Justify MSE loss function
 
 
 def convert_output_to_db(states_net_output):
@@ -23,12 +23,12 @@ class StateDetectionNetworkModel(network.NetworkModel):
     model_name = 'States Detection Network'
 
     net_params = {
-        'lr': 1e-4,
+        'lr': 0.001,
         'training_set_size': 50000,
         'validation_set_size': 12500,
-        'batch_size': 8,
+        'batch_size': 16,
         'amsgrad': False,
-        'epsilon': 1e-7
+        'epsilon': 1e-6
     }
     # For analysis of hyper-params
     analysis_params = {

@@ -24,10 +24,10 @@ class L1NetworkModel(network.NetworkModel):
     net_params = {
         'training_set_size': 50000,
         'validation_set_size': 12500,
-        'lr': 1e-4,
-        'batch_size': 8,
+        'lr': 0.001,
+        'batch_size': 16,
         'amsgrad': False,
-        'epsilon': 1e-7
+        'epsilon': 1e-6
     }
     # For analysis of hyper-params
     analysis_params = {

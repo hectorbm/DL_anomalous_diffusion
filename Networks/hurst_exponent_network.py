@@ -14,7 +14,6 @@ from PhysicalModels.fbm import FBM
 from Tracks.simulated_tracks import SimulatedTrack
 
 
-# TODO: Check Brownian type!
 
 class HurstExponentNetworkModel(NetworkModel):
     fbm_type = StringField(choices=["Subdiffusive", "Brownian", "Superdiffusive"], required=True)
@@ -23,10 +22,24 @@ class HurstExponentNetworkModel(NetworkModel):
     net_params = {
         'training_set_size': 40000,
         'validation_set_size': 10000,
-        'lr': 1e-4,
-        'batch_size': 64,
-        'amsgrad': False,
-        'epsilon': 1e-7
+        'Subdiffusive': {
+            'lr': 0.001,
+            'batch_size': 32,
+            'amsgrad': True,
+            'epsilon': 1e-6
+        },
+        'Brownian': {
+            'lr': 0.0001,
+            'batch_size': 16,
+            'amsgrad': False,
+            'epsilon': 1e-8
+        },
+        'Superdiffusive': {
+            'lr': 0.001,
+            'batch_size': 64,
+            'amsgrad': False,
+            'epsilon': 1e-6
+        }
     }
     # For analysis of hyper-params
     analysis_params = {
@@ -52,13 +65,13 @@ class HurstExponentNetworkModel(NetworkModel):
                                    mode="min")]
 
         if self.hiperparams_opt:
-            validation_generator = generator_hurst_exp_network_validation(batch_size=self.net_params['batch_size'],
+            validation_generator = generator_hurst_exp_network_validation(batch_size=self.net_params[self.fbm_type]['batch_size'],
                                                                           track_length=self.track_length,
                                                                           track_time=self.track_time,
                                                                           fbm_type=self.fbm_type,
                                                                           validation_set_size=self.net_params['validation_set_size'])
         else:
-            validation_generator = generator_hurst_exp_network(batch_size=self.net_params['batch_size'],
+            validation_generator = generator_hurst_exp_network(batch_size=self.net_params[self.fbm_type]['batch_size'],
                                                                track_length=self.track_length,
                                                                track_time=self.track_time,
                                                                fbm_type=self.fbm_type)
@@ -69,7 +82,7 @@ class HurstExponentNetworkModel(NetworkModel):
             batch_size=self.net_params['batch_size'],
             callbacks=callbacks,
             validation_data=validation_generator,
-            validation_steps=math.floor(self.net_params['validation_set_size'] / self.net_params['batch_size']),
+            validation_steps=math.floor(self.net_params['validation_set_size'] / self.net_params[self.fbm_type]['batch_size']),
             shuffle=True)
 
         self.convert_history_to_db_format(history_training)
@@ -88,8 +101,8 @@ class HurstExponentNetworkModel(NetworkModel):
 
         hurst_exp_keras_model = Model(inputs=inputs, outputs=output_network)
 
-        optimizer = Adam(lr=self.net_params['lr'], epsilon=self.net_params['epsilon'],
-                         amsgrad=self.net_params['amsgrad'])
+        optimizer = Adam(lr=self.net_params[self.fbm_type]['lr'], epsilon=self.net_params[self.fbm_type]['epsilon'],
+                         amsgrad=self.net_params[self.fbm_type]['amsgrad'])
 
         hurst_exp_keras_model.compile(optimizer=optimizer, loss='mse', metrics=['mse', 'mae'])
 
