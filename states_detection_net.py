@@ -12,7 +12,7 @@ worker_mode = False
 def train_net(track):
     K.clear_session()
     model_states_net = StateDetectionNetworkModel(track_length=track.track_length, track_time=track.track_time)
-    model_states_net.train_network(batch_size=8)
+    model_states_net.train_network()
     model_states_net.load_model_from_file()
     model_states_net.save_model_file_to_db()
     model_states_net.save()

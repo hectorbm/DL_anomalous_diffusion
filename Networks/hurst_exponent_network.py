@@ -49,7 +49,7 @@ class HurstExponentNetworkModel(NetworkModel):
         'epsilon': [1e-6, 1e-7, 1e-8]
     }
 
-    def train_network(self, batch_size):
+    def train_network(self):
         y_data, x_data = generate_batch_hurst_net(self.net_params['training_set_size'],
                                                   self.fbm_type,
                                                   self.track_length,
@@ -79,7 +79,7 @@ class HurstExponentNetworkModel(NetworkModel):
             x=x_data,
             y=y_data,
             epochs=20,
-            batch_size=self.net_params['batch_size'],
+            batch_size=self.net_params[self.fbm_type]['batch_size'],
             callbacks=callbacks,
             validation_data=validation_generator,
             validation_steps=math.floor(self.net_params['validation_set_size'] / self.net_params[self.fbm_type]['batch_size']),

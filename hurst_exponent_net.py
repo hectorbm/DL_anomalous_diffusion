@@ -14,7 +14,7 @@ def train_net(track):
     model_hurst_net = HurstExponentNetworkModel(track_length=track.track_length,
                                                 track_time=track.track_time,
                                                 fbm_type=track.l2_classified_as)
-    model_hurst_net.train_network(batch_size=64)
+    model_hurst_net.train_network()
     model_hurst_net.load_model_from_file()
     model_hurst_net.save_model_file_to_db()
     model_hurst_net.save()

@@ -13,7 +13,7 @@ worker_mode = False
 def train_net(track):
     K.clear_session()
     model_l2 = L2NetworkModel(track_length=track.track_length, track_time=track.track_time)
-    model_l2.train_network(batch_size=8)
+    model_l2.train_network()
     model_l2.load_model_from_file()
     model_l2.save_model_file_to_db()
     model_l2.save()

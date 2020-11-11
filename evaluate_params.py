@@ -60,7 +60,7 @@ def scan_params(net_name):
                     network.net_params[stack_names[i]] = analysis_params[stack_names[i]][stack[i]]
                 print('Evaluating params: {}'.format(network.net_params))
 
-                network.train_network(batch_size=network.net_params['batch_size'])
+                network.train_network()
                 network.load_model_from_file()
                 network.save_model_file_to_db()
                 network.save()

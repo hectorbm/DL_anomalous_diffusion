@@ -38,7 +38,7 @@ class StateDetectionNetworkModel(network.NetworkModel):
         'epsilon': [1e-6, 1e-7, 1e-8]
     }
 
-    def train_network(self, batch_size):
+    def train_network(self):
         # Generate training set
         x_data, y_data = generate_batch_states_net(self.net_params['training_set_size'],
                                                    self.track_length,
@@ -55,12 +55,12 @@ class StateDetectionNetworkModel(network.NetworkModel):
                           mode="min")
         ]
         if self.hiperparams_opt:
-            validation_generator = generator_state_net_validation(batch_size=batch_size,
+            validation_generator = generator_state_net_validation(batch_size=self.net_params['batch_size'],
                                                                   track_length=self.track_length,
                                                                   track_time=self.track_time,
                                                                   validation_set_size=self.net_params['validation_set_size'])
         else:
-            validation_generator = generator_state_net(batch_size=batch_size,
+            validation_generator = generator_state_net(batch_size=self.net_params['batch_size'],
                                                        track_length=self.track_length,
                                                        track_time=self.track_time)
 

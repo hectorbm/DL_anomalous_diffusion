@@ -18,7 +18,7 @@ def train_net(track_length, track_time):
     model_d_net = DiffusionCoefficientNetworkModel(track_length=track_length,
                                                    track_time=track_time,
                                                    diffusion_model_range="2-State-OD")
-    model_d_net.train_network(batch_size=8)
+    model_d_net.train_network()
     model_d_net.load_model_from_file()
     model_d_net.save_model_file_to_db()
     model_d_net.save()

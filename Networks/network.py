@@ -26,7 +26,7 @@ class NetworkModel(Document):
             self.save()
         self.model_filename = ''.join(['Models/', str(self.id)])
 
-    def train_network(self, batch_size):
+    def train_network(self):
         pass
 
     def evaluate_track_input(self, track):

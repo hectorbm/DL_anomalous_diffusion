@@ -36,7 +36,7 @@ class DiffusionCoefficientNetworkModel(network.NetworkModel):
         'epsilon': [1e-6, 1e-7, 1e-8]
     }
 
-    def train_network(self, batch_size):
+    def train_network(self):
         x_data, y_data = generate_batch_diffusion_coefficient_net(self.track_length,
                                                                   self.diffusion_model_range,
                                                                   self.track_time,
@@ -46,7 +46,7 @@ class DiffusionCoefficientNetworkModel(network.NetworkModel):
         diffusion_coefficient_keras_model.summary()
 
         if self.hiperparams_opt:
-            validation_generator = generator_diffusion_coefficient_network_validation(batch_size=batch_size,
+            validation_generator = generator_diffusion_coefficient_network_validation(batch_size=self.net_params['batch_size'],
                                                                                       track_length=self.track_length,
                                                                                       track_time=self.track_time,
                                                                                       diffusion_model_range=self.diffusion_model_range,
@@ -54,7 +54,7 @@ class DiffusionCoefficientNetworkModel(network.NetworkModel):
                                                                                       self.net_params[
                                                                                           'validation_set_size'])
         else:
-            validation_generator = generator_diffusion_coefficient_network(batch_size=batch_size,
+            validation_generator = generator_diffusion_coefficient_network(batch_size=self.net_params['batch_size'],
                                                                            track_length=self.track_length,
                                                                            track_time=self.track_time,
                                                                            diffusion_model_range=self.diffusion_model_range)

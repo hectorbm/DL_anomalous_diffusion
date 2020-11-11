@@ -15,7 +15,7 @@ def train_net(track):
     model_d_net = DiffusionCoefficientNetworkModel(track_length=track.track_length,
                                                    track_time=track.track_time,
                                                    diffusion_model_range="Brownian")
-    model_d_net.train_network(batch_size=8)
+    model_d_net.train_network()
     model_d_net.load_model_from_file()
     model_d_net.save_model_file_to_db()
     model_d_net.save()
