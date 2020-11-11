@@ -2,7 +2,7 @@ from Networks.states_detection_network import StateDetectionNetworkModel
 from Tracks.experimental_tracks import ExperimentalTracks
 from Tools.db_connection import connect_to_db, disconnect_to_db
 from keras import backend as K
-
+from pymongo.errors import CursorNotFound
 # For workers
 from worker_config import *
 import argparse
@@ -86,10 +86,17 @@ if __name__ == '__main__':
 
     connect_to_db()
     # Train, classify and show results
-    for i in track_length_range:
-        print("Training for length:{}".format(i))
-        train(range_track_length=[i])
-    K.clear_session()
+    flag_ex = True
+    while flag_ex:
+        for i in track_length_range:
+            print("Training for length:{}".format(i))
+            try:
+                train(range_track_length=[i])
+                if i == track_length_range[-1]:
+                    flag_ex = False
+            except CursorNotFound:
+                flag_ex = True
+        K.clear_session()
     for i in track_length_range:
         K.clear_session()
         print("Classifying length:{}".format(i))
