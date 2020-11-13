@@ -3,6 +3,7 @@ from Tracks.experimental_tracks import ExperimentalTracks, L1_output_categories_
     L2_output_categories_labels
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.stats as st
 
 
 def show_tracks_hg():
@@ -40,8 +41,12 @@ def show_classification_results(tl_range, exp_label, net_name):
                 for i in range(len(L2_output_categories_labels)):
                     if track.l2_classified_as == L2_output_categories_labels[i]:
                         count[i] += 1
-
         count = [(100 * x) / len(tracks) for x in count]
+        # To load in tables
+        print('Network:{}, label:{}, condition:{}'.format(net_name, exp_label, exp_cond))
+        print('{}, {}, {}'.format(L1_output_categories_labels[0], L1_output_categories_labels[1],
+                                  L1_output_categories_labels[2]))
+        print('{}, {}, {}'.format(count[0], count[1], count[2]))
 
         plt.bar(x=[(aux + i) for i in range(3)], height=count, width=0.4, align='center',
                 color=['firebrick', 'red', 'seagreen'])
@@ -80,8 +85,23 @@ def show_hurst_results(range_steps, label):
             plt.violinplot(hurst_exp_values, widths=1.5, positions=[aux], showextrema=False, showmeans=False)
             plt.scatter(x=np.random.uniform(low=aux - 0.35, high=aux + 0.35, size=len(hurst_exp_values)),
                         y=hurst_exp_values, s=20, alpha=0.6)
-            stats_values = [np.mean(hurst_exp_values), np.mean(hurst_exp_values) - np.std(hurst_exp_values),
-                            np.mean(hurst_exp_values) + np.std(hurst_exp_values)]
+            stats_values = [np.mean(hurst_exp_values), np.mean(hurst_exp_values) - np.std(hurst_exp_values, ddof=1),
+                            np.mean(hurst_exp_values) + np.std(hurst_exp_values, ddof=1)]
+
+            if len(hurst_exp_values) > 30:
+                confidence_interval = st.norm.interval(alpha=0.95,
+                                                       loc=np.mean(hurst_exp_values),
+                                                       scale=st.sem(hurst_exp_values))
+
+            else:
+                confidence_interval = st.t.interval(alpha=0.95,
+                                                    loc=np.mean(hurst_exp_values),
+                                                    df=len(hurst_exp_values) - 1,
+                                                    scale=st.sem(hurst_exp_values))
+            print('Hurst Exponent, Label:{}, condition:{}'.format(label, exp_cond))
+            print('{:.4f}, {:.4f}, {:.4f}, {:.4f}'.format(np.mean(hurst_exp_values), np.std(hurst_exp_values, ddof=1),
+                                                          confidence_interval[0], confidence_interval[1]))
+
             plt.scatter(x=[aux for i in range(3)], y=stats_values, color='black', marker='+', s=100, alpha=1)
             plt.plot([aux for i in range(3)], stats_values, color='black')
             aux = aux + 3
@@ -110,8 +130,22 @@ def show_residence_time(range_steps, label):
             plt.violinplot(res_time_values, widths=1.5, positions=[aux], showextrema=False, showmeans=False)
             plt.scatter(x=np.random.uniform(low=aux - 0.35, high=aux + 0.35, size=len(res_time_values)),
                         y=res_time_values, s=20, alpha=0.6)
-            stats_values = [np.mean(res_time_values), np.mean(res_time_values) - np.std(res_time_values),
-                            np.mean(res_time_values) + np.std(res_time_values)]
+            stats_values = [np.mean(res_time_values), np.mean(res_time_values) - np.std(res_time_values, ddof=1),
+                            np.mean(res_time_values) + np.std(res_time_values, ddof=1)]
+
+            if len(res_time_values) > 30:
+                confidence_interval = st.norm.interval(alpha=0.95,
+                                                       loc=np.mean(res_time_values),
+                                                       scale=st.sem(res_time_values))
+
+            else:
+                confidence_interval = st.t.interval(alpha=0.95,
+                                                    loc=np.mean(res_time_values),
+                                                    df=len(res_time_values) - 1,
+                                                    scale=st.sem(res_time_values))
+            print('Residence time, Label:{}, condition:{}'.format(label, exp_cond))
+            print('{:.4f}, {:.4f}, {:.4f}, {:.4f}'.format(np.mean(res_time_values), np.std(res_time_values, ddof=1),
+                                          confidence_interval[0], confidence_interval[1]))
             plt.scatter(x=[aux for i in range(3)], y=stats_values, color='black', marker='+', s=100, alpha=1)
             plt.plot([aux for i in range(3)], stats_values, color='black')
             aux = aux + 3
@@ -144,8 +178,23 @@ def show_confinement_area(range_steps, label):
         plt.violinplot(conf_area_values, widths=1.5, positions=[aux], showextrema=False, showmeans=False)
         plt.scatter(x=np.random.uniform(low=aux - 0.35, high=aux + 0.35, size=len(conf_area_values)),
                     y=conf_area_values, s=20, alpha=0.6)
-        stats_values = [np.mean(conf_area_values), np.mean(conf_area_values) - np.std(conf_area_values),
-                        np.mean(conf_area_values) + np.std(conf_area_values)]
+        stats_values = [np.mean(conf_area_values), np.mean(conf_area_values) - np.std(conf_area_values, ddof=1),
+                        np.mean(conf_area_values) + np.std(conf_area_values, ddof=1)]
+
+        if len(conf_area_values) > 30:
+            confidence_interval = st.norm.interval(alpha=0.95,
+                                                   loc=np.mean(conf_area_values),
+                                                   scale=st.sem(conf_area_values))
+
+        else:
+            confidence_interval = st.t.interval(alpha=0.95,
+                                                loc=np.mean(conf_area_values),
+                                                df=len(conf_area_values) - 1,
+                                                scale=st.sem(conf_area_values))
+        print('Confinement area, Label:{}, condition:{}'.format(label, exp_cond))
+        print('{:.4f}, {:.4f}, {:.4f}, {:.4f}'.format(np.mean(conf_area_values), np.std(conf_area_values, ddof=1),
+                                      confidence_interval[0], confidence_interval[1]))
+
         plt.scatter(x=[aux for i in range(3)], y=stats_values, color='black', marker='+', s=100, alpha=1)
         plt.plot([aux for i in range(3)], stats_values, color='black')
         aux = aux + 3
