@@ -239,8 +239,7 @@ def generator_state_net_validation(batch_size, track_length, track_time, validat
 
 def generator_diffusion_coefficient_network(batch_size, track_length, track_time, diffusion_model_range):
     while True:
-        out, label = generate_batch_diffusion_coefficient_net(batch_size, diffusion_model_range, track_length,
-                                                              track_time)
+        out, label = generate_batch_diffusion_coefficient_net(track_length, diffusion_model_range, track_time, batch_size)
 
         yield out, label
 
