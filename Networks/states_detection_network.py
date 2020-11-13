@@ -14,10 +14,6 @@ from . import network
 # TODO: Justify MSE loss function
 
 
-def convert_output_to_db(states_net_output):
-    return states_net_output.tolist()
-
-
 class StateDetectionNetworkModel(network.NetworkModel):
     output_categories_labels = ["State-0", "State-1"]
     model_name = 'States Detection Network'
@@ -208,3 +204,6 @@ class StateDetectionNetworkModel(network.NetworkModel):
                                         predicted_value=predicted_value,
                                         labels=self.output_categories_labels,
                                         normalized=normalized)
+
+    def convert_output_to_db(self, states_net_output):
+        return states_net_output.tolist()
