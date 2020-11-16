@@ -143,6 +143,6 @@ class HurstExponentNetworkModel(NetworkModel):
             track.set_axes_data(axes_data=noisy_data)
             track.set_time_axis(time_axis_data=t)
             prediction = self.evaluate_track_input(track)
-            mse[i] = mean_squared_error(ground_truth, prediction)
+            mse[i] = mean_squared_error([ground_truth], [prediction])
 
         return np.mean(mse)
