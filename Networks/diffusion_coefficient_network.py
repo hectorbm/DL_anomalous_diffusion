@@ -105,14 +105,14 @@ class DiffusionCoefficientNetworkModel(network.NetworkModel):
 
         axes_data = track.axes_data
         out = np.zeros(shape=[1, self.track_length - 1, 1])
-        out[0, :, 0] = convert_to_diffusion_net_input(axes_data['0'], axes_data['1'])
+        out[0, :, 0] = convert_to_diffusion_net_input(np.array(axes_data['0']), np.array(axes_data['1']))
 
         if self.diffusion_model_range == "2-State-OD":
             prediction = self.keras_model.predict(out)
         else:
             prediction = self.keras_model.predict(out)
 
-        return prediction[0, 0]
+        return float(prediction[0, 0])
 
     def validate_test_data_mse(self, n_axes, test_batch_size=100):
         mse_avg = np.zeros(shape=test_batch_size)
