@@ -189,6 +189,9 @@ class L1NetworkModel(network.NetworkModel):
             else:
                 x_noisy, y_noisy, x, y, t, state, switching = physical_model.simulate_track(self.track_length,
                                                                                             self.track_time)
+                while not switching:
+                    x_noisy, y_noisy, x, y, t, state, switching = physical_model.simulate_track(self.track_length,
+                                                                                                self.track_time)
 
             track = SimulatedTrack(track_length=self.track_length, track_time=self.track_time,
                                    n_axes=n_axes, model_type=physical_model.__class__.__name__)
