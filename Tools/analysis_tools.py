@@ -13,13 +13,14 @@ def plot_confusion_matrix_for_layer(layer_name, ground_truth, predicted_value, l
         confusion_mat = confusion_mat.astype('float') / confusion_mat.sum(axis=1)[:, np.newaxis]
 
     df_cm = pd.DataFrame(data=confusion_mat, index=labels, columns=labels)
-    sns.set(font_scale=1)
+    sns.set(font_scale=0.9)
     color_map = sns.color_palette(palette="Blues", n_colors=7)
-    sns.heatmap(data=df_cm, annot=True, annot_kws={"size": 12}, cmap=color_map)
+    sns.heatmap(data=df_cm, annot=True, annot_kws={"size": 11}, cmap=color_map)
     # Plot matrix
-    plt.title(f'Confusion Matrix {layer_name}')
-    plt.ylabel("Ground Truth")
-    plt.xlabel("Predicted")
+    plt.rcParams.update({'font.size': 12})
+    plt.ylabel("Ground truth")
+    plt.xlabel("Predicted label")
+    plt.show()
     plt.show()
 
 
