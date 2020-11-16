@@ -74,7 +74,6 @@ class NetworkModel(Document):
     def plot_loss_model(self, train=True, val=True):
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
-        plt.title('Model Loss')
         if train:
             plt.plot(np.arange(1, len(self.history['loss']) + 1, 1), self.history['loss'], label="Train loss")
         if val:
@@ -84,8 +83,7 @@ class NetworkModel(Document):
 
     def plot_mse_model(self, train=True, val=True):
         plt.xlabel('Epoch')
-        plt.ylabel('Loss')
-        plt.title('Model MSE')
+        plt.ylabel('MSE')
         if train:
             plt.plot(np.arange(1, len(self.history['mse']) + 1, 1), self.history['mse'], label="Train mse")
         if val:
@@ -95,8 +93,7 @@ class NetworkModel(Document):
 
     def plot_accuracy_model(self, train=True, val=True, categorical=False):
         plt.xlabel('Epoch')
-        plt.ylabel('Loss')
-        plt.title('Model Accuracy')
+        plt.ylabel('Model Accuracy')
         if categorical:
             if train:
                 plt.plot(np.arange(1, len(self.history['categorical_accuracy']) + 1, 1),
