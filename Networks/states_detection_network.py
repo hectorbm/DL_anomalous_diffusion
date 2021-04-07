@@ -11,8 +11,6 @@ from Tools.analysis_tools import plot_confusion_matrix_for_layer
 from Tracks.simulated_tracks import SimulatedTrack
 from . import network
 
-# TODO: Justify MSE loss function
-
 
 class StateDetectionNetworkModel(network.NetworkModel):
     output_categories_labels = ["State-0", "State-1"]
@@ -43,13 +41,6 @@ class StateDetectionNetworkModel(network.NetworkModel):
         state_detection_keras_model = self.build_model()
         state_detection_keras_model.summary()
 
-        callbacks = [
-            EarlyStopping(monitor="val_loss",
-                          min_delta=1e-3,
-                          patience=10,
-                          verbose=1,
-                          mode="min")
-        ]
         if self.hiperparams_opt:
             validation_generator = generator_state_net_validation(batch_size=self.net_params['batch_size'],
                                                                   track_length=self.track_length,
@@ -65,7 +56,6 @@ class StateDetectionNetworkModel(network.NetworkModel):
             y=y_data,
             epochs=50,
             batch_size=self.net_params['batch_size'],
-            callbacks=callbacks,
             validation_data=validation_generator,
             validation_steps=math.floor(self.net_params['validation_set_size'] / self.net_params['batch_size']),
             shuffle=True)
@@ -179,7 +169,7 @@ class StateDetectionNetworkModel(network.NetworkModel):
         return mean_prediction
 
     def validate_test_data_accuracy(self, n_axes, normalized=True):
-        test_batch_size = 100
+        test_batch_size = 1000
         ground_truth = np.zeros(shape=(test_batch_size, self.track_length))
         predicted_value = np.zeros(shape=(test_batch_size, self.track_length))
         for i in range(test_batch_size):
