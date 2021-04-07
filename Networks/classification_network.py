@@ -25,9 +25,9 @@ class L1NetworkModel(network.NetworkModel):
         'training_set_size': 50000,
         'validation_set_size': 12500,
         'lr': 0.001,
-        'batch_size': 16,
+        'batch_size': 32,
         'amsgrad': False,
-        'epsilon': 1e-6
+        'epsilon': 1e-8
     }
     # For analysis of hyper-params
     analysis_params = {
@@ -172,7 +172,7 @@ class L1NetworkModel(network.NetworkModel):
         return mean_prediction
 
     def validate_test_data_accuracy(self, n_axes, normalized=True):
-        test_batch_size = 100
+        test_batch_size = 1000
         ground_truth = np.zeros(shape=test_batch_size)
         predicted_value = np.zeros(shape=test_batch_size)
         for i in range(test_batch_size):
@@ -191,7 +191,7 @@ class L1NetworkModel(network.NetworkModel):
                                                                                             self.track_time)
                 while not switching:
                     x_noisy, y_noisy, x, y, t, state, switching = physical_model.simulate_track(self.track_length,
-                                                                                                self.track_time)
+                                                                                            self.track_time)
 
             track = SimulatedTrack(track_length=self.track_length, track_time=self.track_time,
                                    n_axes=n_axes, model_type=physical_model.__class__.__name__)

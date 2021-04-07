@@ -22,9 +22,9 @@ class L2NetworkModel(network.NetworkModel):
         'lr': 0.01,
         'training_set_size': 50000,
         'validation_set_size': 12500,
-        'batch_size': 8,
+        'batch_size': 16,
         'amsgrad': True,
-        'epsilon': 1e-7
+        'epsilon': 1e-6
     }
     # For analysis of hyper-params
     analysis_params = {
@@ -182,7 +182,7 @@ class L2NetworkModel(network.NetworkModel):
         return mean_prediction
 
     def validate_test_data_accuracy(self, n_axes, normalized=True):
-        test_batch_size = 100
+        test_batch_size = 1000
         ground_truth = np.zeros(shape=test_batch_size)
         predicted_value = np.zeros(shape=test_batch_size)
         for i in range(test_batch_size):

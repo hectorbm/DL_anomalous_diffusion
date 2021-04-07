@@ -23,22 +23,22 @@ class HurstExponentNetworkModel(NetworkModel):
         'training_set_size': 40000,
         'validation_set_size': 10000,
         'Subdiffusive': {
-            'lr': 0.001,
-            'batch_size': 32,
-            'amsgrad': True,
+            'lr': 0.0001,
+            'batch_size': 64,
+            'amsgrad': False,
             'epsilon': 1e-6
         },
         'Brownian': {
             'lr': 0.0001,
             'batch_size': 16,
-            'amsgrad': False,
-            'epsilon': 1e-8
+            'amsgrad': True,
+            'epsilon': 1e-7
         },
         'Superdiffusive': {
             'lr': 0.001,
             'batch_size': 64,
             'amsgrad': False,
-            'epsilon': 1e-6
+            'epsilon': 1e-7
         }
     }
     # For analysis of hyper-params
@@ -123,13 +123,13 @@ class HurstExponentNetworkModel(NetworkModel):
         return np.mean(prediction)
 
     def validate_test_data_mse(self, n_axes):
-        test_batch_size = 100
+        test_batch_size = 30
         mse = np.zeros(shape=test_batch_size)
 
         for i in range(test_batch_size):
             if self.fbm_type == "Subdiffusive":
                 model_sample = FBM.create_random_subdiffusive()
-            elif self.fbm_type == 'Brownian':
+            elif self.fbm_type == "Brownian":
                 model_sample = FBM.create_random_brownian()
             else:
                 model_sample = FBM.create_random_superdiffusive()
