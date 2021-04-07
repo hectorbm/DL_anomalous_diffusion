@@ -140,8 +140,10 @@ def plot_analysis(net_name):
     for network in networks:
         epochs = [(i + 1) for i in range(len(network.history['val_loss']))]
         plt.plot(epochs, network.history['val_loss'])
-    plt.ylabel('Validation loss')
-    plt.xlabel('Epoch')
+    plt.ylabel('Validation loss', fontsize=16)
+    plt.xlabel('Epoch', fontsize=16)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
     plt.show()
 
     # Delete outliers if needed, modify stdev limit if required
@@ -157,8 +159,10 @@ def plot_analysis(net_name):
     for network in networks:
         epochs = [(i + 1) for i in range(len(network.history['val_loss']))]
         plt.plot(epochs, network.history['val_loss'])
-    plt.ylabel('Validation loss')
-    plt.xlabel('Epoch')
+    plt.ylabel('Validation loss', fontsize=16)
+    plt.xlabel('Epoch', fontsize=16)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
     plt.show()
 
     # First reduction
@@ -182,8 +186,10 @@ def plot_analysis(net_name):
     for network in networks:
         epochs = [(j + 1) for j in range(len(network.history['val_loss']))]
         plt.plot(epochs, network.history['val_loss'])
-    plt.ylabel('Validation loss')
-    plt.xlabel('Epoch')
+    plt.ylabel('Validation loss', fontsize=16)
+    plt.xlabel('Epoch', fontsize=16)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
     plt.show()
     # Second reduction
     print("Set min:", end="")
@@ -209,8 +215,15 @@ def plot_analysis(net_name):
         plt.plot(epochs, network.history['val_loss'])
         print('{}, {} ,{}'.format(network.params_training, best_results[i][0], best_results[i][1]))
         i += 1
-    plt.ylabel('Validation loss')
-    plt.xlabel('Epoch')
+    
+    for i in range(len(networks)):
+        print('{} ,{}'.format(best_results[i][0], best_results[i][1]))
+    
+
+    plt.ylabel('Validation loss', fontsize=16)
+    plt.xlabel('Epoch', fontsize=16)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
     plt.show()
 
     print("Training loss results")
@@ -219,17 +232,19 @@ def plot_analysis(net_name):
         epochs = [(j + 1) for j in range(len(network.history['loss']))]
         plt.plot(epochs, network.history['loss'])
         i += 1
-    plt.ylabel('Training loss')
-    plt.xlabel('Epoch')
+    plt.ylabel('Training loss', fontsize=16)
+    plt.xlabel('Epoch', fontsize=16)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
     plt.show()
 
 
 if __name__ == '__main__':
-    track_length = 25
+    track_length = 50
     track_time = 0.5
     fbm_type_net = 'Brownian'
 
-    net = 'StateDetectionNetwork'
+    net = 'HurstExponentNetwork'
 
     connect_to_db()
     analysis_params = get_params(net)
