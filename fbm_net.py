@@ -3,6 +3,7 @@ from Tracks.experimental_tracks import ExperimentalTracks
 from Tools.db_connection import connect_to_db, disconnect_to_db
 from keras import backend as K
 from pymongo.errors import CursorNotFound
+import numpy as np
 # For workers
 from worker_config import *
 import argparse
@@ -20,7 +21,7 @@ def train_net(track):
 
 
 def train(range_track_length):
-    tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='fBm')
+    tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='fBm', immobile=False)
     count = 1
     for track in tracks:
         networks = L2NetworkModel.objects(track_length=track.track_length, hiperparams_opt=False)
@@ -31,27 +32,37 @@ def train(range_track_length):
 
         if not net_available:
             if worker_id == (count % num_workers):
-                print("Training network for track_length:{} and track_time:{}".format(track.track_length,
+                print("Training network for track length:{}, and track time:{:.3f}".format(track.track_length,
                                                                                       track.track_time))
                 train_net(track)
         count += 1
 
 
 def classify(range_track_length):
-    print('Classifying tracks')
-    networks = L2NetworkModel.objects(track_length__in=range_track_length, hiperparams_opt=False)
-    tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='fBm')
+    tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='fBm', immobile=False)
+    if len(tracks)>0:
+        networks = L2NetworkModel.objects(track_length__in=range_track_length, hiperparams_opt=False)
+        classified_tracks = {}
+        count_classified_tracks = 0
+        for track in tracks:
+            classified_tracks[str(track.id)] = False
 
-    for net in networks:
-        # In worker mode only check for local files
-        if net.load_model_from_file(only_local_files=worker_mode):
-            for track in tracks:
-                if net.is_valid_network_track_time(track.track_time) and track.track_length == net.track_length:
-                    output = net.output_net_to_labels(net.evaluate_track_input(track))
-                    track.set_l2_classified(output)
+        for net in networks:
+            error = np.mean(net.history['val_categorical_accuracy'][-2:])
+            # In worker mode only check for local files
+            if count_classified_tracks < len(tracks):
+                if net.load_model_from_file(only_local_files=worker_mode):
+                    remaining_tracks = [track for track in tracks if classified_tracks[str(track.id)] == False]
+                    for track in remaining_tracks:
+                        if net.is_valid_network_track_time(track.track_time) and track.track_length == net.track_length:
+                            output = net.output_net_to_labels(net.evaluate_track_input(track))
+                            track.set_l2_classified(output)
+                            track.l2_error = error
+                            classified_tracks[str(track.id)] = True
+                            count_classified_tracks += 1
 
-    for track in tracks:
-        track.save()
+        for track in tracks:
+            track.save()
 
 
 if __name__ == '__main__':

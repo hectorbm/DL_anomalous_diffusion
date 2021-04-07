@@ -26,69 +26,53 @@ def train_net(track_length, track_time):
 
 
 def train(range_track_length):
-    for steps in range_track_length:
-        tracks = ExperimentalTracks.objects(track_length=steps,
-                                            l1_classified_as='2-State-OD')
-        count = 1
-        for track in tracks:
-            for i in range(len(track.seq_initial_frame)):
-                if track.track_states[track.seq_initial_frame[i]] == 0 and (
-                        track.seq_final_frame[i] - track.seq_initial_frame[i] + 1) > lowerLimitTrackLength:
+    tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='2-State-OD', immobile=False)
+    count = 1
+    for track in tracks:
+        segments = [segment for segment in track.get_brownian_state_segments() if segment['length']>=lowerLimitTrackLength]
+            
+        for segment in segments:
+            net_available = False
+            networks = DiffusionCoefficientNetworkModel.objects(track_length=segment['length'], hiperparams_opt=False)
 
-                    net_available = False
-                    networks = DiffusionCoefficientNetworkModel.objects(
-                        track_length=(track.seq_final_frame[i] - track.seq_initial_frame[i] + 1),
-                        diffusion_model_range=track.l1_classified_as,
-                        hiperparams_opt=False)
-                    for net in networks:
-                        if net.is_valid_network_track_time(track.seq_res_time[i]):
-                            net_available = True
+            for net in networks:
+                if net.is_valid_network_track_time(segment['residence_time']):
+                    net_available = True
 
-                    if not net_available:
-                        if worker_id == (count % num_workers):
-                            print('Training for original track length{}, sequence length:{}, sequence time{}'.format(
-                                track.track_length, (track.seq_final_frame[i] - track.seq_initial_frame[i] + 1),
-                                track.seq_res_time[i]))
-                            train_net(track_length=(track.seq_final_frame[i] - track.seq_initial_frame[i] + 1),
-                                      track_time=track.seq_res_time[i])
-                count += 1
+                
+            if not net_available:
+                if worker_id == (count % num_workers):
+                    print('Training for original track length:{}, segment length:{}, and segment time:{:.3f}'.format(
+                            track.track_length, segment['length'], segment['residence_time']))
+
+                    train_net(track_length=segment['length'], track_time=segment['residence_time'])
+                        
+            count += 1
 
 
 def classify(range_track_length):
     upper_limit = max(range_track_length)
-    networks = DiffusionCoefficientNetworkModel.objects(track_length__in=range(lowerLimitTrackLength, upper_limit),
-                                                        hiperparams_opt=False)
-    tracks = ExperimentalTracks.objects(track_length__in=range_track_length,
-                                        l1_classified_as='2-State-OD')
-
-    for net in networks:
-        K.clear_session()
-        if net.load_model_from_file(only_local_files=worker_mode):
-            for track in tracks:
-                for i in range(len(track.seq_initial_frame)):
-                    if track.track_states[track.seq_initial_frame[i]] == 0 and (
-                            track.seq_final_frame[i] - track.seq_initial_frame[i] + 1) > lowerLimitTrackLength:
-                        if net.is_valid_network_track_time(track.seq_res_time[i]) and (
-                                track.seq_final_frame[i] - track.seq_initial_frame[i] + 1) == net.track_length:
-                            # Create aux track for analysis
-                            seq_track = ExperimentalTracks(
-                                track_length=(track.seq_final_frame[i] - track.seq_initial_frame[i] + 1),
-                                track_time=track.seq_res_time[i],
-                                n_axes=track.n_axes,
-                                labeling_method=track.labeling_method,
-                                experimental_condition=track.experimental_condition,
-                                origin_file=track.origin_file)
-                            axes_data = np.zeros(shape=(seq_track.n_axes, seq_track.track_length))
-                            axes_data[0] = track.axes_data[str(0)][track.seq_initial_frame[i]:track.seq_final_frame[i]+1]
-                            axes_data[1] = track.axes_data[str(1)][track.seq_initial_frame[i]:track.seq_final_frame[i]+1]
-                            seq_track.set_axes_data(axes_data)
-                            seq_track.set_time_axis(
-                                np.array(track.time_axis[track.seq_initial_frame[i]:track.seq_final_frame[i] + 1]))
-                            seq_track.set_frames(track.frames[track.seq_initial_frame[i]:track.seq_final_frame[i] + 1])
-
-                            output = net.evaluate_track_input(seq_track)
-                            track.set_seq_diffusion_coefficient(i, output)
-                            track.save()
+    tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='2-State-OD', immobile=False)
+    if len(tracks)>0:
+        networks = DiffusionCoefficientNetworkModel.objects(track_length__in=range(lowerLimitTrackLength, upper_limit),
+                                                            hiperparams_opt=False)
+        for net in networks:
+            try:
+                error = np.mean(net.history['val_mae'][-2:])
+            except KeyError:
+                error = -1
+            K.clear_session()
+            if net.load_model_from_file(only_local_files=worker_mode):
+                for track in tracks:
+                    segments = [segment for segment in track.get_brownian_state_segments() 
+                                if segment['length'] == net.track_length and net.is_valid_network_track_time(segment['residence_time'])]
+                    # evaluate segments
+                    for segment in segments:
+                        sub_track = track.create_track_from_segment(segment)
+                        output = net.evaluate_track_input(sub_track)
+                        segment['diffusion_coefficient'] = output
+                        segment['diffusion_net_error'] = error
+                    track.save()
 
 
 if __name__ == '__main__':
