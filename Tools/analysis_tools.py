@@ -11,16 +11,21 @@ def plot_confusion_matrix_for_layer(layer_name, ground_truth, predicted_value, l
     confusion_mat = confusion_matrix(y_true=ground_truth, y_pred=predicted_value)
     if normalized:
         confusion_mat = confusion_mat.astype('float') / confusion_mat.sum(axis=1)[:, np.newaxis]
-
+    if layer_name == 'L1 Network':
+        labels = ['fBm', 'CTRW', 'two-state']
+    elif layer_name == 'L2 Network':
+        labels = ['H<0.42', '0.42<H<0.57', 'H>0.57']
+    else:
+        labels = ['Brownian', 'O.D.']
     df_cm = pd.DataFrame(data=confusion_mat, index=labels, columns=labels)
-    sns.set(font_scale=0.9)
+    sns.set(font_scale=1.5)
     color_map = sns.color_palette(palette="Blues", n_colors=7)
-    sns.heatmap(data=df_cm, annot=True, annot_kws={"size": 11}, cmap=color_map)
+    sns.heatmap(data=df_cm, annot=True, annot_kws={"size": 15}, cmap=color_map)
     # Plot matrix
-    plt.rcParams.update({'font.size': 12})
-    plt.ylabel("Ground truth")
-    plt.xlabel("Predicted label")
-    plt.show()
+    # plt.title(f'Confusion Matrix {layer_name}')
+    plt.rcParams.update({'font.size': 15})
+    plt.ylabel("Ground truth", fontsize=15)
+    plt.xlabel("Predicted label", fontsize=15)
     plt.show()
 
 
