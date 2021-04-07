@@ -70,6 +70,7 @@ class NetworkModel(Document):
 
     def save_model_file_to_db(self):
         self.model_file.put(pickle.dumps(self.keras_model.get_weights()))
+
     def update_model_file_to_db(self):
         self.model_file.replace(pickle.dumps(self.keras_model.get_weights()))
 
@@ -120,4 +121,3 @@ class NetworkModel(Document):
             return True
         else:
             return False
-
