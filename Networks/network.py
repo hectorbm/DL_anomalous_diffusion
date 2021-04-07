@@ -70,6 +70,8 @@ class NetworkModel(Document):
 
     def save_model_file_to_db(self):
         self.model_file.put(pickle.dumps(self.keras_model.get_weights()))
+    def update_model_file_to_db(self):
+        self.model_file.replace(pickle.dumps(self.keras_model.get_weights()))
 
     def plot_loss_model(self, train=True, val=True):
         plt.xlabel('Epoch')
@@ -88,12 +90,13 @@ class NetworkModel(Document):
             plt.plot(np.arange(1, len(self.history['mse']) + 1, 1), self.history['mse'], label="Train mse")
         if val:
             plt.plot(np.arange(1, len(self.history['val_mse']) + 1, 1), self.history['val_mse'], label="Val mse")
-        plt.legend()
+        # plt.legend()
         plt.show()
 
     def plot_accuracy_model(self, train=True, val=True, categorical=False):
         plt.xlabel('Epoch')
-        plt.ylabel('Model Accuracy')
+        plt.ylabel('Loss')
+        plt.title('Model Accuracy')
         if categorical:
             if train:
                 plt.plot(np.arange(1, len(self.history['categorical_accuracy']) + 1, 1),
