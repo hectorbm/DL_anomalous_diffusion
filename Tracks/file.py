@@ -19,7 +19,7 @@ def get_files_in_path(path_name):
         for entry in it:
             if not entry.name.startswith('.') and entry.is_file():
                 file_extension = entry.name.split('.')
-                if file_extension[len(file_extension) - 1] == "csv":
+                if file_extension[len(file_extension) - 1] == "csv" or file_extension[len(file_extension) - 1] == "txt":
                     filename = ''.join([path_name, entry.name])
                     files.append(filename)
     return files
@@ -30,7 +30,7 @@ class File(Document):
     labeling_method = StringField(choices=LABELING_METHODS, required=True)
     raw_file = FileField(required=True)
     filename = StringField(required=True)
-    file_fps = FloatField(default=50)
+    file_fps = FloatField(default=100)
     file_pixel_size = 106
 
     def add_raw_file(self, filename):
@@ -50,7 +50,7 @@ class File(Document):
         file_extension = file_extension[len(file_extension) - 1]
 
         # Check file extension
-        assert file_extension == 'csv', "File format is not CSV"
+        assert file_extension == 'csv' or file_extension == 'txt', "File format is not CSV/txt"
 
         only_file_split = only_file.split('_')
         exp_cond_detected = False
