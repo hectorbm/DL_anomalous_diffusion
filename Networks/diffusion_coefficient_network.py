@@ -102,7 +102,6 @@ class DiffusionCoefficientNetworkModel(network.NetworkModel):
     def evaluate_track_input(self, track):
         if track.track_length != self.track_length:
             raise ValueError('Invalid track length')
-
         axes_data = track.axes_data
         out = np.zeros(shape=[1, self.track_length - 1, 1])
         out[0, :, 0] = convert_to_diffusion_net_input(np.array(axes_data['0']), np.array(axes_data['1']))
