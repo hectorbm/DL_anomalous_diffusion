@@ -10,7 +10,7 @@ jobs:
           command: "pip install pytest pytest-dependency pytest-pep8==1.0.6"
       - run:
           name: "Test PEP 8"
-          command: "pytest -q --pep8"
+          command: "pytest --pep8"
 workflows:
   build-n-test-workflow:
     jobs:
