@@ -2,7 +2,7 @@ import math
 import pickle
 
 import numpy as np
-from keras.utils import to_categorical
+from tensorflow.keras.utils import to_categorical
 
 from PhysicalModels.brownian import Brownian
 from PhysicalModels.ctrw import CTRW
