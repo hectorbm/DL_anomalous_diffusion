@@ -1,17 +1,21 @@
 version: 2.1
+
+orbs:
+  python: circleci/python@1.2
+
+workflows:
+  sample:
+    jobs:
+      - build-and-test
+
 jobs:
-  build-n-test:
+  build-and-test:
     docker:
-      - image: cimg/python:3.6
+      - image: cimg/python:3.8
     steps:
       - checkout
+      - python/install-packages:
+          pkg-manager: pip
       - run:
-          name: "Install pytest"
-          command: "pip install pytest-pep8"
-      - run:
-          name: "Test PEP8"
-          command: "pytest -q --pep8"
-workflows:
-  build-n-test-workflow:
-    jobs:
-      - build-n-test
+          name: Run tests
+          command: "pytest -q --pep8 -vvvv"
