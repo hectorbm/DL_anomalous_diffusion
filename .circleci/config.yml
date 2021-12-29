@@ -7,7 +7,7 @@ jobs:
       - checkout
       - run:
           name: "Install pytest"
-          command: "pip pytest-pep8==1.0.6"
+          command: "pip install pytest-pep8==1.0.6"
       - run:
           name: "Test PEP 8"
           command: "pytest -q --pep8"
