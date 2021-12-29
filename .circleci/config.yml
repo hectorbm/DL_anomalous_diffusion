@@ -9,8 +9,8 @@ jobs:
           name: "Install pytest"
           command: "pip install pytest-pep8"
       - run:
-          name: "Test PEP 8"
-          command: "pytest --pep8"
+          name: "Test PEP8"
+          command: "pytest -q --pep8"
 workflows:
   build-n-test-workflow:
     jobs:
