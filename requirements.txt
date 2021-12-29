@@ -4,3 +4,7 @@ pytest-pep8==1.0.6
 sklearn
 matplotlib
 mongoengine
+pymongo
+numpy
+keras
+tensorflow
