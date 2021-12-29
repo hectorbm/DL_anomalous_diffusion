@@ -8,7 +8,7 @@ from . import network
 
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPooling1D
 from keras.models import Model
-from keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam
 from Networks.generators import generator_diffusion_coefficient_network, \
     generator_diffusion_coefficient_network_validation, generate_batch_diffusion_coefficient_net, \
     convert_to_diffusion_net_input
