@@ -1,0 +1,2 @@
+pytest==4.6.3
+pytest-pep8==1.0.6
