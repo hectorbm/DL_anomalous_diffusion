@@ -23,7 +23,8 @@ def get_classification_error(steps_range, exp_label, exp_cond, net_name):
                                                 experimental_condition=exp_cond, immobile=False)
     else:
         tracks = ExperimentalTracks.objects(track_length__in=steps_range, labeling_method=exp_label,
-                                                experimental_condition=exp_cond, l1_classified_as='fBm', immobile=False)
+                                            experimental_condition=exp_cond, l1_classified_as='fBm',
+                                            immobile=False)
 
     classification_accuracy = []
     for track in tracks:
@@ -31,7 +32,7 @@ def get_classification_error(steps_range, exp_label, exp_cond, net_name):
             classification_accuracy.append(track.l1_error)
         elif net_name == 'L2 Network':
             classification_accuracy.append(track.l2_error)
-        else: 
+        else:
             raise ValueError
 
     lower_x = np.percentile(classification_accuracy, 5)
@@ -94,7 +95,7 @@ def net_mae(min_steps, max_steps, net_name):
         plt.show()
 
 
-def net_mae_histogram(min_steps, max_steps,net_name):
+def net_mae_histogram(min_steps, max_steps, net_name):
     error_arr = []
     for i in range(min_steps, max_steps):
         try:
@@ -202,7 +203,7 @@ def show_hurst_results(range_steps, label):
                                                 experimental_condition=exp_cond, l1_classified_as='fBm',
                                                 l2_classified_as=category, immobile=False)
             hurst_exp_values = [track.hurst_exponent_fbm for track in tracks]
-            
+
             print(hurst_exp_values)
 
 
@@ -210,7 +211,7 @@ def show_residence_time(range_steps, label):
     for state in [0, 1]:
         for exp_cond in EXPERIMENTAL_CONDITIONS:
             tracks = ExperimentalTracks.objects(track_length__in=range_steps, labeling_method=label,
-                                                experimental_condition=exp_cond, l1_classified_as='2-State-OD',immobile=False)
+                                                experimental_condition=exp_cond, l1_classified_as='2-State-OD', immobile=False)
             # Compute residence time values
             res_time_values = []
             for track in tracks:
@@ -221,9 +222,8 @@ def show_residence_time(range_steps, label):
                 for segment in segments:
                     if track.segments[0]['length'] != track.track_length:
                         res_time_values.append(segment['residence_time'])
-            
 
-            print('Residence time, state:{} , Label:{}, condition:{}'.format(state, label, exp_cond))          
+            print('Residence time, state:{} , Label:{}, condition:{}'.format(state, label, exp_cond))
             print(res_time_values)
 
 
@@ -238,10 +238,10 @@ def show_confinement_area(range_steps, label):
                 if track.segments[0]['length'] != track.track_length:
                     conf_area_values.append(segment['confinement_area'] * (0.001 ** 2))
 
-
-        print('Conf area, Label:{}, condition:{}'.format(label, exp_cond)) 
+        print('Conf area, Label:{}, condition:{}'.format(label, exp_cond))
         print(conf_area_values)
-        
+
+
 def show_transitions(range_steps, label):
     for exp_cond in EXPERIMENTAL_CONDITIONS:
         tracks = ExperimentalTracks.objects(track_length__in=range_steps, labeling_method=label,
@@ -254,11 +254,12 @@ def show_transitions(range_steps, label):
                 OD_to_Brownian.append(track.transitions['OD_to_Brownian'])
             if track.transitions['Brownian_to_OD'] > 0:
                 Brownian_to_OD.append(track.transitions['Brownian_to_OD'])
-        
-        print('OD to Brownian, Label:{}, condition:{}'.format(label, exp_cond)) 
+
+        print('OD to Brownian, Label:{}, condition:{}'.format(label, exp_cond))
         print(OD_to_Brownian)
-        print('Brownian to OD, Label:{}, condition:{}'.format(label, exp_cond)) 
+        print('Brownian to OD, Label:{}, condition:{}'.format(label, exp_cond))
         print(Brownian_to_OD)
+
 
 def show_diffusion_results_brownian(range_steps, label):
     for exp_cond in EXPERIMENTAL_CONDITIONS:
@@ -271,10 +272,10 @@ def show_diffusion_results_brownian(range_steps, label):
             if track.diffusion_coefficient_brownian > 0:
                 diffusion_coefficient_values.append(track.diffusion_coefficient_brownian)
             else:
-                aux += 1 
-        
-        print('Diffusion coefficient, Label:{}, condition:{}'.format(label, exp_cond)) 
-        print('Bad training:{}/{}'.format(aux,len(tracks)))
+                aux += 1
+
+        print('Diffusion coefficient, Label:{}, condition:{}'.format(label, exp_cond))
+        print('Bad training:{}/{}'.format(aux, len(tracks)))
 
         if len(diffusion_coefficient_values) > 2:
             normFit = Fit_Normal_2P(failures=diffusion_coefficient_values)
@@ -284,7 +285,7 @@ def show_diffusion_results_brownian(range_steps, label):
             normFit.distribution.PDF()
             mean = normFit.mu
             stdev = normFit.sigma
-            plt.title('{} - {}\n{}:{:.2f}, {}:{:.2f}'.format(label, exp_cond, r'$\mu$', mean, r'$\sigma$',stdev), fontsize=16)
+            plt.title('{} - {}\n{}:{:.2f}, {}:{:.2f}'.format(label, exp_cond, r'$\mu$', mean, r'$\sigma$', stdev), fontsize=16)
             plt.ylabel('Frequency', fontsize=16)
             plt.xlabel('Diffusion coefficient {}m²'.format(r'$\mu$'), fontsize=16)
             plt.xticks(fontsize=16)
@@ -296,19 +297,19 @@ def show_diffusion_coefficient_two_state(range_steps, label):
     keyerror = 0
     for exp_cond in EXPERIMENTAL_CONDITIONS:
         tracks = ExperimentalTracks.objects(track_length__in=range_steps, labeling_method=label,
-                                                experimental_condition=exp_cond, l1_classified_as='2-State-OD',
-                                                immobile=False)
+                                            experimental_condition=exp_cond, l1_classified_as='2-State-OD', 
+                                            immobile=False)
         diffusion_coefficient_values = []
         for track in tracks:
-            segments  = track.get_brownian_state_segments()
+            segments = track.get_brownian_state_segments()
             for segment in segments:
                 try:
                     d = segment['diffusion_coefficient']
-                    if 0.2>= d >= 0.05:
+                    if 0.2 >= d >= 0.05:
                         diffusion_coefficient_values.append(d)
                 except KeyError:
-                    keyerror += 1 
-        print('Diffusion coefficient, Label:{}, condition:{}'.format(label, exp_cond)) 
+                    keyerror += 1
+        print('Diffusion coefficient, Label:{}, condition:{}'.format(label, exp_cond))
         print(diffusion_coefficient_values)
 
 
@@ -319,7 +320,7 @@ if __name__ == '__main__':
     exp_labels = ['mAb', 'BTX']
     net = 'L1 Network'
     range_steps = list(range(min_steps, max_steps))
-    
+
     # Performance plots
     # validation_set_confusion_matrix(net_name='L2 Network')
 

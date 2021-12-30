@@ -51,7 +51,7 @@ def classify(range_track_length):
             # In worker mode only check for local files
             if count_classified_tracks < len(tracks):
                 if net.load_model_from_file(only_local_files=worker_mode):
-                    remaining_tracks = [track for track in tracks if not classified_tracks[str(track.id)] ]
+                    remaining_tracks = [track for track in tracks if not classified_tracks[str(track.id)]]
                     for track in remaining_tracks:
                         if net.is_valid_network_track_time(track.track_time) and track.track_length == net.track_length:
                             output = net.output_net_to_labels(net.evaluate_track_input(track))

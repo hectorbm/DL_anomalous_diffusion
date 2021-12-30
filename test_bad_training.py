@@ -22,7 +22,7 @@ if __name__ == "__main__":
     plt.show()
 
     for net in nets:
-        if net.history['mse'][-1]>=0.006:
+        if net.history['mse'][-1] >= 0.006:
             net.net_params['lr'] = 6e-8
             # net.net_params['lr'] = 5e-7
 
