@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
     for label in ['mAb', 'BTX']:
         for exp_cond in ['Control', 'CDx-Chol', 'CDx']:
-            tracks = ExperimentalTracks.objects(track_length__in=range_track, 
+            tracks = ExperimentalTracks.objects(track_length__in=range_track,
                                                 labeling_method=label,
                                                 experimental_condition=exp_cond,
                                                 l1_classified_as='2-State-OD',

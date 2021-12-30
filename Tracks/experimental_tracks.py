@@ -17,13 +17,13 @@ class ExperimentalTracks(tracks.Tracks):
     # Output Nets
     l1_classified_as = StringField(choices=L1_output_categories_labels, required=False)
     l1_error = FloatField(min_value=0, max_value=1, required=False)
-    
+
     l2_classified_as = StringField(choices=L2_output_categories_labels, required=False)
     l2_error = FloatField(min_value=0, max_value=1, required=False)
 
     diffusion_coefficient_brownian = FloatField(required=False)
     diffusion_coefficient_brownian_error = FloatField(min_value=0, max_value=1, required=False)
-    
+
     hurst_exponent_fbm = FloatField(required=False, min_value=0, max_value=1)
     hurst_mae = FloatField(min_value=0, max_value=1, required=False)
 
@@ -66,13 +66,13 @@ class ExperimentalTracks(tracks.Tracks):
                 segment_state = current_state
                 segment_initial_step = step
                 segment_final_step = -1
-            
+
             if step == self.track_length - 1:
                 # The last step ends the last segment
                 segment_final_step = self.track_length - 1
                 segment = self.create_segment(segment_state, segment_initial_step, segment_final_step)
                 self.add_segment(segment)
-            
+
             step += 1
 
     def create_segment(self, state, initial_step, final_step):
