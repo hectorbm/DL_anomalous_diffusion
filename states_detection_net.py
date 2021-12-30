@@ -43,7 +43,7 @@ def classify(range_track_length):
 
     if len(tracks) > 0:
         networks = StateDetectionNetworkModel.objects(track_length__in=range_track_length, hiperparams_opt=False)
-        
+
         classified_tracks = {}
         count_classified_tracks = 0
         for track in tracks:
@@ -53,7 +53,7 @@ def classify(range_track_length):
             if count_classified_tracks < len(tracks):
 
                 if net.load_model_from_file(only_local_files=worker_mode):
-                    remaining_tracks = [track for track in tracks if classified_tracks[str(track.id)] == False]
+                    remaining_tracks = [track for track in tracks if not classified_tracks[str(track.id)]]
                     for track in remaining_tracks:
                         if net.is_valid_network_track_time(track.track_time) and track.track_length == net.track_length:
                             output = net.evaluate_track_input(track)
@@ -61,7 +61,7 @@ def classify(range_track_length):
 
                             classified_tracks[str(track.id)] = True
                             count_classified_tracks += 1
-                            
+
                             track.set_track_states(output)
                             track.save()
 

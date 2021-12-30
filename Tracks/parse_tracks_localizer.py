@@ -90,6 +90,3 @@ def add_to_file_tracks(frames, tracks, x, y, label, exp_cond):
     track.set_axes_data(axes_data)
     track.set_time_axis(time_axis)
     tracks.append(track)
-
-
-

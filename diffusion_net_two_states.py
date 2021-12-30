@@ -29,8 +29,8 @@ def train(range_track_length):
     tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='2-State-OD', immobile=False)
     count = 1
     for track in tracks:
-        segments = [segment for segment in track.get_brownian_state_segments() if segment['length']>=lowerLimitTrackLength]
-            
+        segments = [segment for segment in track.get_brownian_state_segments() if segment['length'] >= lowerLimitTrackLength]
+
         for segment in segments:
             net_available = False
             networks = DiffusionCoefficientNetworkModel.objects(track_length=segment['length'], hiperparams_opt=False)
@@ -39,21 +39,20 @@ def train(range_track_length):
                 if net.is_valid_network_track_time(segment['residence_time']):
                     net_available = True
 
-                
             if not net_available:
                 if worker_id == (count % num_workers):
                     print('Training for original track length:{}, segment length:{}, and segment time:{:.3f}'.format(
                             track.track_length, segment['length'], segment['residence_time']))
 
                     train_net(track_length=segment['length'], track_time=segment['residence_time'])
-                        
+
             count += 1
 
 
 def classify(range_track_length):
     upper_limit = max(range_track_length)
     tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='2-State-OD', immobile=False)
-    if len(tracks)>0:
+    if len(tracks) > 0:
         networks = DiffusionCoefficientNetworkModel.objects(track_length__in=range(lowerLimitTrackLength, upper_limit),
                                                             hiperparams_opt=False)
         for net in networks:
@@ -64,7 +63,7 @@ def classify(range_track_length):
             K.clear_session()
             if net.load_model_from_file(only_local_files=worker_mode):
                 for track in tracks:
-                    segments = [segment for segment in track.get_brownian_state_segments() 
+                    segments = [segment for segment in track.get_brownian_state_segments()
                                 if segment['length'] == net.track_length and net.is_valid_network_track_time(segment['residence_time'])]
                     # evaluate segments
                     for segment in segments:

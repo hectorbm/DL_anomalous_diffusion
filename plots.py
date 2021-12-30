@@ -12,7 +12,7 @@ from Networks.diffusion_coefficient_network import DiffusionCoefficientNetworkMo
 import keras.backend as K
 from scipy.optimize import curve_fit
 from scipy import stats
-# For PDF 
+# For PDF
 from reliability.Fitters import Fit_Exponential_1P, Fit_Normal_2P
 from reliability.Other_functions import histogram
 
@@ -33,8 +33,7 @@ def get_classification_error(steps_range, exp_label, exp_cond, net_name):
             classification_accuracy.append(track.l2_error)
         else: 
             raise ValueError
-    
-    
+
     lower_x = np.percentile(classification_accuracy, 5)
     # histogram(classification_accuracy, c='orange', white_above=lower_x)
     # plt.axvline(x=lower_x,c='black',alpha=0.7,linestyle='dotted')
@@ -44,6 +43,7 @@ def get_classification_error(steps_range, exp_label, exp_cond, net_name):
     # plt.xticks(fontsize=16)
     # plt.show()
     return lower_x
+
 
 # Performance plots
 def validation_set_confusion_matrix(net_name):
@@ -67,19 +67,19 @@ def net_mae(min_steps, max_steps, net_name):
     for fbm_type in diffusion_range:
         error_arr = []
         x = []
-        for i in range(min_steps,max_steps):
+        for i in range(min_steps, max_steps):
             try:
                 if net_name == 'Hurst Exponent Network':
                     net = HurstExponentNetworkModel.objects(track_length=i, fbm_type=fbm_type, hiperparams_opt=False).order_by('track_time')[0]
                 elif net_name == 'Diffusion Coefficient Network':
-                    net = DiffusionCoefficientNetworkModel.objects(track_length=i,hiperparams_opt=False).order_by('track_time')[0]
+                    net = DiffusionCoefficientNetworkModel.objects(track_length=i, hiperparams_opt=False).order_by('track_time')[0]
 
                 error = np.mean(net.history['val_mae'][-2:])
                 error_arr.append(error)
                 x.append(i)
-            except IndexError: 
+            except IndexError:
                 print('Network not available for #{} steps'.format(i))
-    
+
         plt.plot(x, error_arr)
         plt.xlabel('Steps', fontsize=16)
         plt.ylabel('MAE', fontsize=16)
@@ -90,34 +90,35 @@ def net_mae(min_steps, max_steps, net_name):
             plt.title(fbm_type, fontsize=16)
         elif net_name == 'Diffusion Coefficient Network':
             plt.title('Diffusion Coefficient Network', fontsize=16)
-    
+
         plt.show()
+
 
 def net_mae_histogram(min_steps, max_steps,net_name):
     error_arr = []
-    for i in range(min_steps,max_steps):
+    for i in range(min_steps, max_steps):
         try:
-            net = DiffusionCoefficientNetworkModel.objects(track_length=i,hiperparams_opt=False).order_by('track_time')[0]
+            net = DiffusionCoefficientNetworkModel.objects(track_length=i, hiperparams_opt=False).order_by('track_time')[0]
             error = np.mean(net.history['val_mae'][-4:])
             error_arr.append(error)
-            
-        except IndexError: 
+
+        except IndexError:
             print('Network not available for #{} steps'.format(i))
 
-    histogram(error_arr,bins=15)
+    histogram(error_arr, bins=15)
     plt.ylabel('Frequency', fontsize=16)
     plt.xlabel('MAE', fontsize=16)
-    plt.xticks([round(i,2) for i in list(np.linspace(0.01,0.05,5))], fontsize=16)
+    plt.xticks([round(i, 2) for i in list(np.linspace(0.01, 0.05, 5))], fontsize=16)
     plt.yticks(fontsize=16)
     plt.show()
-        
 
-# Results plots 
+
+# Results plots
 def show_classification_results(tl_range, exp_label, net_name):
     aux = 0
     for exp_cond in EXPERIMENTAL_CONDITIONS:
         # Get classification error
-        pc = 1 - get_classification_error(tl_range,exp_label, exp_cond, net_name)
+        pc = 1 - get_classification_error(tl_range, exp_label, exp_cond, net_name)
 
         if net_name == 'L1 Network':
             tracks = ExperimentalTracks.objects(track_length__in=tl_range, labeling_method=exp_label,
@@ -140,11 +141,11 @@ def show_classification_results(tl_range, exp_label, net_name):
 
         # Compute error limits
         count_n = count
-        error_y0 = (100 * pc * count[0]/len(tracks), 100 * pc * (count[1]+count[2])/len(tracks)) 
-        error_y1 = (100 * pc * count[1]/len(tracks), 100 * pc * (count[0]+count[2])/len(tracks)) 
-        error_y2 = (100 * pc * count[2]/len(tracks), 100 * pc * (count[0]+count[1])/len(tracks)) 
+        error_y0 = (100 * pc * count[0]/len(tracks), 100 * pc * (count[1]+count[2])/len(tracks))
+        error_y1 = (100 * pc * count[1]/len(tracks), 100 * pc * (count[0]+count[2])/len(tracks))
+        error_y2 = (100 * pc * count[2]/len(tracks), 100 * pc * (count[0]+count[1])/len(tracks))
         count = [(100 * x) / len(tracks) for x in count]
-        error_y = [[error_y0[0], error_y1[0], error_y2[0]],[error_y0[1], error_y1[1], error_y2[1]]]
+        error_y = [[error_y0[0], error_y1[0], error_y2[0]], [error_y0[1], error_y1[1], error_y2[1]]]
 
         # For data tables
         print('Network:{}, label:{}, condition:{}'.format(net_name, exp_label, exp_cond))
@@ -155,7 +156,7 @@ def show_classification_results(tl_range, exp_label, net_name):
         print('{}, {}, {}'.format(count[0], count[1], count[2]))
         print(count_n)
         print(error_y)
-        
+
         # Plot bars
         plt.bar(x=[(aux + i) for i in range(3)], height=count, width=0.6, align='center',
                 color=['firebrick', 'orangered', 'dodgerblue'], yerr=error_y)
@@ -167,8 +168,7 @@ def show_classification_results(tl_range, exp_label, net_name):
     plt.ylabel('%', fontsize=16)
     if exp_label == 'BTX':
         exp_label = 'BTX'
-    plt.title(exp_label,fontsize=16)
-
+    plt.title(exp_label, fontsize=16)
 
     if net_name == 'L1 Network':
         colors = {L1_output_categories_labels[0]: 'firebrick', L1_output_categories_labels[1]: 'orangered',
@@ -179,11 +179,11 @@ def show_classification_results(tl_range, exp_label, net_name):
 
     labels = list(colors.keys())
     handles = [plt.Rectangle((0, 0), 1, 1, color=colors[label]) for label in labels]
-    
+
     if net_name == 'L1 Network' and label == 'mAb':
-        plt.legend(handles, ['fBm', 'CTRW', 'two-state'], bbox_to_anchor=(1.04,1), borderaxespad=0, fontsize=14)
+        plt.legend(handles, ['fBm', 'CTRW', 'two-state'], bbox_to_anchor=(1.04, 1), borderaxespad=0, fontsize=14)
     elif net_name == 'L2 Network' and label == 'mAb':
-        plt.legend(handles, ['fBm subdiffusive', 'fBm Brownian', 'fBm superdiffusive'], bbox_to_anchor=(1.04,1), borderaxespad=0, fontsize=14)
+        plt.legend(handles, ['fBm subdiffusive', 'fBm Brownian', 'fBm superdiffusive'], bbox_to_anchor=(1.04, 1), borderaxespad=0, fontsize=14)
 
     plt.rcParams['lines.color'] = 'b'
     plt.rcParams['lines.linewidth'] = 3
