@@ -297,7 +297,7 @@ def show_diffusion_coefficient_two_state(range_steps, label):
     keyerror = 0
     for exp_cond in EXPERIMENTAL_CONDITIONS:
         tracks = ExperimentalTracks.objects(track_length__in=range_steps, labeling_method=label,
-                                            experimental_condition=exp_cond, l1_classified_as='2-State-OD', 
+                                            experimental_condition=exp_cond, l1_classified_as='2-State-OD',
                                             immobile=False)
         diffusion_coefficient_values = []
         for track in tracks:
