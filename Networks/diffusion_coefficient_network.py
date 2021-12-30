@@ -50,8 +50,7 @@ class DiffusionCoefficientNetworkModel(network.NetworkModel):
                                                                                       track_length=self.track_length,
                                                                                       track_time=self.track_time,
                                                                                       diffusion_model_range=self.diffusion_model_range,
-                                                                                      validation_set_size=
-                                                                                      self.net_params[
+                                                                                      validation_set_size=self.net_params[
                                                                                           'validation_set_size'])
         else:
             validation_generator = generator_diffusion_coefficient_network(batch_size=self.net_params['batch_size'],

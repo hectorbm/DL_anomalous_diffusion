@@ -14,19 +14,18 @@ class ExperimentalTracks(tracks.Tracks):
     origin_file = ObjectIdField(required=False)
     immobile = BooleanField(required=False)
 
-
     # Output Nets
     l1_classified_as = StringField(choices=L1_output_categories_labels, required=False)
-    l1_error = FloatField(min_value=0,max_value=1,required=False)
+    l1_error = FloatField(min_value=0, max_value=1, required=False)
     
     l2_classified_as = StringField(choices=L2_output_categories_labels, required=False)
-    l2_error = FloatField(min_value=0,max_value=1,required=False)
+    l2_error = FloatField(min_value=0, max_value=1, required=False)
 
     diffusion_coefficient_brownian = FloatField(required=False)
-    diffusion_coefficient_brownian_error = FloatField(min_value=0,max_value=1,required=False)
+    diffusion_coefficient_brownian_error = FloatField(min_value=0, max_value=1, required=False)
     
     hurst_exponent_fbm = FloatField(required=False, min_value=0, max_value=1)
-    hurst_mae = FloatField(min_value=0,max_value=1,required=False)
+    hurst_mae = FloatField(min_value=0, max_value=1, required=False)
 
     track_states = ListField(required=False)
     segments = ListField(required=False)
@@ -56,10 +55,10 @@ class ExperimentalTracks(tracks.Tracks):
         # For initial segment
         segment_initial_step = step
         segment_final_step = -1
-        
+
         for current_state in self.track_states:
             if current_state != segment_state:
-                # End segment    
+                # End segment
                 segment_final_step = step - 1
                 segment = self.create_segment(segment_state, segment_initial_step, segment_final_step)
                 self.add_segment(segment)
@@ -76,13 +75,12 @@ class ExperimentalTracks(tracks.Tracks):
             
             step += 1
 
-        
     def create_segment(self, state, initial_step, final_step):
-        segment = {'state':state,
+        segment = {'state': state,
                    'initial_step': initial_step,
                    'final_step': final_step,
                    'length': final_step - initial_step + 1,
-                   'residence_time': self.time_axis[final_step]-self.time_axis[initial_step]}
+                   'residence_time': self.time_axis[final_step] - self.time_axis[initial_step]}
         return segment
 
     def compute_confinement_region(self, segment):
@@ -92,18 +90,15 @@ class ExperimentalTracks(tracks.Tracks):
         area = distance_x * distance_y
         segment['confinement_area'] = area
 
-
     def add_segment(self, segment):
         if segment['initial_step'] < segment['final_step']:
             self.segments.append(segment)
 
-
     def get_brownian_state_segments(self):
-        return [segment for segment in self.segments if segment['state'] == 0 and segment['length']>3]
-
+        return [segment for segment in self.segments if segment['state'] == 0 and segment['length'] > 3]
 
     def get_od_state_segments(self):
-        return [segment for segment in self.segments if segment['state'] == 1 and segment['length']>4]
+        return [segment for segment in self.segments if segment['state'] == 1 and segment['length'] > 4]
 
     def get_segment_axes(self, segment):
         x_segment = self.axes_data['0'][segment['initial_step']: segment['final_step']+1]
@@ -115,10 +110,10 @@ class ExperimentalTracks(tracks.Tracks):
 
     def create_track_from_segment(self, segment):
         x_segment, y_segment = self.get_segment_axes(segment)
-        axes_data = np.zeros(shape=(2,segment['length']))
+        axes_data = np.zeros(shape=(2, segment['length']))
         axes_data[0] = x_segment
         axes_data[1] = y_segment
-        time_segment = np.zeros(shape=(1,segment['length']))
+        time_segment = np.zeros(shape=(1, segment['length']))
         time_segment[0] = self.get_segment_time_axis(segment)
         sub_track = ExperimentalTracks(track_length=segment['length'],
                                        track_time=segment['residence_time'],
@@ -127,29 +122,29 @@ class ExperimentalTracks(tracks.Tracks):
                                        experimental_condition=self.experimental_condition)
         sub_track.set_time_axis(time_segment[0])
         sub_track.set_axes_data(axes_data)
-        
+
         return sub_track
 
     def compute_transitions(self):
         if len(self.segments) > 0:
-            self.transitions = {'OD_to_Brownian':0, 
-                                'Brownian_to_OD':0}
-            
+            self.transitions = {'OD_to_Brownian': 0,
+                                'Brownian_to_OD': 0}
+
             last_segment_state = self.segments[0]['state']
             last_segment_length = self.segments[0]['length']
             last_segment_step = self.segments[0]['final_step']
-            
+
             for segment in self.segments:
                 if segment['state'] != last_segment_state and segment['initial_step'] == last_segment_step + 1:
                     if segment['state'] == 0 and segment['length'] > 3 and last_segment_length > 4:
                         self.transitions['OD_to_Brownian'] += 1
                     elif segment['state'] == 1 and segment['length'] > 4 and last_segment_length > 3:
                         self.transitions['Brownian_to_OD'] += 1
-                
+
                 last_segment_state = segment['state']
                 last_segment_step = segment['final_step']
                 last_segment_length = segment['length']
-    
+
     def compute_two_state_segments_data(self):
         # Detect all segments
         self.compute_segments()

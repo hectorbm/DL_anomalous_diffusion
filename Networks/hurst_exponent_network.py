@@ -3,8 +3,7 @@ import math
 from tensorflow.keras.callbacks import EarlyStopping
 from mongoengine import StringField
 import numpy as np
-from Networks.generators import generator_hurst_exp_network, generator_hurst_exp_network_validation, \
-    generate_batch_hurst_net
+from Networks.generators import generator_hurst_exp_network, generator_hurst_exp_network_validation, generate_batch_hurst_net
 from Networks.network import NetworkModel
 from keras.layers import Dense, Input, LSTM
 from keras.models import Model
@@ -12,7 +11,6 @@ from keras.optimizers import Adam
 from sklearn.metrics import mean_squared_error
 from PhysicalModels.fbm import FBM
 from Tracks.simulated_tracks import SimulatedTrack
-
 
 
 class HurstExponentNetworkModel(NetworkModel):

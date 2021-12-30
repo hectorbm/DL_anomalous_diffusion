@@ -89,14 +89,14 @@ if __name__ == '__main__':
     # my_data = read_and_load_mat_file()
     # load_tracks(my_data)
     range_track = list(range(25, 900))
-    
+
     for label in ['mAb', 'BTX']:
-        for exp_cond in ['Control', 'CDx-Chol','CDx']:
+        for exp_cond in ['Control', 'CDx-Chol', 'CDx']:
             tracks = ExperimentalTracks.objects(track_length__in=range_track, 
                                                 labeling_method=label,
                                                 experimental_condition=exp_cond,
                                                 l1_classified_as='2-State-OD',
-                                                immobile=False)        
+                                                immobile=False)
             count = 0
             od = 0
             brownian = 0

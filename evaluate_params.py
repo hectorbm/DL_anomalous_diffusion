@@ -215,10 +215,9 @@ def plot_analysis(net_name):
         plt.plot(epochs, network.history['val_loss'])
         print('{}, {} ,{}'.format(network.params_training, best_results[i][0], best_results[i][1]))
         i += 1
-    
+
     for i in range(len(networks)):
         print('{} ,{}'.format(best_results[i][0], best_results[i][1]))
-    
 
     plt.ylabel('Validation loss', fontsize=16)
     plt.xlabel('Epoch', fontsize=16)

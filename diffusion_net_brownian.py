@@ -38,18 +38,18 @@ def train(range_track_length):
 
         if not net_available:
             if worker_id == (count % num_workers):
-                print("Training network for track length:{}, and track time:{:.3f}".format(track.track_length,track.track_time))
+                print("Training network for track length:{}, and track time:{:.3f}".format(track.track_length, track.track_time))
                 train_net(track)
         count += 1
 
 
 def classify(range_track_length):
-    
+
     tracks = ExperimentalTracks.objects(track_length__in=range_track_length, l1_classified_as='fBm',
                                         l2_classified_as='Brownian', immobile=False)
-    if len(tracks)>0:
+    if len(tracks) > 0:
         networks = DiffusionCoefficientNetworkModel.objects(track_length__in=range_track_length, hiperparams_opt=False)
-        
+
         classified_tracks = {}
         count_classified_tracks = 0
         for track in tracks:
@@ -59,7 +59,7 @@ def classify(range_track_length):
             error = np.mean(net.history['val_mae'][-2:])
             if count_classified_tracks < len(tracks):
                 if net.load_model_from_file(only_local_files=worker_mode):
-                    remaining_tracks = [track for track in tracks if classified_tracks[str(track.id)] == False]
+                    remaining_tracks = [track for track in tracks if not classified_tracks[str(track.id)]]
                     for track in remaining_tracks:
                         if net.is_valid_network_track_time(track.track_time) and track.track_length == net.track_length:
                             track.diffusion_coefficient_brownian = net.evaluate_track_input(track)

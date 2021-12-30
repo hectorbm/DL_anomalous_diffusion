@@ -1,5 +1,5 @@
 class Models:
-    
+
     @classmethod
     def create_random(cls):
         pass
