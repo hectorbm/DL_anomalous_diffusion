@@ -8,7 +8,7 @@ from . import network
 
 from keras.layers import Dense, BatchNormalization, Conv1D, Input, GlobalMaxPooling1D
 from keras.models import Model
-from keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam
 from Networks.generators import generator_diffusion_coefficient_network, \
     generator_diffusion_coefficient_network_validation, generate_batch_diffusion_coefficient_net, \
     convert_to_diffusion_net_input
@@ -50,8 +50,7 @@ class DiffusionCoefficientNetworkModel(network.NetworkModel):
                                                                                       track_length=self.track_length,
                                                                                       track_time=self.track_time,
                                                                                       diffusion_model_range=self.diffusion_model_range,
-                                                                                      validation_set_size=
-                                                                                      self.net_params[
+                                                                                      validation_set_size=self.net_params[
                                                                                           'validation_set_size'])
         else:
             validation_generator = generator_diffusion_coefficient_network(batch_size=self.net_params['batch_size'],
